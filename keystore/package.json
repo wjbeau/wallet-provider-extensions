@@ -1,0 +1,21 @@
+{
+	"name": "@algorandfoundation/keystore-extension",
+	"version": "0.0.1",
+	"description": "",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"lint": "biome check",
+		"lint:fix": "biome check --fix",
+		"docs": "typedoc",
+		"test": "echo \"Error: no test specified\" && exit 0"
+	},
+	"author": "Algorand Foundation",
+	"license": "Apache-2.0",
+	"dependencies": {
+		"@algorandfoundation/wallet-provider": "0.0.1",
+		"@tanstack/store": "^0.8.0"
+	}
+}
