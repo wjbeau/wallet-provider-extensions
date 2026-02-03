@@ -1,0 +1,6 @@
+{
+  "entryPointStrategy": "packages",
+  "entryPoints": ["keystore"],
+
+  "readme": "./README.md"
+}

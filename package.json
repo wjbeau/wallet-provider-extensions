@@ -1,0 +1,30 @@
+{
+  "name": "wallet-provider-extensions",
+  "version": "0.0.0",
+  "description": "Collection of extensions for the Wallet Provider.",
+  "workspaces": [
+    "keystore/**"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "docs": "typedoc",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git"
+  },
+  "author": "Algorand Foundation",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/algorandfoundation/wallet-provider-extensions/issues"
+  },
+  "homepage": "https://github.com/algorandfoundation/wallet-provider-extensions#readme",
+  "devDependencies": {
+    "@biomejs/biome": "2.3.14",
+    "typedoc": "^0.28.16",
+    "typescript": "^5.9.3"
+  }
+}
