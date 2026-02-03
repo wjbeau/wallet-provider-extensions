@@ -1,7 +1,7 @@
 {
 	"name": "@algorandfoundation/keystore-extension",
 	"version": "0.0.1",
-	"description": "",
+	"description": "Basic Keystore Extension for the Wallet Provider.",
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
