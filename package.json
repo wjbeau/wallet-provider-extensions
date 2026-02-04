@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "Collection of extensions for the Wallet Provider.",
   "workspaces": [
-    "keystore/**"
+    "keystore/**",
+    "crypto/**"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
