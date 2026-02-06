@@ -10,7 +10,9 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"declaration": true,
-		"verbatimModuleSyntax": true
+		"verbatimModuleSyntax": true,
+		"allowImportingTsExtensions": true,
+		"noEmit": true
 	},
 	"include": ["src/**/*"]
 }
