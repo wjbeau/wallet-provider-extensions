@@ -23,11 +23,11 @@ export class InMemoryKeyStorage implements KeyStorage {
 	 * @returns The stored key data or undefined if not found
 	 */
 	async get(id: KeyId): Promise<StoredKeyData> {
-    // throw if key not found to simplify error handling in tests
-    const keyData = this.keys.get(id);
-    if (!keyData) {
-      throw new Error(`Key with ID ${id} not found`);
-    }
+		// throw if key not found to simplify error handling in tests
+		const keyData = this.keys.get(id);
+		if (!keyData) {
+			throw new Error(`Key with ID ${id} not found`);
+		}
 		return keyData;
 	}
 
@@ -70,12 +70,12 @@ export class InMemorySeedStorage implements SeedStorage {
 	private seeds = new Map<KeyId, StoredSeedData>();
 
 	async get(id: KeyId): Promise<StoredSeedData> {
-    // throw if seed not found to simplify error handling in tests
-    const seedData = this.seeds.get(id);
-    if (!seedData) {
-      throw new Error(`Seed with ID ${id} not found`);
-    }
-    return seedData;
+		// throw if seed not found to simplify error handling in tests
+		const seedData = this.seeds.get(id);
+		if (!seedData) {
+			throw new Error(`Seed with ID ${id} not found`);
+		}
+		return seedData;
 	}
 
 	async set(id: KeyId, data: StoredSeedData): Promise<void> {

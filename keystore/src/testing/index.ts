@@ -13,8 +13,7 @@ export function runKeyStoreBackendTests(
 	factory: BackendFactory,
 	options: TestSuiteOptions = {},
 ) {
-
-  // Some features of the KeyStoreBackend are optional and may not be implemented by all backends (e.g. batchSign, HD wallet operations, encryption, audit logging). We allow these tests to be skipped via options so that the test suite can be used for a wider range of implementations while still providing comprehensive coverage for core functionality.
+	// Some features of the KeyStoreBackend are optional and may not be implemented by all backends (e.g. batchSign, HD wallet operations, encryption, audit logging). We allow these tests to be skipped via options so that the test suite can be used for a wider range of implementations while still providing comprehensive coverage for core functionality.
 	const { skipOptional = false } = options;
 
 	describe("KeyStoreBackend Conformance Tests", () => {
@@ -32,9 +31,9 @@ export function runKeyStoreBackendTests(
 			});
 		}
 
-    // =======================
-    // Core Operations
-    // =======================
+		// =======================
+		// Core Operations
+		// =======================
 		describe("Core Operations", () => {
 			describe("list()", () => {
 				it("should return an array", async () => {
@@ -93,9 +92,9 @@ export function runKeyStoreBackendTests(
 			});
 		});
 
-    // =======================
-    // Signing and Verification
-    // =======================
+		// =======================
+		// Signing and Verification
+		// =======================
 		describe("Signing Operations", () => {
 			describe("sign()", () => {
 				it("should return a signature as Uint8Array", async () => {
@@ -149,8 +148,8 @@ export function runKeyStoreBackendTests(
 				});
 			});
 
-      // Optional batch signing test - only run if batchSign is implemented
-      // This is a more advanced feature and may not be supported by all backends, so we allow it to be skipped via options
+			// Optional batch signing test - only run if batchSign is implemented
+			// This is a more advanced feature and may not be supported by all backends, so we allow it to be skipped via options
 			if (!skipOptional) {
 				describe("batchSign()", () => {
 					it("should sign multiple data items", async () => {
@@ -175,13 +174,13 @@ export function runKeyStoreBackendTests(
 			}
 		});
 
-    // =======================
-    // Optional Advanced Features
-    //
-    //
-    // xHD Wallet Operations (importSeed, deriveFromSeed)
-    //
-    // =======================
+		// =======================
+		// Optional Advanced Features
+		//
+		//
+		// xHD Wallet Operations (importSeed, deriveFromSeed)
+		//
+		// =======================
 
 		if (!skipOptional) {
 			describe("HD Wallet Operations", () => {
@@ -258,9 +257,9 @@ export function runKeyStoreBackendTests(
 				});
 			});
 
-      // =======================
-      // Encryption with Passphrase and Key Agreement (encryptWithKey, encryptData, deriveSharedSecret)
-      // =======================
+			// =======================
+			// Encryption with Passphrase and Key Agreement (encryptWithKey, encryptData, deriveSharedSecret)
+			// =======================
 
 			describe("Encryption Operations", () => {
 				describe("encryptWithKey() / decryptWithKey()", () => {
@@ -299,7 +298,7 @@ export function runKeyStoreBackendTests(
 						const secret = await backend.deriveSharedSecret(
 							id1,
 							key2.publicKey,
-              true
+							true,
 						);
 
 						expect(secret).toBeInstanceOf(Uint8Array);
@@ -319,12 +318,12 @@ export function runKeyStoreBackendTests(
 						const secret1 = await backend.deriveSharedSecret(
 							id1,
 							key2.publicKey,
-              true
+							true,
 						);
 						const secret2 = await backend.deriveSharedSecret(
 							id2,
 							key1.publicKey,
-              false
+							false,
 						);
 
 						expect(secret1).toEqual(secret2);
@@ -332,11 +331,11 @@ export function runKeyStoreBackendTests(
 				});
 			});
 
-      // =======================
-      // Audit Logging (logAuditEvent, getAuditLogs)
-      //
-      // Optional features, but gives the option to logs or persistent audit trails of key operations which can be important for security-sensitive applications
-      // =======================
+			// =======================
+			// Audit Logging (logAuditEvent, getAuditLogs)
+			//
+			// Optional features, but gives the option to logs or persistent audit trails of key operations which can be important for security-sensitive applications
+			// =======================
 
 			describe("Audit Operations", () => {
 				describe("logAuditEvent() / getAuditLogs()", () => {
@@ -383,11 +382,11 @@ export function runKeyStoreBackendTests(
 			});
 		}
 
-    // =======================
-    // Error Handling
-    //
-    // Tests to ensure that the backend properly throws errors for invalid operations, such as trying to access non-existent keys or providing invalid input data. Proper error handling is crucial for robustness and security.
-    // =======================
+		// =======================
+		// Error Handling
+		//
+		// Tests to ensure that the backend properly throws errors for invalid operations, such as trying to access non-existent keys or providing invalid input data. Proper error handling is crucial for robustness and security.
+		// =======================
 
 		describe("Error Handling", () => {
 			it("should throw when getting metadata for non-existent key", async () => {

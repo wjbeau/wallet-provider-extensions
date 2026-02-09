@@ -8,48 +8,42 @@ import {
 } from "@algorandfoundation/xhd-wallet-api";
 import {
 	crypto_generichash,
-	crypto_scalarmult,
-	crypto_scalarmult_ed25519_base_noclamp,
 	crypto_secretbox_easy,
 	crypto_secretbox_open_easy,
-	crypto_sign_ed25519_pk_to_curve25519,
-	crypto_sign_ed25519_sk_to_curve25519,
 } from "@algorandfoundation/xhd-wallet-api/dist/sumo.facade.js";
 import {
-	InMemoryAuditStorage,
-	InMemoryKeyStorage,
-	InMemorySeedStorage,
-} from "./storage.ts";
-import type {
-	AuditEvent,
-	AuditStorage,
-	DeriveOptions,
-	ExportOptions,
-	GenerateOptions,
-	KeyData,
-	KeyFormat,
-	KeyId,
-	KeyMetadata,
-	KeyOptions,
-	KeyStorage,
-	KeyStoreBackend,
-	SeedStorage,
-	StoredSeedData,
-} from "./types.ts";
-import {
+	type AuditEvent,
+	type AuditStorage,
+	type DeriveOptions,
+	type ExportOptions,
+	type GenerateOptions,
 	InvalidKeyDataError,
+	InvalidKeyFormatError,
+	type KeyData,
+	type KeyFormat,
 	KeyGenerationNotSupportedError,
+	type KeyId,
+	type KeyMetadata,
 	KeyNotFoundError,
+	type KeyOptions,
+	type KeyStorage,
+	type KeyStoreBackend,
+	type SeedStorage,
+	type StoredSeedData,
 } from "./types.ts";
 
 /**
  * Configuration options for XHDKeyStoreBackend
  */
 export interface XHDKeyStoreBackendOptions {
-	keyStorage?: KeyStorage;
-	seedStorage?: SeedStorage;
-	auditStorage?: AuditStorage;
+	keyStorage: KeyStorage;
+	seedStorage: SeedStorage;
+	auditStorage: AuditStorage;
 }
+
+// core
+// dnfs
+// evm -> algo
 
 /**
  * Extended Hierarchical Deterministic (HD) Key Store Backend
@@ -74,10 +68,10 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	private api = new XHDWalletAPI();
 	private dp256 = new DeterministicP256();
 
-	constructor(options?: XHDKeyStoreBackendOptions) {
-		this.keyStorage = options?.keyStorage ?? new InMemoryKeyStorage();
-		this.seedStorage = options?.seedStorage ?? new InMemorySeedStorage();
-		this.auditStorage = options?.auditStorage ?? new InMemoryAuditStorage();
+	constructor(options: XHDKeyStoreBackendOptions) {
+		this.keyStorage = options.keyStorage;
+		this.seedStorage = options.seedStorage;
+		this.auditStorage = options.auditStorage;
 	}
 
 	/**
@@ -135,9 +129,9 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * Ed25519 keys are 32-byte public keys + 64-byte private keys (includes public key)
 	 * P-256 keys use 33-byte compressed or 65-byte uncompressed public keys
 	 */
-	async import(data: KeyData, _format: KeyFormat): Promise<KeyId> {
+	async import(data: KeyData, format: KeyFormat): Promise<KeyId> {
 		if (!data.publicKey && !data.privateKey) {
-			throw new InvalidKeyDataError("publicKey or privateKey required");
+			throw new InvalidKeyFormatError("publicKey or privateKey required");
 		}
 
 		const isP256 = data.metadata.algorithm === "ES256";
@@ -269,15 +263,15 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 			);
 		}
 
-
-    // find rootKey by seedID
-    const seedId = key.metadata.customData.seedId as KeyId;
-    const seed = await this.seedStorage.get(seedId);
-    if (!seed) {
-      throw new KeyNotFoundError(`Seed with ID ${seedId} not found for signing`);
-    }
-    const rootKey = seed.rootKey;
-
+		// find rootKey by seedID
+		const seedId = key.metadata.customData.seedId as KeyId;
+		const seed = await this.seedStorage.get(seedId);
+		if (!seed) {
+			throw new KeyNotFoundError(
+				`Seed with ID ${seedId} not found for signing`,
+			);
+		}
+		const rootKey = seed.rootKey;
 
 		// Note: signData uses the rootKey to derive the signing key internally.
 		// The sensitive derived key is not exposed to us, so we can't clear it here.
@@ -574,11 +568,11 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	async deriveSharedSecret(
 		id: KeyId,
 		publicKey: Uint8Array,
-    meFirst: boolean,
+		meFirst: boolean,
 		_algorithm?: string,
 	): Promise<Uint8Array> {
-	  return new Uint8Array(0); // Placeholder implementation
-  }
+		return new Uint8Array(0); // Placeholder implementation
+	}
 
 	/**
 	 * Extracts the Ed25519 private key from a stored key
