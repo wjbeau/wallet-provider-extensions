@@ -31,10 +31,8 @@ import type {
 export class UnsafeTestOnlyKeyStorage implements KeyStorage {
 	private keys = new Map<string, StoredKeyData>();
 
-	async get(id: KeyId): Promise<StoredKeyData> {
-		const key = this.keys.get(id);
-		if (!key) throw new Error(`Key not found: ${id}`);
-		return key;
+	async get(id: KeyId): Promise<StoredKeyData | undefined> {
+		return this.keys.get(id);
 	}
 
 	async set(id: KeyId, data: StoredKeyData): Promise<void> {
@@ -78,10 +76,8 @@ export class UnsafeTestOnlyKeyStorage implements KeyStorage {
 export class UnsafeTestOnlySeedStorage implements SeedStorage {
 	private seeds = new Map<string, StoredSeedData>();
 
-	async get(id: KeyId): Promise<StoredSeedData> {
-		const seed = this.seeds.get(id);
-		if (!seed) throw new Error(`Seed not found: ${id}`);
-		return seed;
+	async get(id: KeyId): Promise<StoredSeedData | undefined> {
+		return this.seeds.get(id);
 	}
 
 	async set(id: KeyId, data: StoredSeedData): Promise<void> {

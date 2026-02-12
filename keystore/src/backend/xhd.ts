@@ -12,6 +12,10 @@ import {
 	crypto_secretbox_open_easy,
 } from "@algorandfoundation/xhd-wallet-api/dist/sumo.facade.js";
 import {
+	createKeystoreStorage,
+	type KeystoreConfig,
+} from "../storage/factory.ts";
+import {
 	type AuditEvent,
 	type AuditStorage,
 	type DeriveOptions,
@@ -71,6 +75,34 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 		this.keyStorage = options.keyStorage;
 		this.seedStorage = options.seedStorage;
 		this.auditStorage = options.auditStorage;
+	}
+
+	/**
+	 * Static factory method to create an XHDKeyStoreBackend instance
+	 * using the storage factory configuration.
+	 *
+	 * @example
+	 * ```typescript
+	 * // For testing only
+	 * const keystore = XHDKeyStoreBackend.create({ mode: 'test-only' });
+	 *
+	 * // For production
+	 * const keystore = XHDKeyStoreBackend.create({
+	 *   mode: 'wrapped',
+	 *   rawStorage: new AsyncStorageRaw(),
+	 *   keyWrapper: new KeychainWrapper(),
+	 *   seedWrapper: new SecureEnclaveWrapper()
+	 * });
+	 * ```
+	 */
+	static create(config?: KeystoreConfig): XHDKeyStoreBackend {
+		const { keyStorage, seedStorage, auditStorage } =
+			createKeystoreStorage(config);
+		return new XHDKeyStoreBackend({
+			keyStorage,
+			seedStorage,
+			auditStorage,
+		});
 	}
 
 	/**
@@ -173,7 +205,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 */
 	async export(id: KeyId, _options?: ExportOptions): Promise<KeyData> {
 		const key = await this.keyStorage.get(id);
-		if (!key) {
+		if (key === undefined) {
 			throw new KeyNotFoundError(id);
 		}
 
@@ -218,10 +250,10 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 */
 	async getMetadata(id: KeyId): Promise<KeyMetadata> {
 		const key = await this.keyStorage.get(id);
-		if (key) return { ...key.metadata };
+		if (key !== undefined) return { ...key.metadata };
 
 		const seed = await this.seedStorage.get(id);
-		if (seed) return { ...seed.metadata };
+		if (seed !== undefined) return { ...seed.metadata };
 
 		throw new KeyNotFoundError(id);
 	}
@@ -771,4 +803,28 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 
 		return Promise.all(ids.map((id, i) => this.sign(id, data[i])));
 	}
+}
+
+/**
+ * Convenience function to create a keystore backend with the given configuration.
+ *
+ * This is the RECOMMENDED way to create a keystore. It provides sensible defaults
+ * and guides developers toward secure patterns.
+ *
+ * @example
+ * ```typescript
+ * // For testing only - data lost when app closes
+ * const testKeystore = createKeyStore({ mode: 'test-only' });
+ *
+ * // For production - with platform-specific encrypted storage
+ * const prodKeystore = createKeyStore({
+ *   mode: 'wrapped',
+ *   rawStorage: new AsyncStorageRaw(),
+ *   keyWrapper: new KeychainWrapper(),
+ *   seedWrapper: new SecureEnclaveWrapper()
+ * });
+ * ```
+ */
+export function createKeyStore(config?: KeystoreConfig): XHDKeyStoreBackend {
+	return XHDKeyStoreBackend.create(config);
 }

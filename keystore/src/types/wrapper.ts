@@ -32,5 +32,14 @@ export interface SeedWrapper extends Wrapper<StoredSeedData> {}
  */
 export interface AuditWrapper extends Wrapper<AuditEvent> {}
 
-// Note: RawBytesStorage and the concrete Wrapper type are defined in storage/wrapped.ts
-// to avoid duplicate exports
+/**
+ * Storage backend interface for raw bytes.
+ * This is what the wrapper storage uses internally to store encrypted data.
+ */
+export interface RawBytesStorage {
+	get(id: import("./core.ts").KeyId): Promise<Uint8Array | undefined>;
+	set(id: import("./core.ts").KeyId, data: Uint8Array): Promise<void>;
+	delete(id: import("./core.ts").KeyId): Promise<boolean>;
+	list(): Promise<import("./core.ts").KeyId[]>;
+	getAll(): Promise<Uint8Array[]>;
+}

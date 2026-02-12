@@ -4,22 +4,13 @@ import type {
 	AuditWrapper,
 	KeyId,
 	KeyWrapper,
+	RawBytesStorage,
 	SeedWrapper,
 	StoredKeyData,
 	StoredSeedData,
 } from "../types/index.ts";
 
-/**
- * Raw bytes storage interface for wrapped data.
- * This is the underlying storage that wrapped storage uses.
- */
-export interface RawBytesStorage {
-	get(id: KeyId): Promise<Uint8Array>;
-	set(id: KeyId, data: Uint8Array): Promise<void>;
-	delete(id: KeyId): Promise<boolean>;
-	list(): Promise<KeyId[]>;
-	getAll(): Promise<Uint8Array[]>;
-}
+export type { RawBytesStorage };
 
 /**
  * Generic wrapper type for storage operations.
@@ -41,8 +32,9 @@ export class WrappedStorage<T> {
 		private wrapper: DataWrapper<T>,
 	) {}
 
-	async get(id: KeyId): Promise<T> {
+	async get(id: KeyId): Promise<T | undefined> {
 		const wrapped = await this.storage.get(id);
+		if (!wrapped) return undefined;
 		return this.wrapper.unwrap(wrapped);
 	}
 
@@ -90,10 +82,8 @@ export class WrappedSeedStorage extends WrappedStorage<StoredSeedData> {
 export class InMemoryRawStorage implements RawBytesStorage {
 	private data = new Map<string, Uint8Array>();
 
-	async get(id: KeyId): Promise<Uint8Array> {
-		const value = this.data.get(id);
-		if (!value) throw new Error(`Data not found: ${id}`);
-		return value;
+	async get(id: KeyId): Promise<Uint8Array | undefined> {
+		return this.data.get(id);
 	}
 
 	async set(id: KeyId, data: Uint8Array): Promise<void> {

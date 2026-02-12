@@ -5,7 +5,7 @@ import type { AuditEvent, KeyId } from "./core.ts";
  * Used for keys, seeds, or any other stored entity.
  */
 export interface Storage<T> {
-	get(id: KeyId): Promise<T>;
+	get(id: KeyId): Promise<T | undefined>;
 	set(id: KeyId, data: T): Promise<void>;
 	delete(id: KeyId): Promise<boolean>;
 	list(): Promise<KeyId[]>;
