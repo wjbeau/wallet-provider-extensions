@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { KeyStoreBackend } from "../types.ts";
+import type { KeyStoreBackend } from "../types/index.ts";
 
 export type BackendFactory = () => KeyStoreBackend | Promise<KeyStoreBackend>;
 
@@ -44,7 +44,7 @@ export function runKeyStoreBackendTests(
 				it("should include derived keys in the list", async () => {
 					const id = await createTestKey();
 					const list = await backend.list();
-					const found = list.find((k) => k.id === id);
+					const found = list.find((k: { id: string }) => k.id === id);
 					expect(found).toBeDefined();
 				});
 			});
@@ -76,7 +76,7 @@ export function runKeyStoreBackendTests(
 					const id = await createTestKey();
 					await backend.remove(id);
 					const list = await backend.list();
-					const found = list.find((k) => k.id === id);
+					const found = list.find((k: { id: string }) => k.id === id);
 					expect(found).toBeUndefined();
 				});
 			});
@@ -354,7 +354,7 @@ export function runKeyStoreBackendTests(
 						const logs = await backend.getAuditLogs();
 
 						expect(Array.isArray(logs)).toBe(true);
-						const found = logs.find((e) => e.id === event.id);
+						const found = logs.find((e: { id: string }) => e.id === event.id);
 						expect(found).toBeDefined();
 						expect(found?.operation).toBe("sign");
 					});
@@ -376,7 +376,9 @@ export function runKeyStoreBackendTests(
 						});
 
 						const logs = await backend.getAuditLogs({ operation: "sign" });
-						expect(logs.every((e) => e.operation === "sign")).toBe(true);
+						expect(
+							logs.every((e: { operation: string }) => e.operation === "sign"),
+						).toBe(true);
 					});
 				});
 			});

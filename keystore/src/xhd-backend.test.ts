@@ -1,10 +1,10 @@
+import { XHDKeyStoreBackend } from "./backend/index.ts";
 import {
 	InMemoryAuditStorage,
 	InMemoryKeyStorage,
 	InMemorySeedStorage,
-} from "./storage.ts";
+} from "./storage/index.ts";
 import { runKeyStoreBackendTests } from "./testing/index.ts";
-import { XHDKeyStoreBackend } from "./xhd-backend.ts";
 
 runKeyStoreBackendTests(
 	() =>

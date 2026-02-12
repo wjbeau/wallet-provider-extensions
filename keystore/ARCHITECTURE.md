@@ -158,57 +158,417 @@ The architecture supports a **defense-in-depth** approach where you can assign d
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Secure Storage Implementation
+## Secure Storage with Wrapping Layer
 
-The keystore storage interfaces work with plaintext data. **For production use, you should implement encryption at rest** using your platform's secure storage capabilities. This section shows how to implement encrypted storage for different platforms.
+The keystore now includes a **wrapping layer** architecture that separates:
+1. **Where** data is stored (storage backend - PostgreSQL, Filesystem, etc.)
+2. **How** data is encrypted (wrapper - AES-GCM, ChaCha20, platform keystore, etc.)
 
-### Why Encrypt at Rest?
+This gives integrators full control over both storage location and encryption method.
 
-Even if your device is compromised, encrypted storage ensures:
-- Keys remain protected by the OS secure enclave
-- Private keys are never written to disk in plaintext
-- Each platform uses its native security features
+### Why a Wrapping Layer?
 
-### Pattern: Encrypted Storage Wrapper
+Traditional encrypted storage mixes both concerns in one class:
+```typescript
+// OLD: Storage and encryption mixed together
+class EncryptedPostgresStorage implements KeyStorage {
+  // Handles SQL queries AND encryption logic
+}
+```
 
-The recommended approach is to implement the `KeyStorage`/`SeedStorage` interface with encryption:
+With the wrapping layer, these are separate composable components:
+```typescript
+// NEW: Separate WHERE from HOW
+const postgres = new PostgresRawStorage();     // WHERE
+const aesWrapper = new AESGCMKeyWrapper();      // HOW
+const secureStorage = new WrappedKeyStorage(postgres, aesWrapper);
+```
+
+Benefits:
+- **Mix and match**: Any storage + any wrapper
+- **Testable**: Test storage and encryption independently
+- **Flexible**: Swap encryption without changing storage code
+- **Composible**: Chain wrappers (compress → encrypt → store)
+
+### Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    WRAPPING ARCHITECTURE                      │
+├──────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Application                                                  │
+│      │                                                        │
+│      ▼                                                        │
+│  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐ │
+│  │   Backend   │───▶│   Storage    │◀───│   Raw Storage    │ │
+│  │             │    │   Wrapper    │    │   (PostgreSQL,   │ │
+│  │XHDKeyStore  │    │              │    │   Filesystem,    │ │
+│  │  Backend    │    │  WrappedKey  │    │   Redis, etc.)   │ │
+│  │             │    │   Storage    │    │                  │ │
+│  └─────────────┘    └──────────────┘    └──────────────────┘ │
+│                            │                                  │
+│                            │ wraps/unwraps                    │
+│                            ▼                                  │
+│                     ┌──────────────┐                          │
+│                     │   Wrapper    │                          │
+│                     │              │                          │
+│                     │  AES-GCM,    │                          │
+│                     │  ChaCha20,   │                          │
+│                     │  Platform    │                          │
+│                     │  Keystore    │                          │
+│                     └──────────────┘                          │
+│                                                               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Wrapper Interfaces
+
+The keystore provides three wrapper interfaces:
 
 ```typescript
-class EncryptedKeyStorage implements KeyStorage {
-  constructor(
-    private backend: KeyStorage,  // e.g., AsyncStorage, FileStorage
-    private options: {
-      encrypt: (data: Uint8Array) => Promise<Uint8Array>
-      decrypt: (data: Uint8Array) => Promise<Uint8Array>
-    }
-  ) {}
-  
-  async get(id: KeyId): Promise<StoredKeyData | undefined> {
-    const encrypted = await this.backend.get(id)
-    if (!encrypted) return undefined
-    
-    // Decrypt private key before returning
-    return {
-      ...encrypted,
-      privateKey: encrypted.privateKey 
-        ? await this.options.decrypt(encrypted.privateKey)
-        : undefined
-    }
-  }
-  
-  async set(id: KeyId, data: StoredKeyData): Promise<void> {
-    // Encrypt private key before storing
-    const encrypted = {
-      ...data,
-      privateKey: data.privateKey 
-        ? await this.options.encrypt(data.privateKey)
-        : undefined
-    }
-    await this.backend.set(id, encrypted)
-  }
-  
-  // ... other methods pass through to backend
+// For encrypting/decrypting key data
+interface KeyWrapper {
+  wrap(data: StoredKeyData): Promise<Uint8Array>
+  unwrap(wrapped: Uint8Array): Promise<StoredKeyData>
 }
+
+// For encrypting/decrypting seed data  
+interface SeedWrapper {
+  wrap(data: StoredSeedData): Promise<Uint8Array>
+  unwrap(wrapped: Uint8Array): Promise<StoredSeedData>
+}
+
+// For encrypting/decrypting audit events
+interface AuditWrapper {
+  wrap(event: AuditEvent): Promise<Uint8Array>
+  unwrap(wrapped: Uint8Array): Promise<AuditEvent>
+}
+```
+
+### Using Wrapped Storage
+
+The `WrappedKeyStorage` and `WrappedSeedStorage` classes combine any storage with any wrapper:
+
+```typescript
+import { 
+  XHDKeyStoreBackend,
+  WrappedKeyStorage,
+  WrappedSeedStorage,
+  InMemoryRawStorage 
+} from "@algorandfoundation/keystore"
+
+// 1. Define WHERE data is stored
+const keyStorageBackend = new PostgresRawStorage({
+  connectionString: process.env.DATABASE_URL
+})
+
+const seedStorageBackend = new HSMRawStorage({
+  hsmUrl: process.env.HSM_URL
+})
+
+// 2. Define HOW data is encrypted
+const keyWrapper = new AESGCMKeyWrapper({
+  masterKey: await loadMasterKeyFromKeychain()
+})
+
+const seedWrapper = new SecureEnclaveWrapper() // iOS/Android secure enclave
+
+// 3. Combine them
+const keyStorage = new WrappedKeyStorage(keyStorageBackend, keyWrapper)
+const seedStorage = new WrappedSeedStorage(seedStorageBackend, seedWrapper)
+
+// 4. Use with backend
+const backend = new XHDKeyStoreBackend({
+  keyStorage,
+  seedStorage,
+  auditStorage: new InMemoryAuditStorage()
+})
+```
+
+### Raw Storage Interface
+
+Raw storage backends work with `Uint8Array` instead of structured objects:
+
+```typescript
+interface RawBytesStorage {
+  get(id: KeyId): Promise<Uint8Array | undefined>
+  set(id: KeyId, data: Uint8Array): Promise<void>
+  delete(id: KeyId): Promise<boolean>
+  list(): Promise<KeyId[]>
+  getAll(): Promise<Uint8Array[]>
+}
+```
+
+This is simpler to implement than `KeyStorage` because you don't handle object serialization.
+
+### Example: React Native with iOS Keychain / Android Keystore
+
+```typescript
+import * as Keychain from 'react-native-keychain';
+import { 
+  WrappedKeyStorage, 
+  WrappedSeedStorage,
+  InMemoryRawStorage 
+} from '@algorandfoundation/keystore';
+
+// Custom wrapper using platform secure enclave
+class SecureEnclaveKeyWrapper implements KeyWrapper {
+  async wrap(data: StoredKeyData): Promise<Uint8Array> {
+    // Serialize to JSON then encrypt
+    const json = JSON.stringify({
+      metadata: data.metadata,
+      publicKey: Buffer.from(data.publicKey).toString('base64'),
+      privateKey: data.privateKey 
+        ? Buffer.from(data.privateKey).toString('base64')
+        : undefined,
+      curve: data.curve
+    });
+    
+    // Encrypt using iOS Keychain / Android Keystore
+    const encrypted = await NativeCrypto.encryptWithKeychain(
+      new TextEncoder().encode(json)
+    );
+    
+    return encrypted;
+  }
+  
+  async unwrap(wrapped: Uint8Array): Promise<StoredKeyData> {
+    // Decrypt using platform secure enclave
+    const decrypted = await NativeCrypto.decryptWithKeychain(wrapped);
+    const json = new TextDecoder().decode(decrypted);
+    const parsed = JSON.parse(json);
+    
+    return {
+      metadata: parsed.metadata,
+      publicKey: Buffer.from(parsed.publicKey, 'base64'),
+      privateKey: parsed.privateKey 
+        ? Buffer.from(parsed.privateKey, 'base64')
+        : undefined,
+      curve: parsed.curve
+    };
+  }
+}
+
+// Usage
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new WrappedKeyStorage(
+    new InMemoryRawStorage(), // Could be AsyncStorage for metadata
+    new SecureEnclaveKeyWrapper()
+  ),
+  seedStorage: new WrappedSeedStorage(
+    new InMemoryRawStorage(),
+    new SecureEnclaveKeyWrapper() // Extra security for seeds
+  ),
+  auditStorage: new InMemoryAuditStorage()
+});
+```
+
+### Example: Web with Web Crypto API
+
+```typescript
+export class WebCryptoKeyWrapper implements KeyWrapper {
+  private masterKey: CryptoKey;
+  
+  async wrap(data: StoredKeyData): Promise<Uint8Array> {
+    // Serialize data
+    const serialized = this.serialize(data);
+    
+    // Generate random IV
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    // Encrypt with AES-GCM
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      this.masterKey,
+      serialized
+    );
+    
+    // Combine IV + ciphertext
+    const result = new Uint8Array(12 + encrypted.byteLength);
+    result.set(iv, 0);
+    result.set(new Uint8Array(encrypted), 12);
+    
+    return result;
+  }
+  
+  async unwrap(wrapped: Uint8Array): Promise<StoredKeyData> {
+    // Extract IV and ciphertext
+    const iv = wrapped.slice(0, 12);
+    const ciphertext = wrapped.slice(12);
+    
+    // Decrypt
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      this.masterKey,
+      ciphertext
+    );
+    
+    // Deserialize
+    return this.deserialize(new Uint8Array(decrypted));
+  }
+  
+  private serialize(data: StoredKeyData): Uint8Array {
+    // Implement serialization
+  }
+  
+  private deserialize(data: Uint8Array): StoredKeyData {
+    // Implement deserialization  
+  }
+}
+
+// Usage with IndexedDB
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new WrappedKeyStorage(
+    new IndexedDBRawStorage('keystore', 'keys'),
+    new WebCryptoKeyWrapper(masterKey)
+  ),
+  seedStorage: new WrappedSeedStorage(
+    new IndexedDBRawStorage('keystore', 'seeds'),
+    new WebCryptoKeyWrapper(masterKey)
+  ),
+  auditStorage: new InMemoryAuditStorage()
+});
+```
+
+### Example: Node.js with OS Keychain
+
+```typescript
+import keytar from 'keytar';
+import { WrappedKeyStorage, InMemoryRawStorage } from '@algorandfoundation/keystore';
+
+// Wrapper that stores encryption key in OS keychain
+class NodeKeychainWrapper implements KeyWrapper {
+  async wrap(data: StoredKeyData): Promise<Uint8Array> {
+    const serialized = Buffer.from(JSON.stringify({
+      metadata: data.metadata,
+      publicKey: data.publicKey.toString('base64'),
+      privateKey: data.privateKey?.toString('base64'),
+      curve: data.curve
+    }));
+    
+    // The encryption key is managed by OS (macOS Keychain, Windows Credential Manager, etc.)
+    return await NativeCrypto.encryptWithOSKeychain(serialized);
+  }
+  
+  async unwrap(wrapped: Uint8Array): Promise<StoredKeyData> {
+    const decrypted = await NativeCrypto.decryptWithOSKeychain(wrapped);
+    const parsed = JSON.parse(Buffer.from(decrypted).toString());
+    
+    return {
+      metadata: parsed.metadata,
+      publicKey: Buffer.from(parsed.publicKey, 'base64'),
+      privateKey: parsed.privateKey 
+        ? Buffer.from(parsed.privateKey, 'base64')
+        : undefined,
+      curve: parsed.curve
+    };
+  }
+}
+
+// Usage
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new WrappedKeyStorage(
+    new FileRawStorage('./keys/'),  // Raw bytes stored in files
+    new NodeKeychainWrapper()        // But encrypted with OS keychain
+  ),
+  seedStorage: new WrappedSeedStorage(
+    new FileRawStorage('./seeds/'),
+    new NodeKeychainWrapper()
+  ),
+  auditStorage: new FileAuditStorage('./audit.log')
+});
+```
+
+### Chain of Responsibility Pattern
+
+You can chain multiple wrappers for layered security:
+
+```typescript
+// Compression wrapper
+class CompressionWrapper implements KeyWrapper {
+  constructor(private inner: KeyWrapper) {}
+  
+  async wrap(data: StoredKeyData): Promise<Uint8Array> {
+    const serialized = serialize(data);
+    const compressed = zlib.compress(serialized);
+    return this.inner.wrap({ ...data, privateKey: compressed });
+  }
+  
+  async unwrap(wrapped: Uint8Array): Promise<StoredKeyData> {
+    const data = await this.inner.unwrap(wrapped);
+    const decompressed = zlib.decompress(data.privateKey!);
+    return deserialize(decompressed);
+  }
+}
+
+// Usage: compress → encrypt → store
+const storage = new WrappedKeyStorage(
+  new PostgresRawStorage(),
+  new CompressionWrapper(
+    new AESGCMKeyWrapper(masterKey)
+  )
+);
+```
+
+### ⚠️ Security Warning
+
+**NEVER use in-memory storage for production keys or seeds!**
+
+The `UnsafeTestOnlyKeyStorage` and `UnsafeTestOnlySeedStorage` classes are provided only for:
+- Unit tests
+- Development and demos  
+- CI/CD pipelines
+
+These storage classes are marked with:
+- **Warning comments** in the code
+- **@deprecated** JSDoc tags
+- **Renamed** to include "UnsafeTestOnly" prefix
+
+**Why they're dangerous:**
+- Data exists in plaintext in memory
+- Data is lost when app closes
+- No encryption at rest
+- No protection from memory dumps
+
+**For production, you must use encrypted storage:**
+
+```typescript
+// ❌ WRONG - In-memory storage for production
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new UnsafeTestOnlyKeyStorage(),  // ⚠️ TEST ONLY!
+  seedStorage: new UnsafeTestOnlySeedStorage(), // ⚠️ TEST ONLY!
+  auditStorage: new InMemoryAuditStorage()
+});
+
+// ✅ CORRECT - Encrypted storage for production
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new WrappedKeyStorage(
+    new PostgresRawStorage(),
+    new AESGCMKeyWrapper(masterKey)
+  ),
+  seedStorage: new WrappedSeedStorage(
+    new SecureEnclaveRawStorage(),
+    new SecureEnclaveWrapper()
+  ),
+  auditStorage: new FileAuditStorage("./audit.log")
+});
+```
+
+### Backward Compatibility
+
+The old names `InMemoryKeyStorage` and `InMemorySeedStorage` are still exported as aliases but marked as deprecated. They will be removed in a future version.
+
+Or implement `KeyStorage` directly with built-in encryption (the old pattern still works):
+
+```typescript
+class MyCustomStorage implements KeyStorage {
+  // Your existing implementation
+}
+
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new MyCustomStorage()  // Still works!
+});
 ```
 
 ### Example: React Native with iOS Keychain / Android Keystore
@@ -384,9 +744,42 @@ const signature = await backend.sign(keyId, data);
 - **Memory is automatically cleared** - backend handles cleanup after cryptographic operations
 - **No changes needed to backend** - just implement the storage interface with encryption
 
+## Code Organization
+
+The keystore is organized by feature/domain for clarity and maintainability:
+
+```
+src/
+├── index.ts              # Main exports - aggregates all modules
+├── types/                # Type definitions
+│   ├── index.ts         # Re-exports all types
+│   ├── core.ts          # Core types (KeyId, KeyData, KeyMetadata, options)
+│   ├── storage.ts       # Storage interfaces (Storage<T>, StoredKeyData)
+│   ├── wrapper.ts       # Wrapper interfaces (Wrapper<T>, KeyWrapper)
+│   ├── backend.ts       # Backend interfaces (KeyStoreBackend)
+│   └── errors.ts        # Error classes (KeyStoreError, KeyNotFoundError)
+├── storage/             # Storage implementations
+│   ├── index.ts         # Re-exports all storage
+│   ├── memory.ts        # In-memory storage implementations
+│   └── wrapped.ts       # Wrapped storage with encryption layer
+├── backend/             # Backend implementations
+│   ├── index.ts         # Re-exports all backends
+│   └── xhd.ts          # XHDKeyStoreBackend implementation
+├── testing/             # Test utilities
+│   └── index.ts         # Test helpers and conformance tests
+└── ipc/                 # IPC types for cross-process communication
+    └── index.ts         # IPC request/response types
+```
+
+**Benefits of this structure:**
+- **Separation of concerns**: Types, storage, and backend logic are separated
+- **Discoverability**: Easy to find related code by feature/domain
+- **Scalable**: Easy to add new features (wallet/, crypto/, etc.)
+- **Tree-shaking**: Better bundle optimization with explicit exports
+
 ## Core Components
 
-### 1. KeyStoreBackend Interface
+### 1. KeyStoreBackend Interface (types/backend.ts)
 
 The `KeyStoreBackend` is the main contract that defines what a keystore must do. Think of it as a "key manager" that handles:
 
@@ -406,7 +799,7 @@ interface KeyStoreBackend {
 }
 ```
 
-### 2. XHDKeyStoreBackend
+### 2. XHDKeyStoreBackend (backend/xhd.ts)
 
 The `XHDKeyStoreBackend` is the primary implementation that supports:
 
@@ -501,14 +894,20 @@ interface AuditStorage {
 
 ## Integration Patterns
 
-### Pattern 1: Basic In-Memory (Development/Testing)
+### Pattern 1: Basic In-Memory (Development/Testing) ⚠️ TEST ONLY
 
-Simplest setup with all data in memory (not persistent):
+**WARNING**: This pattern uses `UnsafeTestOnlyKeyStorage` and `UnsafeTestOnlySeedStorage`.
+Data exists only in memory and is lost when the app closes. Keys are stored in plaintext.
+
+**🚫 NEVER use for production wallets or real funds!**
 
 ```typescript
-import { XHDKeyStoreBackend } from "@algorandfoundation/keystore"
+import { XHDKeyStoreBackend, UnsafeTestOnlyKeyStorage, UnsafeTestOnlySeedStorage } from "@algorandfoundation/keystore"
 
-const backend = new XHDKeyStoreBackend()
+const backend = new XHDKeyStoreBackend({
+  keyStorage: new UnsafeTestOnlyKeyStorage(),
+  seedStorage: new UnsafeTestOnlySeedStorage()
+})
 
 // Import a seed
 const seedId = await backend.importSeed(seedBytes, { name: "My Wallet" })
@@ -524,7 +923,7 @@ const keyId = await backend.deriveFromSeed(
 const signature = await backend.sign(keyId, transactionBytes)
 ```
 
-**Use case**: Unit tests, development, temporary sessions
+**Use case**: Unit tests, development, temporary sessions only
 
 ### Pattern 2: Persistent File Storage
 
@@ -552,12 +951,15 @@ Store seeds in hardware, keys in software:
 
 ```typescript
 const backend = new XHDKeyStoreBackend({
-  keyStorage: new InMemoryKeyStorage(), // Fast access for derived keys
-  seedStorage: new HsmSeedStorage({      // Seeds in hardware
+  keyStorage: new WrappedKeyStorage(
+    new RedisRawStorage(),                 // Fast access for derived keys
+    new AESGCMWrapper(encryptionKey)       // Still encrypted at rest
+  ),
+  seedStorage: new HsmSeedStorage({        // Seeds in hardware
     hsmUrl: process.env.HSM_URL,
     credentials: hsmCredentials
   }),
-  auditStorage: new SplunkAuditStorage({ // Enterprise logging
+  auditStorage: new SplunkAuditStorage({   // Enterprise logging
     endpoint: process.env.SPLUNK_URL
   })
 })

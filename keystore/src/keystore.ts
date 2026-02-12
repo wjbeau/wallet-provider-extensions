@@ -1,5 +1,5 @@
 //import type { Extension, ExtensionOptions, Provider, ProviderOptions } from '@algorandfoundation/wallet-provider'
-import type { KeyStoreBackend } from "./types.ts";
+import type { KeyStoreBackend } from "./types/index.ts";
 
 export type keyStoreExtension = {
 	keystore: KeyStoreBackend;

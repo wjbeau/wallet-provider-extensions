@@ -30,20 +30,19 @@ import {
 	type KeyStoreBackend,
 	type SeedStorage,
 	type StoredSeedData,
-} from "./types.ts";
+} from "../types/index.ts";
 
 /**
  * Configuration options for XHDKeyStoreBackend
  */
 export interface XHDKeyStoreBackendOptions {
+	/** Storage for keys (derived or imported). Can be wrapped with encryption. */
 	keyStorage: KeyStorage;
+	/** Storage for seeds (master HD seeds). Can be wrapped with encryption. */
 	seedStorage: SeedStorage;
+	/** Storage for audit logs. */
 	auditStorage: AuditStorage;
 }
-
-// core
-// dnfs
-// evm -> algo
 
 /**
  * Extended Hierarchical Deterministic (HD) Key Store Backend
@@ -205,8 +204,12 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 			this.seedStorage.getAll(),
 		]);
 		return [
-			...keys.map((k) => ({ ...k.metadata })),
-			...seeds.map((s) => ({ ...s.metadata })),
+			...keys.map((k: { metadata: (typeof keys)[0]["metadata"] }) => ({
+				...k.metadata,
+			})),
+			...seeds.map((s: { metadata: (typeof seeds)[0]["metadata"] }) => ({
+				...s.metadata,
+			})),
 		];
 	}
 
@@ -345,8 +348,11 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * Imports a BIP32 seed for HD wallet derivation
 	 *
 	 * The seed is the root of the HD wallet tree. From this single seed,
-	 * you can derive all your keys deterministically. This is typically
-	 * generated from a BIP39 mnemonic (12-24 words).
+	 * you can deterministically derive an unlimited tree of child keys using paths
+	 * like "m/44'/283'/0'/0'/0'". This means:
+	 * - Backup is just the seed (usually as a 12-24 word mnemonic)
+	 * - Same seed always produces the same keys
+	 * - Keys are organized hierarchically (accounts, addresses, etc.)
 	 *
 	 * We also generate a "derived main key" for P-256 deterministic keys,
 	 * which uses PBKDF2-like stretching for domain-specific key derivation.
