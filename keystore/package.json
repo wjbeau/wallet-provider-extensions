@@ -41,7 +41,7 @@
 		"lint:fix": "biome check --fix",
 		"docs": "typedoc",
 		"test": "vitest",
-		"release": "package-releaser"
+		"release": "npx package-releaser"
 	},
 	"author": "Algorand Foundation",
 	"license": "Apache-2.0",
