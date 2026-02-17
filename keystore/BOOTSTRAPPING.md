@@ -17,8 +17,6 @@ This ensures your private keys are never stored in React state or Redux stores.
 src/
 ├── providers/
 │   └── wallet-provider.tsx    # Provider with keystore extension
-├── stores/
-│   └── wallet-store.ts        # TanStack Store for UI state
 ├── storage/
 │   ├── async-storage.ts       # Raw bytes storage implementation
 │   └── keychain-wrapper.ts    # Encryption wrapper (iOS/Android secure enclave)
@@ -211,14 +209,14 @@ await syncKeysMetadata(keystore)
 // 2) Construct a Provider that is extended with the keystore extension
 const ProviderWithKeystore = Provider.withExtensions([WithKeyStore])
 
-export function WalletProviderWithKeystore({ children }: { children: React.ReactNode }) {
-  // 3) Instantiate the provider and pass the keystore backend to the extension via options
-  const provider = new ProviderWithKeystore({
+// 3) Instantiate the provider and pass the keystore backend to the extension via options
+const provider = new ProviderWithKeystore({
     api: {
-      keystore
+        keystore
     }
-  }) as ExtendedProvider
+}) as ExtendedProvider
 
+export function WalletProviderWithKeystore({ children }: { children: React.ReactNode }) {
   // 4) Add hooks to the keystore for logging or custom logic
   // These hooks are powered by 'before-after-hook'
   
