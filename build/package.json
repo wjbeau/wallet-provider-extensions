@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "main": "dist/bin.js",
-  "bin": "dist/bin.js",
+  "bin": {
+    "package-releaser": "dist/bin.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
   },
@@ -12,5 +14,11 @@
     "type": "git",
     "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git",
     "directory": "build"
+  },
+  "dependencies": {
+    "cosmiconfig": "^9.0.0",
+    "meow": "^14.0.0",
+    "read-pkg": "^10.1.0",
+    "semantic-release": "^25.0.3"
   }
 }
