@@ -4,20 +4,20 @@ import type { StoredKeyData, StoredSeedData } from "./storage.ts";
 /**
  * Generic wrapper interface for encrypting/decrypting data of type T.
  * This is the base interface used to provide a layer of security before data is sent to storage.
- * 
+ *
  * @template T - The type of data structure being wrapped.
  */
 export interface Wrapper<T> {
 	/**
 	 * Encrypts or encodes data into a raw byte array.
-	 * 
+	 *
 	 * @param data - The data structure to protect.
 	 * @returns The wrapped byte array.
 	 */
 	wrap(data: T): Promise<Uint8Array>;
 	/**
 	 * Decrypts or decodes data back into its original structure.
-	 * 
+	 *
 	 * @param wrapped - The wrapped byte array.
 	 * @returns The original data structure.
 	 */

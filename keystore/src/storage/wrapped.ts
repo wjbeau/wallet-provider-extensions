@@ -29,10 +29,7 @@ export type DataWrapper<T, U = Uint8Array> = {
 export class WrappedStorage<T> {
 	storage: RawBytesStorage;
 	wrapper: DataWrapper<T>;
-	constructor(
-		storage: RawBytesStorage,
-		wrapper: DataWrapper<T>,
-	) {
+	constructor(storage: RawBytesStorage, wrapper: DataWrapper<T>) {
 		this.storage = storage;
 		this.wrapper = wrapper;
 	}
@@ -115,10 +112,7 @@ export class WrappedAuditStorage implements AuditStorage {
 	storage: RawBytesStorage;
 	wrapper: AuditWrapper;
 
-	constructor(
-		storage: RawBytesStorage,
-		wrapper: AuditWrapper,
-	) {
+	constructor(storage: RawBytesStorage, wrapper: AuditWrapper) {
 		this.storage = storage;
 		this.wrapper = wrapper;
 	}
@@ -140,7 +134,8 @@ export class WrappedAuditStorage implements AuditStorage {
 		);
 		let result = all;
 		if (filter?.since) {
-			result = result.filter((e) => e.timestamp >= filter.since!);
+			const since = filter.since;
+			result = result.filter((e) => e.timestamp >= since);
 		}
 		if (filter?.operation) {
 			result = result.filter((e) => e.operation === filter.operation);

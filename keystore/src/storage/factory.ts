@@ -74,9 +74,9 @@ export interface KeystoreConfig {
  * ```
  */
 export function createKeystoreStorage(config: KeystoreConfig = {}): {
-    keyStorage: KeyStorage;
-    seedStorage: SeedStorage;
-    auditStorage: AuditStorage;
+	keyStorage: KeyStorage;
+	seedStorage: SeedStorage;
+	auditStorage: AuditStorage;
 } {
 	const mode = config.mode ?? "test-only";
 

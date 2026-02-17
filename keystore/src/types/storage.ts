@@ -3,7 +3,7 @@ import type { AuditEvent, KeyId } from "./core.ts";
 /**
  * Generic storage interface for typed data.
  * Used for keys, seeds, or any other stored entity.
- * 
+ *
  * @template T - The type of data being stored.
  */
 export interface Storage<T> {
@@ -67,7 +67,7 @@ export interface AuditStorage {
 	append(event: AuditEvent): Promise<void>;
 	/**
 	 * Lists audit events matching the filter.
-	 * 
+	 *
 	 * @param filter - Search criteria for audit events.
 	 */
 	list(filter?: { since?: Date; operation?: string }): Promise<AuditEvent[]>;

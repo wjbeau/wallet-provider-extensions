@@ -613,42 +613,6 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	}
 
 	/**
-	 * Extracts the Ed25519 private key from a stored key
-	 *
-	 * For HD keys: derives the child private key from the root key
-	 * For imported keys: returns a copy of the stored private key (safe to clear after use)
-	 */
-	//@ts-expect-error: This interface is marked as private but is not in use in this class.
-	private async getEd25519PrivateKey(key: {
-		privateKey?: Uint8Array;
-		rootKey?: Uint8Array;
-		context?: number;
-		account?: number;
-		keyIndex?: number;
-	}): Promise<Uint8Array> {
-		// Direct private key available (imported non-HD key)
-		// Return a copy so the caller can safely clear it without affecting stored data
-		if (key.privateKey) {
-			return new Uint8Array(key.privateKey);
-		}
-
-		// HD key - derive from root
-		if (key.rootKey && key.context !== undefined) {
-			const extendedPrivateKey = await this.api.deriveKey(
-				key.rootKey,
-				[key.context, key.account ?? 0, 0, key.keyIndex ?? 0],
-				true, // Return private key
-				BIP32DerivationType.Peikert,
-			);
-			// Extended format: 96 bytes total (kL || kR || chainCode)
-			// We only need the first 64 bytes (kL || kR) for signing/ECDH
-			return extendedPrivateKey.slice(0, 64);
-		}
-
-		throw new InvalidKeyDataError("No private key available");
-	}
-
-	/**
 	 * Encrypts data using a public key
 	 *
 	 * Uses NaCl's secretbox (XSalsa20 + Poly1305):

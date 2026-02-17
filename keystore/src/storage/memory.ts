@@ -119,7 +119,8 @@ export class InMemoryAuditStorage implements AuditStorage {
 	}): Promise<AuditEvent[]> {
 		let result = [...this.events];
 		if (filter?.since) {
-			result = result.filter((e) => e.timestamp >= filter.since!);
+			const since = filter.since;
+			result = result.filter((e) => e.timestamp >= since);
 		}
 		if (filter?.operation) {
 			result = result.filter((e) => e.operation === filter.operation);
@@ -135,9 +136,11 @@ export class InMemoryAuditStorage implements AuditStorage {
 /**
  * @deprecated Use {@link UnsafeTestOnlyKeyStorage}. This alias will be removed.
  */
-export const InMemoryKeyStorage: typeof UnsafeTestOnlyKeyStorage = UnsafeTestOnlyKeyStorage;
+export const InMemoryKeyStorage: typeof UnsafeTestOnlyKeyStorage =
+	UnsafeTestOnlyKeyStorage;
 
 /**
  * @deprecated Use {@link UnsafeTestOnlySeedStorage}. This alias will be removed.
  */
-export const InMemorySeedStorage: typeof UnsafeTestOnlySeedStorage = UnsafeTestOnlySeedStorage;
+export const InMemorySeedStorage: typeof UnsafeTestOnlySeedStorage =
+	UnsafeTestOnlySeedStorage;

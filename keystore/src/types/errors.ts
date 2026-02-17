@@ -2,11 +2,7 @@
  * Base error class for keystore operations.
  */
 export class KeyStoreError extends Error {
-	constructor(
-		message: string,
-		name: string,
-		cause?: Error,
-	) {
+	constructor(message: string, name: string, cause?: Error) {
 		super(message);
 		this.name = name;
 		if (cause) {

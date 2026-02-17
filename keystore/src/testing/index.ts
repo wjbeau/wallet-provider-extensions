@@ -24,11 +24,18 @@ export function runKeyStoreBackendTests(
 		});
 
 		async function createTestKey(index = 0) {
-			const seedId = await backend.importSeed!(TEST_SEED);
-			return backend.deriveFromSeed!(seedId, `m/44'/283'/0'/0'/${index}'`, {
+			const importSeed = backend.importSeed;
+			const deriveFromSeed = backend.deriveFromSeed;
+
+			if (!importSeed || !deriveFromSeed) {
+				throw new Error("importSeed or deriveFromSeed not supported");
+			}
+
+			const seedId = (await importSeed(TEST_SEED)) as string;
+			return (await deriveFromSeed(seedId, `m/44'/283'/0'/0'/${index}'`, {
 				algorithm: "EdDSA",
 				curve: "ed25519",
-			});
+			})) as string;
 		}
 
 		// =======================
@@ -42,7 +49,7 @@ export function runKeyStoreBackendTests(
 				});
 
 				it("should include derived keys in the list", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const list = await backend.list();
 					const found = list.find((k: { id: string }) => k.id === id);
 					expect(found).toBeDefined();
@@ -51,7 +58,7 @@ export function runKeyStoreBackendTests(
 
 			describe("getMetadata()", () => {
 				it("should return metadata for a derived key", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const metadata = await backend.getMetadata(id);
 					expect(metadata.id).toBe(id);
 					expect(metadata.type).toBe("hd-derived");
@@ -62,7 +69,7 @@ export function runKeyStoreBackendTests(
 
 			describe("export()", () => {
 				it("should export a key with publicKey and metadata", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const data = await backend.export(id);
 					expect(data.publicKey).toBeInstanceOf(Uint8Array);
 					expect(data.publicKey?.length).toBe(32);
@@ -73,7 +80,7 @@ export function runKeyStoreBackendTests(
 
 			describe("remove()", () => {
 				it("should remove a key", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					await backend.remove(id);
 					const list = await backend.list();
 					const found = list.find((k: { id: string }) => k.id === id);
@@ -83,7 +90,7 @@ export function runKeyStoreBackendTests(
 
 			describe("import()", () => {
 				it("should import a key and return a KeyId", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const exported = await backend.export(id);
 					const importedId = await backend.import(exported, "raw");
 					expect(typeof importedId).toBe("string");
@@ -98,7 +105,7 @@ export function runKeyStoreBackendTests(
 		describe("Signing Operations", () => {
 			describe("sign()", () => {
 				it("should return a signature as Uint8Array", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const data = new Uint8Array([1, 2, 3, 4, 5]);
 					const signature = await backend.sign(id, data);
 					expect(signature).toBeInstanceOf(Uint8Array);
@@ -106,14 +113,14 @@ export function runKeyStoreBackendTests(
 				});
 
 				it("should produce different signatures for different data", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const sig1 = await backend.sign(id, new Uint8Array([1, 2, 3]));
 					const sig2 = await backend.sign(id, new Uint8Array([4, 5, 6]));
 					expect(sig1).not.toEqual(sig2);
 				});
 
 				it("should produce consistent signatures for same data (deterministic)", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const data = new Uint8Array([1, 2, 3]);
 					const sig1 = await backend.sign(id, data);
 					const sig2 = await backend.sign(id, data);
@@ -123,7 +130,7 @@ export function runKeyStoreBackendTests(
 
 			describe("verify()", () => {
 				it("should verify a valid signature", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const data = new Uint8Array([1, 2, 3, 4, 5]);
 					const signature = await backend.sign(id, data);
 					const valid = await backend.verify(id, data, signature);
@@ -131,7 +138,7 @@ export function runKeyStoreBackendTests(
 				});
 
 				it("should reject an invalid signature", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const data = new Uint8Array([1, 2, 3, 4, 5]);
 					const badSignature = new Uint8Array(64).fill(0);
 					const valid = await backend.verify(id, data, badSignature);
@@ -139,7 +146,7 @@ export function runKeyStoreBackendTests(
 				});
 
 				it("should reject signature for different data", async () => {
-					const id = await createTestKey();
+					const id = (await createTestKey()) as string;
 					const data1 = new Uint8Array([1, 2, 3]);
 					const data2 = new Uint8Array([4, 5, 6]);
 					const signature = await backend.sign(id, data1);
@@ -155,8 +162,8 @@ export function runKeyStoreBackendTests(
 					it("should sign multiple data items", async () => {
 						if (!backend.batchSign) return;
 
-						const id1 = await createTestKey(0);
-						const id2 = await createTestKey(1);
+						const id1 = (await createTestKey(0)) as string;
+						const id2 = (await createTestKey(1)) as string;
 
 						const signatures = await backend.batchSign(
 							[id1, id2],
@@ -266,7 +273,7 @@ export function runKeyStoreBackendTests(
 					it("should round-trip encrypt/decrypt data", async () => {
 						if (!backend.encryptWithKey || !backend.decryptWithKey) return;
 
-						const id = await createTestKey();
+						const id = (await createTestKey()) as string;
 						const plaintext = new Uint8Array([1, 2, 3, 4, 5]);
 						const encrypted = await backend.encryptWithKey(id, plaintext);
 						const decrypted = await backend.decryptWithKey(id, encrypted);
@@ -290,8 +297,8 @@ export function runKeyStoreBackendTests(
 					it("should derive a shared secret", async () => {
 						if (!backend.deriveSharedSecret) return;
 
-						const id1 = await createTestKey(0);
-						const id2 = await createTestKey(1);
+						const id1 = (await createTestKey(0)) as string;
+						const id2 = (await createTestKey(1)) as string;
 
 						const key2 = await backend.export(id2);
 						if (!key2.publicKey) throw new Error("publicKey missing");
@@ -307,8 +314,8 @@ export function runKeyStoreBackendTests(
 					it("should derive same secret from both sides", async () => {
 						if (!backend.deriveSharedSecret) return;
 
-						const id1 = await createTestKey(0);
-						const id2 = await createTestKey(1);
+						const id1 = (await createTestKey(0)) as string;
+						const id2 = (await createTestKey(1)) as string;
 
 						const key1 = await backend.export(id1);
 						const key2 = await backend.export(id2);
