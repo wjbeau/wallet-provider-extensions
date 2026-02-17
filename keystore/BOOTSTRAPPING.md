@@ -31,36 +31,14 @@ src/
 ```typescript
 // stores/wallet-store.ts
 import { Store } from "@tanstack/react-store"
-import type { KeyMetadata } from "@algorandfoundation/keystore-extension"
-
-export interface WalletUIState {
-  // Metadata only - NO cryptographic material
-  keys: Array<{
-    id: string
-    name: string
-    type: "seed" | "key"
-    algorithm: string
-    createdAt: Date
-  }>
-  
-  // UI state
-  isLoading: boolean
-  error: string | null
-  selectedKeyId: string | null
-}
-
-export const walletStore = new Store<WalletUIState>({
-  keys: [],
-  isLoading: false,
-  error: null,
-  selectedKeyId: null
-})
+import type { KeyStoreBackend, KeyMetadata } from "@algorandfoundation/keystore/types"
+import {keyStore} from "@algorandfoundation/keystore/extension"
 
 // Helper to sync metadata from keystore to store
 export async function syncKeysMetadata(keystore: KeyStoreBackend) {
   const allKeys = await keystore.list()
-  
-  walletStore.setState(state => ({
+
+  keyStore.setState(state => ({
     ...state,
     keys: allKeys.map(meta => ({
       id: meta.id,
@@ -78,7 +56,7 @@ export async function syncKeysMetadata(keystore: KeyStoreBackend) {
 ```typescript
 // storage/async-storage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import type { RawBytesStorage } from "@algorandfoundation/keystore-extension"
+import type { RawBytesStorage } from "@algorandfoundation/keystore/storage"
 
 export class AsyncStorageRaw implements RawBytesStorage {
   async get(id: string): Promise<Uint8Array | undefined> {
@@ -117,7 +95,7 @@ export class AsyncStorageRaw implements RawBytesStorage {
 ```typescript
 // storage/keychain-wrapper.ts
 import * as RNKeychain from "react-native-keychain"
-import type { KeyWrapper, SeedWrapper, StoredKeyData, StoredSeedData } from "@algorandfoundation/keystore-extension"
+import type { KeyWrapper, SeedWrapper, StoredKeyData, StoredSeedData } from "@algorandfoundation/keystore/types"
 
 // Keys: Use iOS Keychain / Android Keystore
 export class ReactNativeKeychainWrapper implements KeyWrapper {
@@ -205,7 +183,9 @@ export class ReactNativeSecureEnclaveWrapper implements SeedWrapper {
 // providers/wallet-provider.tsx
 import { createContext, useContext } from "react"
 import { Provider, type WalletProvider } from "@algorandfoundation/wallet-provider"
-import { createKeyStore, WithKeystore, type KeyStoreBackend } from "@algorandfoundation/keystore-extension"
+import { createKeyStore } from "@algorandfoundation/keystore/backend"
+import { WithKeyStore, keyStore } from "@algorandfoundation/keystore/extension"
+import type { KeyStoreBackend } from "@algorandfoundation/keystore/types"
 import { walletStore, syncKeysMetadata } from "../stores/wallet-store"
 import { AsyncStorageRaw } from "../storage/async-storage"
 import { ReactNativeKeychainWrapper, ReactNativeSecureEnclaveWrapper } from "../storage/keychain-wrapper"
@@ -225,8 +205,11 @@ const keystore = createKeyStore({
   seedWrapper: new ReactNativeSecureEnclaveWrapper()
 })
 
-// 2) Construct a Provider that is extended with the WithKeystore extension
-const ProviderWithKeystore = Provider.withExtensions([WithKeystore])
+// Then bootstrap the keystore with existing keys
+await syncKeysMetadata(keystore)
+
+// 2) Construct a Provider that is extended with the keystore extension
+const ProviderWithKeystore = Provider.withExtensions([WithKeyStore])
 
 export function WalletProviderWithKeystore({ children }: { children: React.ReactNode }) {
   // 3) Instantiate the provider and pass the keystore backend to the extension via options
@@ -280,8 +263,8 @@ export function useWallet() {
   const context = useContext(WalletContext)
   if (!context) throw new Error("useWallet must be used within WalletProviderWithKeystore")
 
-  const keys = useStore(walletStore, (state)=> state.keys)
-  const status = useStore(walletStore, (state)=> state.status)
+  const keys = useStore(keyStore, (state)=> state.keys)
+  const status = useStore(keyStore, (state)=> state.status)
     
   return {...context, keys, status}
 }
@@ -292,7 +275,6 @@ export function useWallet() {
 ```typescript
 // screens/WalletScreen.tsx
 import { View, Button, Text, FlatList } from "react-native"
-import { useStore } from "@tanstack/react-store"
 import { useWallet } from "../providers/wallet-provider"
 import { walletStore } from "../stores/wallet-store"
 
@@ -307,11 +289,14 @@ export function WalletScreen() {
       // Generate seed and derive first address
       const seedId = await keystore.importSeed(crypto.getRandomValues(new Uint8Array(32)))
       const keyId = await keystore.deriveFromSeed(seedId, "m/44'/283'/0'/0/0")
+        setSelectedKeyId(keyId)
     } catch (error) {
       console.log("Something went wrong:", error)
     }
   }
   
+  // Note: the extension could provide the active key directly
+  // Note: This could form into an Accounts extension that handles signing transactions via the KMS
   const handleSign = async () => {
     if (!selectedKeyId) return
     
@@ -353,7 +338,8 @@ For backend/CLI tools with file-based encrypted storage:
 
 ```typescript
 // server/keystore-setup.ts
-import { createKeyStore } from "@algorandfoundation/keystore-extension"
+import { createKeyStore } from "@algorandfoundation/keystore/backend"
+import type { KeyWrapper, SeedWrapper, RawBytesStorage } from "@algorandfoundation/keystore/types"
 import * as fs from "fs/promises"
 import * as path from "path"
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "crypto"

@@ -5,10 +5,10 @@
  * with the provider pattern in a React Native app.
  */
 
-import { createKeyStore, XHDKeyStoreBackend } from "./backend/xhd.ts";
-import type { KeystoreConfig } from "./storage/factory.ts";
-import type { RawBytesStorage } from "./storage/wrapped.ts";
-import type { KeyWrapper, SeedWrapper } from "./types/index.ts";
+import { createKeyStore, XHDKeyStoreBackend } from "../src/backend/xhd.ts";
+import type { KeystoreConfig } from "../src/storage/factory.ts";
+import type { RawBytesStorage } from "../src/index.ts";
+import type { KeyWrapper, SeedWrapper } from "../src/index.ts";
 
 // ============================================================================
 // Example 1: Testing/Development (unsafe but quick to start)
@@ -53,7 +53,7 @@ class ReactNativeAsyncStorageRaw implements RawBytesStorage {
 
 class ReactNativeKeychainWrapper implements KeyWrapper {
 	async wrap(_data: {
-		metadata: import("./types/core.ts").KeyMetadata;
+		metadata: import("../src/types/core.ts").KeyMetadata;
 		publicKey: Uint8Array;
 		privateKey?: Uint8Array;
 		derivationPath?: number[];
@@ -67,7 +67,7 @@ class ReactNativeKeychainWrapper implements KeyWrapper {
 		);
 	}
 	async unwrap(_wrapped: Uint8Array): Promise<{
-		metadata: import("./types/core.ts").KeyMetadata;
+		metadata: import("../src/types/core.ts").KeyMetadata;
 		publicKey: Uint8Array;
 		privateKey?: Uint8Array;
 		derivationPath?: number[];
@@ -84,7 +84,7 @@ class ReactNativeKeychainWrapper implements KeyWrapper {
 
 class ReactNativeSecureEnclaveWrapper implements SeedWrapper {
 	async wrap(_data: {
-		metadata: import("./types/core.ts").KeyMetadata;
+		metadata: import("../src/types/core.ts").KeyMetadata;
 		rootKey: Uint8Array;
 		derivedMainKey?: Uint8Array | undefined;
 	}): Promise<Uint8Array> {
@@ -93,7 +93,7 @@ class ReactNativeSecureEnclaveWrapper implements SeedWrapper {
 		);
 	}
 	async unwrap(_wrapped: Uint8Array): Promise<{
-		metadata: import("./types/core.ts").KeyMetadata;
+		metadata: import("../src/types/core.ts").KeyMetadata;
 		rootKey: Uint8Array;
 		derivedMainKey?: Uint8Array | undefined;
 	}> {

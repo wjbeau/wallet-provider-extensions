@@ -1,5 +1,5 @@
 {
-	"name": "@algorandfoundation/keystore-extension",
+	"name": "@algorandfoundation/keystore",
 	"version": "0.0.1",
 	"description": "Basic Keystore Extension for the Wallet Provider.",
 	"type": "module",
@@ -10,7 +10,7 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
-		"./keystore": {
+		"./extension": {
 			"types": "./dist/keystore.d.ts",
 			"import": "./dist/keystore.js"
 		},
@@ -25,10 +25,6 @@
 		"./backend": {
 			"types": "./dist/backend/index.d.ts",
 			"import": "./dist/backend/index.js"
-		},
-		"./bootstrap": {
-			"types": "./dist/bootstrap.d.ts",
-			"import": "./dist/bootstrap.js"
 		},
 		"./ipc": {
 			"types": "./dist/ipc/index.d.ts",

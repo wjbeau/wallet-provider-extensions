@@ -1,6 +1,9 @@
 {
+  "name": "Wallet Provider Extensions",
   "entryPointStrategy": "packages",
-  "entryPoints": ["keystore"],
-
+  "alwaysCreateEntryPointModule": true,
+  "entryPoints": [
+    "keystore"
+  ],
   "readme": "./README.md"
 }

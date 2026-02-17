@@ -3,25 +3,100 @@ import Hook, { type HookCollection } from "before-after-hook";
 import type { KeyStoreBackend, KeyId } from "./types/index.ts";
 import type { Provider, Extension } from "@algorandfoundation/wallet-provider";
 
-type KeyStoreState = {
-	keys: string[];
-	status: string
-};
+/**
+ * Represents the state of the keystore extension.
+ *
+ * This state is intentionally UI-safe: it only contains metadata (like key IDs)
+ * and status flags. It NEVER contains private key material.
+ *
+ * @remarks
+ * Consumers can subscribe to state changes using TanStack Store selectors.
+ * See {@link https://tanstack.com/store/latest docs} for details.
+ */
+ type KeyStoreState = {
+ 	/** Array of available {@link KeyId}s currently stored by the backend */
+ 	keys: string[];
+ 	/**
+ 	 * Current status of the keystore operation lifecycle.
+ 	 *
+ 	 * Typical values include:
+ 	 * - `"idle"` — no operation in progress
+ 	 * - `"generating"` — creating a new key/seed
+ 	 * - `"importing"` — importing an existing key
+ 	 * - `"deriving"` — deriving a key from a seed
+ 	 * - `"signing"` — signing data/transactions
+ 	 * - `"encrypting"` / `"decrypting"` — performing crypto on payloads
+ 	 */
+ 	status: string
+ };
+ 
+ /**
+  * Shared TanStack Store instance used by the keystore extension to expose
+  * reactive, UI-safe state.
+  *
+  * @example
+  * ```ts
+  * import { keyStore } from "@algorandfoundation/keystore/extension";
+  * import { useStore } from "@tanstack/react-store";
+  *
+  * const status = useStore(keyStore, (s) => s.status);
+  * const keys = useStore(keyStore, (s) => s.keys);
+  * ```
+  */
+ export const keyStore: Store<KeyStoreState, (cb: KeyStoreState) => KeyStoreState> = new Store<KeyStoreState>({ keys: [], status: 'idle'})
 
-const keyStore = new Store<KeyStoreState>({ keys: [], status: 'idle'})
-
-// TODO: add object for consumers to have introspection at consumption
+/**
+ * The interface exposed by the Keystore Extension when added to a Provider.
+ */
 export type KeyStoreExtension = {
-	keys: KeyId[]
-	keystore: KeyStoreBackend & {
-		hooks: HookCollection<any>;
-	};
-};
+ 	/** Reactive list of key identifiers currently in the keystore */
+ 	keys: KeyId[]
+ 	/** The keystore backend with added support for hooks */
+ 	keystore: KeyStoreBackend & {
+ 		/** 
+ 		 * Hook collection for intercepting keystore operations.
+ 		 *
+ 		 * Supported operation ids include (non-exhaustive):
+ 		 * `"generating"`, `"importing"`, `"exporting"`, `"removing"`,
+ 		 * `"listing"`, `"getting metadata"`, `"signing"`, `"verifying"`,
+ 		 * `"encrypting"`, `"decrypting"`, `"deriving"`, `"importing seed"`,
+ 		 * `"logging audit event"`, `"getting audit logs"`, `"batch signing"`.
+ 		 *
+ 		 * Powered by {@link https://github.com/gr2m/before-after-hook before-after-hook}.
+ 		 */
+ 		hooks: HookCollection<any>;
+ 	};
+ };
 
-export const WithKeystore: Extension<KeyStoreExtension> = (
-	_provider: Provider<any>,
-	options: { api: { keystore: KeyStoreBackend } },
-) => {
+/**
+ * Wallet Provider Extension that adds Keystore functionality.
+ * 
+ * It wraps a {@link KeyStoreBackend} to provide reactive state for keys and status,
+ * and adds a hook system for intercepting operations.
+ * 
+ * @param _provider - The host {@link Provider} instance (unused here but part of the Extension signature)
+ * @param options - Extension options
+ * @param options.api.keystore - The concrete {@link KeyStoreBackend} implementation to wrap
+ * 
+ * @returns The {@link KeyStoreExtension} surface with reactive `keys` and an augmented `keystore` API.
+ * 
+ * @example
+ * ```typescript
+ * const ProviderWithKeystore = Provider.withExtensions([WithKeyStore]);
+ * const provider = new ProviderWithKeystore({
+ *   api: { keystore: myKeystoreBackend }
+ * });
+ * 
+ * // Add hooks
+ * provider.keystore.hooks.before("signing", ({ id }) => {
+ *   console.log("About to sign with", id)
+ * })
+ * ```
+ */
+ export const WithKeyStore: Extension<KeyStoreExtension> = (
+ 	_provider: Provider<any>,
+ 	options: { api: { keystore: KeyStoreBackend } },
+ ) => {
 	const { keystore: api } = options.api;
 	const hooks = new Hook.Collection();
 

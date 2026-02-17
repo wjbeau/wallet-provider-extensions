@@ -29,31 +29,31 @@ export type Algorithm = "RS256" | "ES256" | "EdDSA";
  * Use case: Store info like when key was created or what it's for.
  */
 export interface KeyMetadata {
-	/** Key ID */
+	/** Unique identifier for the key */
 	id: KeyId;
-	/** Key type */
+	/** The type of key (e.g., RSA, ECC, HD) */
 	type: KeyType;
-	/** Algorithm used */
+	/** The algorithm used by the key */
 	algorithm: Algorithm;
-	/** Creation timestamp */
+	/** When the key was created */
 	createdAt: Date;
 	/** API version for compatibility tracking */
 	version?: number;
-	/** Custom labels (e.g., {"purpose": "signing"}) */
+	/** Custom labels (e.g., `{"purpose": "signing"}`) */
 	labels?: Record<string, string>;
-	/** Custom extension data */
+	/** Custom extension data for specific implementations */
 	customData?: Record<string, unknown>;
 }
 
 /**
- * Data for a key, including public key and metadata.
+ * Data for a key, including optional public key and metadata.
  */
 export interface KeyData {
 	/** Public key bytes (if available) */
 	publicKey?: Uint8Array;
-	/** Private key bytes (for import only, never exported) */
+	/** Private key bytes (usually for import only, never exported for existing keys) */
 	privateKey?: Uint8Array;
-	/** Key metadata */
+	/** Associated {@link KeyMetadata} */
 	metadata: KeyMetadata;
 }
 
@@ -147,7 +147,7 @@ export interface EncryptionConfig {
 	algorithm?: "aes-256-gcm" | "chacha20-poly1305";
 	/** How to derive keys from passphrases (e.g., 'pbkdf2') */
 	keyDerivation?: "pbkdf2" | "argon2";
-	/** Require passphrase for sensitive ops */
+	/** Whether to require a passphrase for sensitive operations */
 	requirePassphrase?: boolean;
 }
 
@@ -155,10 +155,10 @@ export interface EncryptionConfig {
  * Configuration for the keystore. This controls how it behaves (e.g., enable logging, set limits).
  */
 export interface KeyStoreConfig {
-	/** Which backend to use for operations */
+	/** The {@link KeyStoreBackend} implementation to use */
 	backend?: import("./backend.ts").KeyStoreBackend;
-	/** Turn on basic auditing */
+	/** Whether to enable audit logging */
 	enableAudit?: boolean;
-	/** How to handle data encryption */
+	/** Data encryption settings */
 	encryption?: EncryptionConfig;
 }
