@@ -35,6 +35,10 @@
 			"import": "./dist/storage/index.js"
 		}
 	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
 		"lint": "biome check",
