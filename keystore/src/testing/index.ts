@@ -23,21 +23,21 @@ export function runKeyStoreBackendTests(
 			backend = await factory();
 		});
 
-	async function createTestKey(index = 0) {
-		if (!backend.importSeed || !backend.deriveFromSeed) {
-			throw new Error("importSeed or deriveFromSeed not supported");
-		}
+		async function createTestKey(index = 0) {
+			if (!backend.importSeed || !backend.deriveFromSeed) {
+				throw new Error("importSeed or deriveFromSeed not supported");
+			}
 
-		const seedId = (await backend.importSeed(TEST_SEED)) as string;
-		return (await backend.deriveFromSeed(
-			seedId,
-			`m/44'/283'/0'/0'/${index}'`,
-			{
-				algorithm: "EdDSA",
-				curve: "ed25519",
-			},
-		)) as string;
-	}
+			const seedId = (await backend.importSeed(TEST_SEED)) as string;
+			return (await backend.deriveFromSeed(
+				seedId,
+				`m/44'/283'/0'/0'/${index}'`,
+				{
+					algorithm: "EdDSA",
+					curve: "ed25519",
+				},
+			)) as string;
+		}
 
 		// =======================
 		// Core Operations
