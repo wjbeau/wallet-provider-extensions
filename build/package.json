@@ -1,0 +1,16 @@
+{
+  "name": "@algorandfoundation/package-releaser",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "dist/bin.js",
+  "bin": "dist/bin.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git",
+    "directory": "build"
+  }
+}
