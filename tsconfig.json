@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"target": "ES2020",
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"lib": ["ESNext", "DOM"],
+		"allowImportingTsExtensions": true,
+		"noEmit": true
+	}
+}
