@@ -45,6 +45,7 @@ export const WithKeystore: Extension<KeyStoreExtension> = (
 				if (shouldUpdateKeys) {
 					await updateKeys();
 				}
+				// TODO: strip any key material from the result, this can be done in the implementation wrapper bellow.
 				return result;
 			} finally {
 				keyStore.setState((state) => ({ ...state, status: "idle" }));
