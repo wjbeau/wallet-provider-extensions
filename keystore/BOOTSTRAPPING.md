@@ -236,6 +236,39 @@ export function WalletProviderWithKeystore({ children }: { children: React.React
     }
   }) as ExtendedProvider
 
+  // 4) Add hooks to the keystore for logging or custom logic
+  // These hooks are powered by 'before-after-hook'
+  
+  // Example: Log all signing operations
+  provider.keystore.hooks.before("signing", (options) => {
+    console.log(`[Keystore] Starting signing operation for key: ${options.id}`)
+  })
+
+  provider.keystore.hooks.after("signing", (result, options) => {
+    console.log(`[Keystore] Successfully signed data with key: ${options.id}`)
+  })
+
+  // Example: Error handling hook
+  provider.keystore.hooks.error("signing", (error, options) => {
+    console.error(`[Keystore] Signing failed for key ${options.id}:`, error)
+    // You could also re-throw or transform the error here
+  })
+
+  // Example: Custom logic before key generation (e.g., check limits)
+  provider.keystore.hooks.before("generating", async (options) => {
+    const existingKeys = await provider.keystore.list()
+    if (existingKeys.length >= 10) {
+      throw new Error("Maximum key limit reached")
+    }
+  })
+
+  // Example: Inject custom logic (e.g., prompt for user confirmation)
+  // before signing or sensitive operations.
+  provider.keystore.hooks.before("signing", async (options) => {
+    // You could call out to UI state or a custom service
+    // await userConfirmationService.approve(options)
+  })
+
   return (
     <WalletContext.Provider value={provider}>
       {children}
