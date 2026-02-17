@@ -135,9 +135,9 @@ export class InMemoryAuditStorage implements AuditStorage {
 /**
  * @deprecated Use {@link UnsafeTestOnlyKeyStorage}. This alias will be removed.
  */
-export const InMemoryKeyStorage = UnsafeTestOnlyKeyStorage;
+export const InMemoryKeyStorage: typeof UnsafeTestOnlyKeyStorage = UnsafeTestOnlyKeyStorage;
 
 /**
  * @deprecated Use {@link UnsafeTestOnlySeedStorage}. This alias will be removed.
  */
-export const InMemorySeedStorage = UnsafeTestOnlySeedStorage;
+export const InMemorySeedStorage: typeof UnsafeTestOnlySeedStorage = UnsafeTestOnlySeedStorage;

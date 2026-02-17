@@ -14,7 +14,7 @@ import type { KeyWrapper, SeedWrapper } from "./types/index.ts";
 // Example 1: Testing/Development (unsafe but quick to start)
 // ============================================================================
 
-const devKeystore = createKeyStore({ mode: "test-only" });
+//const devKeystore = createKeyStore({ mode: "test-only" });
 
 // ============================================================================
 // Example 2: Production with React Native
@@ -104,12 +104,12 @@ class ReactNativeSecureEnclaveWrapper implements SeedWrapper {
 }
 
 // Production example (would be used with real implementations)
-const prodKeystore = createKeyStore({
-	mode: "wrapped",
-	rawStorage: new ReactNativeAsyncStorageRaw(),
-	keyWrapper: new ReactNativeKeychainWrapper(),
-	seedWrapper: new ReactNativeSecureEnclaveWrapper(),
-});
+// const prodKeystore = createKeyStore({
+// 	mode: "wrapped",
+// 	rawStorage: new ReactNativeAsyncStorageRaw(),
+// 	keyWrapper: new ReactNativeKeychainWrapper(),
+// 	seedWrapper: new ReactNativeSecureEnclaveWrapper(),
+// });
 
 // ============================================================================
 // Example 3: With Provider pattern and TanStack Store

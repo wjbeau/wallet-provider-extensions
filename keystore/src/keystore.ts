@@ -19,7 +19,7 @@ export type KeyStoreExtension = {
 };
 
 export const WithKeystore: Extension<KeyStoreExtension> = (
-	provider: Provider<any>,
+	_provider: Provider<any>,
 	options: { api: { keystore: KeyStoreBackend } },
 ) => {
 	const { keystore: api } = options.api;

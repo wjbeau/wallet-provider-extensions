@@ -4,7 +4,7 @@
   "description": "Collection of extensions for the Wallet Provider.",
   "workspaces": [
     "keystore/**",
-    "crypto/**"
+    "contexts/**"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

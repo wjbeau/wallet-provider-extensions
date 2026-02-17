@@ -10,13 +10,37 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
+		"./keystore": {
+			"types": "./dist/keystore.d.ts",
+			"import": "./dist/keystore.js"
+		},
+		"./types": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/types/index.js"
+		},
 		"./testing": {
 			"types": "./dist/testing/index.d.ts",
 			"import": "./dist/testing/index.js"
+		},
+		"./backend": {
+			"types": "./dist/backend/index.d.ts",
+			"import": "./dist/backend/index.js"
+		},
+		"./bootstrap": {
+			"types": "./dist/bootstrap.d.ts",
+			"import": "./dist/bootstrap.js"
+		},
+		"./ipc": {
+			"types": "./dist/ipc/index.d.ts",
+			"import": "./dist/ipc/index.js"
+		},
+		"./storage": {
+			"types": "./dist/storage/index.d.ts",
+			"import": "./dist/storage/index.js"
 		}
 	},
 	"scripts": {
-		"build": "tsc",
+		"build": "tsc -p tsconfig.build.json",
 		"lint": "biome check",
 		"lint:fix": "biome check --fix",
 		"docs": "typedoc",

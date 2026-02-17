@@ -73,7 +73,11 @@ export interface KeystoreConfig {
  * });
  * ```
  */
-export function createKeystoreStorage(config: KeystoreConfig = {}) {
+export function createKeystoreStorage(config: KeystoreConfig = {}): {
+    keyStorage: KeyStorage;
+    seedStorage: SeedStorage;
+    auditStorage: AuditStorage;
+} {
 	const mode = config.mode ?? "test-only";
 
 	switch (mode) {

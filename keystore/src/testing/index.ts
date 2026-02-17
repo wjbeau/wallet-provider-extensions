@@ -12,7 +12,7 @@ const TEST_SEED = new Uint8Array(32).fill(1);
 export function runKeyStoreBackendTests(
 	factory: BackendFactory,
 	options: TestSuiteOptions = {},
-) {
+): void {
 	// Some features of the KeyStoreBackend are optional and may not be implemented by all backends (e.g. batchSign, HD wallet operations, encryption, audit logging). We allow these tests to be skipped via options so that the test suite can be used for a wider range of implementations while still providing comprehensive coverage for core functionality.
 	const { skipOptional = false } = options;
 

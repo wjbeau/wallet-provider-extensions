@@ -4,8 +4,8 @@
 export class KeyStoreError extends Error {
 	constructor(
 		message: string,
-		public readonly name: string,
-		public readonly cause?: Error,
+		name: string,
+		cause?: Error,
 	) {
 		super(message);
 		this.name = name;

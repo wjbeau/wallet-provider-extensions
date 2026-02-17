@@ -27,10 +27,15 @@ export type DataWrapper<T, U = Uint8Array> = {
  * This wraps a RawBytesStorage and applies encryption/decryption.
  */
 export class WrappedStorage<T> {
+	storage: RawBytesStorage;
+	wrapper: DataWrapper<T>;
 	constructor(
-		private storage: RawBytesStorage,
-		private wrapper: DataWrapper<T>,
-	) {}
+		storage: RawBytesStorage,
+		wrapper: DataWrapper<T>,
+	) {
+		this.storage = storage;
+		this.wrapper = wrapper;
+	}
 
 	async get(id: KeyId): Promise<T | undefined> {
 		const wrapped = await this.storage.get(id);
@@ -107,10 +112,16 @@ export class InMemoryRawStorage implements RawBytesStorage {
  * Wrapped audit storage using an AuditWrapper for encryption.
  */
 export class WrappedAuditStorage implements AuditStorage {
+	storage: RawBytesStorage;
+	wrapper: AuditWrapper;
+
 	constructor(
-		private storage: RawBytesStorage,
-		private wrapper: AuditWrapper,
-	) {}
+		storage: RawBytesStorage,
+		wrapper: AuditWrapper,
+	) {
+		this.storage = storage;
+		this.wrapper = wrapper;
+	}
 
 	async append(event: AuditEvent): Promise<void> {
 		const wrapped = await this.wrapper.wrap(event);

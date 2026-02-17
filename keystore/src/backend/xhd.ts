@@ -109,7 +109,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * Generates a cryptographically secure random ID (hex string)
 	 * Uses the Web Crypto API's getRandomValues for secure randomness
 	 */
-	private generateId(): KeyId {
+	static generateId(): KeyId {
 		const bytes = new Uint8Array(16);
 		crypto.getRandomValues(bytes);
 		return Array.from(bytes)
@@ -132,7 +132,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * Returns negative if a < b, positive if a > b, zero if equal.
 	 * Used for deterministic ordering in ECDH.
 	 */
-	private compareBytes(a: Uint8Array, b: Uint8Array): number {
+	static compareBytes(a: Uint8Array, b: Uint8Array): number {
 		const len = Math.min(a.length, b.length);
 		for (let i = 0; i < len; i++) {
 			if (a[i] !== b[i]) return a[i] - b[i];
@@ -160,7 +160,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * Ed25519 keys are 32-byte public keys + 64-byte private keys (includes public key)
 	 * P-256 keys use 33-byte compressed or 65-byte uncompressed public keys
 	 */
-	async import(data: KeyData, format: KeyFormat): Promise<KeyId> {
+	async import(data: KeyData, _format: KeyFormat): Promise<KeyId> {
 		if (!data.publicKey && !data.privateKey) {
 			throw new InvalidKeyFormatError("publicKey or privateKey required");
 		}
@@ -188,7 +188,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 			throw new InvalidKeyDataError("Could not derive public key");
 		}
 
-		const id = this.generateId();
+		const id = XHDKeyStoreBackend.generateId();
 		await this.keyStorage.set(id, {
 			metadata: { ...data.metadata, id, createdAt: new Date() },
 			publicKey,
@@ -409,7 +409,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 			64,
 		);
 
-		const id = options?.id ?? this.generateId();
+		const id = options?.id ?? XHDKeyStoreBackend.generateId();
 		await this.seedStorage.set(id, {
 			metadata: {
 				id,
@@ -479,7 +479,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 
 		const publicKey = this.dp256.getPurePKBytes(privateKey);
 
-		const id = options?.id ?? this.generateId();
+		const id = options?.id ?? XHDKeyStoreBackend.generateId();
 		await this.keyStorage.set(id, {
 			metadata: {
 				id,
@@ -544,7 +544,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 			derivationType,
 		);
 
-		const id = options?.id ?? this.generateId();
+		const id = options?.id ?? XHDKeyStoreBackend.generateId();
 		await this.keyStorage.set(id, {
 			metadata: {
 				id,
@@ -604,9 +604,9 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * This method works for both HD-derived keys and imported keys.
 	 */
 	async deriveSharedSecret(
-		id: KeyId,
-		publicKey: Uint8Array,
-		meFirst: boolean,
+		_id: KeyId,
+		_publicKey: Uint8Array,
+		_meFirst: boolean,
 		_algorithm?: string,
 	): Promise<Uint8Array> {
 		return new Uint8Array(0); // Placeholder implementation
@@ -618,6 +618,7 @@ export class XHDKeyStoreBackend implements KeyStoreBackend {
 	 * For HD keys: derives the child private key from the root key
 	 * For imported keys: returns a copy of the stored private key (safe to clear after use)
 	 */
+	//@ts-expect-error: This interface is marked as private but is not in use in this class.
 	private async getEd25519PrivateKey(key: {
 		privateKey?: Uint8Array;
 		rootKey?: Uint8Array;

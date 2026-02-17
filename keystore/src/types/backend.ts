@@ -8,9 +8,7 @@ import type {
 	KeyId,
 	KeyMetadata,
 	KeyOptions,
-	KeyStoreConfig,
 } from "./core.ts";
-import type { Storage } from "./storage.ts";
 
 /**
  * Main interface for keystore operations. This defines what a keystore backend must do.
