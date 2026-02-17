@@ -19,7 +19,8 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'npm'
-      - run: npm ci
+      - run: npm install
+      - run: ls ./node_modules/.bin
       - run: npm run build
       - name: Release
         run: npm run release
