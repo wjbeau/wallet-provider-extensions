@@ -26,9 +26,10 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@algorandfoundation/dp256": "^1.1.0",
-		"@algorandfoundation/wallet-provider": "0.0.1",
+		"@algorandfoundation/wallet-provider": "^1.0.0-canary.1",
 		"@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
-		"@tanstack/store": "^0.8.0"
+		"@tanstack/store": "^0.8.0",
+		"before-after-hook": "^4.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^20.0.0",

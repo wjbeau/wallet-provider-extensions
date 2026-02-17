@@ -203,41 +203,39 @@ export class ReactNativeSecureEnclaveWrapper implements SeedWrapper {
 
 ```typescript
 // providers/wallet-provider.tsx
-import { createContext, useContext, useEffect } from "react"
-import { Provider as WalletProvider } from "@algorandfoundation/wallet-provider"
-import { createKeyStore, type KeyStoreBackend } from "@algorandfoundation/keystore-extension"
+import { createContext, useContext } from "react"
+import { Provider, type WalletProvider } from "@algorandfoundation/wallet-provider"
+import { createKeyStore, WithKeystore, type KeyStoreBackend } from "@algorandfoundation/keystore-extension"
 import { walletStore, syncKeysMetadata } from "../stores/wallet-store"
 import { AsyncStorageRaw } from "../storage/async-storage"
 import { ReactNativeKeychainWrapper, ReactNativeSecureEnclaveWrapper } from "../storage/keychain-wrapper"
 
-// Extend provider type
-type ExtendedProvider = WalletProvider & {
+// Extend provider type for convenience in the app
+export type ExtendedProvider = WalletProvider & {
   keystore: KeyStoreBackend
 }
 
 const WalletContext = createContext<ExtendedProvider | null>(null)
 
+// 1) Create the keystore backend with secure storage (once per app)
+const keystore = createKeyStore({
+  mode: "wrapped",
+  rawStorage: new AsyncStorageRaw(),
+  keyWrapper: new ReactNativeKeychainWrapper(),
+  seedWrapper: new ReactNativeSecureEnclaveWrapper()
+})
+
+// 2) Construct a Provider that is extended with the WithKeystore extension
+const ProviderWithKeystore = Provider.withExtensions([WithKeystore])
+
 export function WalletProviderWithKeystore({ children }: { children: React.ReactNode }) {
-  // Create keystore with secure storage (once)
-  const keystore = createKeyStore({
-    mode: "wrapped",
-    rawStorage: new AsyncStorageRaw(),
-    keyWrapper: new ReactNativeKeychainWrapper(),
-    seedWrapper: new ReactNativeSecureEnclaveWrapper()
-  })
-  
-  // Sync metadata to TanStack Store on mount
-  useEffect(() => {
-    syncKeysMetadata(keystore)
-  }, [keystore])
-  
-  // Create base provider with keystore extension
-  const provider = new WalletProvider({
-    extensions: [
-      { keystore }  // Injected into provider
-    ]
+  // 3) Instantiate the provider and pass the keystore backend to the extension via options
+  const provider = new ProviderWithKeystore({
+    api: {
+      keystore
+    }
   }) as ExtendedProvider
-  
+
   return (
     <WalletContext.Provider value={provider}>
       {children}
@@ -245,10 +243,14 @@ export function WalletProviderWithKeystore({ children }: { children: React.React
   )
 }
 
-export const useWallet = () => {
+export function useWallet() {
   const context = useContext(WalletContext)
   if (!context) throw new Error("useWallet must be used within WalletProviderWithKeystore")
-  return context
+
+  const keys = useStore(walletStore, (state)=> state.keys)
+  const status = useStore(walletStore, (state)=> state.status)
+    
+  return {...context, keys, status}
 }
 ```
 
@@ -262,24 +264,18 @@ import { useWallet } from "../providers/wallet-provider"
 import { walletStore } from "../stores/wallet-store"
 
 export function WalletScreen() {
-  const { keystore } = useWallet()
-  const { keys, isLoading, selectedKeyId } = useStore(walletStore)
+  // Provider State
+  const { keystore, status, keys } = useWallet()
+  // Component State
+  const {selectedKeyId, setSelectedKeyId} = useState(null);
   
   const handleCreateWallet = async () => {
-    walletStore.setState(s => ({ ...s, isLoading: true }))
-    
     try {
       // Generate seed and derive first address
       const seedId = await keystore.importSeed(crypto.getRandomValues(new Uint8Array(32)))
       const keyId = await keystore.deriveFromSeed(seedId, "m/44'/283'/0'/0/0")
-      
-      // Sync metadata to UI store
-      await syncKeysMetadata(keystore)
-      
     } catch (error) {
-      walletStore.setState(s => ({ ...s, error: error.message }))
-    } finally {
-      walletStore.setState(s => ({ ...s, isLoading: false }))
+      console.log("Something went wrong:", error)
     }
   }
   
@@ -295,17 +291,17 @@ export function WalletScreen() {
   
   return (
     <View>
-      {isLoading && <Text>Loading...</Text>}
+      {status === 'loading' && <Text>Loading...</Text>}
       
       <FlatList
         data={keys}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item}
         renderItem={({ item }) => (
           <Button
-            title={item.name}
+            title={item}
             onPress={() => walletStore.setState(s => ({ 
               ...s, 
-              selectedKeyId: item.id 
+              selectedKeyId: item 
             }))}
           />
         )}

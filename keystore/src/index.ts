@@ -4,3 +4,4 @@ export * from "./ipc/index.ts";
 export * from "./storage/index.ts";
 export * from "./testing/index.ts";
 export * from "./types/index.ts";
+export * from "./keystore.ts";
