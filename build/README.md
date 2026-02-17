@@ -1,6 +1,6 @@
-# @algorandfoundation/extension-releaser
+# @algorandfoundation/package-releaser
 
-`@algorandfoundation/extension-releaser` is a custom release tool built on top of `semantic-release`. It is designed for use in a monorepo setup, allowing individual packages (extensions) to be released independently while sharing a global release configuration.
+`@algorandfoundation/package-releaser` is a custom release tool built on top of `semantic-release`. It is designed for use in a monorepo setup, allowing individual packages (extensions) to be released independently while sharing a global release configuration.
 
 ## Features
 
@@ -16,24 +16,24 @@ To use this tool in an extension (package) within this monorepo, follow these st
 
 ### 1. Add the Dependency
 
-Add `@algorandfoundation/extension-releaser` to the `dependencies` or `devDependencies` of your package.
+Add `@algorandfoundation/package-releaser` to the `dependencies` or `devDependencies` of your package.
 
 ```json
 {
   "dependencies": {
-    "@algorandfoundation/extension-releaser": "0.0.1"
+    "@algorandfoundation/package-releaser": "0.0.1"
   }
 }
 ```
 
 ### 2. Add the Release Script
 
-Add a `release` script to your package's `package.json`. This script should call `extension-releaser`.
+Add a `release` script to your package's `package.json`. This script should call `package-releaser`.
 
 ```json
 {
   "scripts": {
-    "release": "extension-releaser"
+    "release": "package-releaser"
   }
 }
 ```
