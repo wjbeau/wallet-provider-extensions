@@ -1,3 +1,10 @@
+# [keystore@1.0.0-canary.2](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.1...keystore@1.0.0-canary.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* add releaser as dev dependency ([6f98967](https://github.com/algorandfoundation/wallet-provider-extensions/commit/6f989673af5b108ab1de9c439ec466e11fd2b863))
+
 # keystore@1.0.0-canary.1 (2026-02-18)
 
 
