@@ -11,50 +11,160 @@ export type KeyId = string;
 /**
  * Type of key: RSA (asymmetric), ECC (elliptic curve), HD seed/derived
  */
-export type KeyType = "rsa" | "ecc" | "lattice" | "hd-seed" | "hd-derived";
+export type KeyType =
+	| "rsa"
+	| "ecc"
+	| "lattice"
+	| "hd-seed"
+	| "hd-root-key"
+	| "hd-derived-ed25519"
+	| "hd-derived-passkey"
+	| string;
 
 /**
  * How keys are encoded: raw bytes, PEM (text), DER (binary), JWK (JSON), OpenPGP
  */
-export type KeyFormat = "raw" | "pem" | "der" | "jwk" | "openpgp";
+export type KeyFormat = "raw" | "pem" | "der" | "jwk" | "openpgp" | string;
+
+// TODO: Align with formats from Subtle?
+// export type ImportFormat =
+// 	| 'raw'
+// 	| 'raw-public'
+// 	| 'raw-secret'
+// 	| 'raw-seed'
+// 	| 'pkcs8'
+// 	| 'spki'
+// 	| 'jwk';
 
 /**
- * Supported algorithms: RS256 (RSA), ES256 (ECDSA), EdDSA (Ed25519)
+ * Supported algorithms:
+ * - `RS256`: RSA PKCS#1 v1.5 with SHA-256
+ * - `ES256`: ECDSA using P-256 and SHA-256
+ * - `EdDSA`: EdDSA using Ed25519
+ * - `raw`: raw bytes (e.g., storing seed material)
  */
-export type Algorithm = "RS256" | "ES256" | "EdDSA";
+export type Algorithm = "RS256" | "ES256" | "EdDSA" | "raw" | string;
+
+// TODO: Align with SubtleCrypto algorithms and general options?
+// export type SubtleAlgorithm = {
+// 	name: AnyAlgorithm;
+// 	salt?: string | BufferLike;
+// 	iterations?: number;
+// 	hash?: HashAlgorithm | string | { name: string };
+// 	namedCurve?: NamedCurve;
+// 	length?: number;
+// 	modulusLength?: number;
+// 	publicExponent?: number | Uint8Array;
+// 	saltLength?: number;
+// 	public?: CryptoKey;
+// 	info?: BufferLike;
+// 	// Argon2 parameters
+// 	nonce?: BufferLike;
+// 	parallelism?: number;
+// 	tagLength?: number;
+// 	memory?: number;
+// 	passes?: number;
+// 	secretValue?: BufferLike;
+// 	associatedData?: BufferLike;
+// 	version?: number;
+// 	// KMAC parameters
+// 	customization?: BufferLike;
+// };
+// export type AnyAlgorithm =
+// 	| DigestAlgorithm
+// 	| HashAlgorithm
+// 	| KeyPairAlgorithm
+// 	| SecretKeyAlgorithm
+// 	| SignVerifyAlgorithm
+// 	| DeriveBitsAlgorithm
+// 	| EncryptDecryptAlgorithm
+// 	| AESAlgorithm
+// 	| 'PBKDF2'
+// 	| 'HKDF'
+// 	| 'unknown';
 
 /**
- * Metadata about a key.
- *
- * Use case: Store info like when key was created or what it's for.
+ * Base key interface containing common metadata.
  */
-export interface KeyMetadata {
-	/** Unique identifier for the key */
+export interface Key {
 	id: KeyId;
-	/** The type of key (e.g., RSA, ECC, HD) */
+	/**
+	 * Key type.
+	 */
 	type: KeyType;
-	/** The algorithm used by the key */
+	/**
+	 * Key algorithm.
+	 */
 	algorithm: Algorithm;
-	/** When the key was created */
-	createdAt: Date;
+	/**
+	 * Key format, if applicable.
+	 */
+	format?: KeyFormat;
+	/** Whether the key can be extracted from the key store */
+	extractable: boolean;
+	/** Custom extension data for specific implementations */
+	metadata?: Record<string, unknown>;
 	/** API version for compatibility tracking */
 	version?: number;
-	/** Custom labels (e.g., `{"purpose": "signing"}`) */
-	labels?: Record<string, string>;
-	/** Custom extension data for specific implementations */
-	customData?: Record<string, unknown>;
+
+	// TODO: add useful methods that are bound to the key contexts (it has knowledge of it's own state):
+	//sign?: (data: Uint8Array) => Promise<Uint8Array>;
+	//verify?: (data: Uint8Array, signature: Uint8Array) => Promise<boolean>;
+	//encrypt?: (data: Uint8Array) => Promise<Uint8Array>;
+	//decrypt?: (data: Uint8Array) => Promise<Uint8Array>;
 }
 
 /**
  * Data for a key, including optional public key and metadata.
  */
-export interface KeyData {
+export interface KeyData extends Key {
 	/** Public key bytes (if available) */
 	publicKey?: Uint8Array;
 	/** Private key bytes (usually for import only, never exported for existing keys) */
 	privateKey?: Uint8Array;
-	/** Associated {@link KeyMetadata} */
-	metadata: KeyMetadata;
+}
+
+// TODO: these may be able to be refactored into Subtle CryptoKeys, for now they just represent the different types we operate on
+export interface SeedData extends KeyData {
+	type: "hd-seed";
+}
+
+export interface XHDRootKey extends KeyData {
+	type: "hd-root-key";
+	metadata?: {
+		parentId?: string;
+	};
+}
+
+// TODO: move this to an identity/accounts extensions
+export interface XHDDerivedKeyData extends KeyData {
+	type: "hd-derived-ed25519";
+	metadata: {
+		path: string;
+		account: number;
+		context: number;
+		index: number;
+		derivation: number;
+		rootKeyId: string;
+	};
+}
+
+// TODO: move this to a passkey extensions
+export interface XHDPasskey extends KeyData {
+	type: "hd-derived-passkey";
+	metadata: {
+		origin: string;
+		userHandle: string;
+		counter?: number;
+		/**
+		 * The root key ID.
+		 */
+		rootKeyId: string;
+		/**
+		 * The passphrase ID used with this key.
+		 */
+		passphraseId?: string;
+	};
 }
 
 /**
@@ -149,16 +259,4 @@ export interface EncryptionConfig {
 	keyDerivation?: "pbkdf2" | "argon2";
 	/** Whether to require a passphrase for sensitive operations */
 	requirePassphrase?: boolean;
-}
-
-/**
- * Configuration for the keystore. This controls how it behaves (e.g., enable logging, set limits).
- */
-export interface KeyStoreConfig {
-	/** The {@link KeyStoreBackend} implementation to use */
-	backend?: import("./backend.ts").KeyStoreBackend;
-	/** Whether to enable audit logging */
-	enableAudit?: boolean;
-	/** Data encryption settings */
-	encryption?: EncryptionConfig;
 }

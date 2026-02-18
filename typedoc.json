@@ -3,7 +3,8 @@
   "entryPointStrategy": "packages",
   "alwaysCreateEntryPointModule": true,
   "entryPoints": [
-    "keystore"
+    "keystore/store",
+    "keystore/react-native"
   ],
   "readme": "./README.md"
 }

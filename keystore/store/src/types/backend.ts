@@ -6,9 +6,9 @@ import type {
 	KeyData,
 	KeyFormat,
 	KeyId,
-	KeyMetadata,
 	KeyOptions,
 } from "./core.ts";
+import type { KeyStoreState } from "./extension.ts";
 
 /**
  * Main interface for keystore operations. This defines what a keystore backend must do.
@@ -19,13 +19,16 @@ import type {
  * - Import keys from external sources (e.g., other wallets).
  * - Derive new keys from a master seed for HD wallets.
  * - Sign data with private keys and verify signatures with public keys.
+ *
+ * @see {@link KeyStoreState} for the reactive state representation of the keystore.
  */
-export interface KeyStoreBackend {
+export interface KeyStoreAPI {
 	/**
 	 * Creates a new key pair. This generates both a private key (secret) and public key (shareable).
 	 *
 	 * @param options - Generation parameters including {@link KeyType} and {@link Algorithm}.
 	 * @returns The unique {@link KeyId} of the generated key.
+	 * @throws {@link KeyGenerationNotSupportedError} If the algorithm is not supported.
 	 */
 	generate(options: GenerateOptions): Promise<KeyId>;
 
@@ -35,8 +38,10 @@ export interface KeyStoreBackend {
 	 * @param data - The raw key data to import.
 	 * @param format - The {@link KeyFormat} of the provided data.
 	 * @returns The unique {@link KeyId} assigned to the imported key.
+	 * @throws {@link InvalidKeyFormatError} If the format is invalid.
+	 * @throws {@link InvalidKeyDataError} If the key data is malformed.
 	 */
-	import(data: KeyData, format: KeyFormat): Promise<KeyId>;
+	import(data: Omit<KeyData, "id">, format: KeyFormat): Promise<KeyId>;
 
 	/**
 	 * Exports a key from the keystore (usually public key only, for security).
@@ -51,23 +56,9 @@ export interface KeyStoreBackend {
 	 * Deletes a key from the keystore.
 	 *
 	 * @param id - The {@link KeyId} of the key to delete.
+	 * @throws {@link KeyNotFoundError} If the key is not found.
 	 */
 	remove(id: KeyId): Promise<void>;
-
-	/**
-	 * Lists all keys in the keystore.
-	 *
-	 * @returns An array of {@link KeyMetadata} for all stored keys.
-	 */
-	list(): Promise<KeyMetadata[]>;
-
-	/**
-	 * Gets details about a specific key.
-	 *
-	 * @param id - The {@link KeyId} to retrieve metadata for.
-	 * @returns The {@link KeyMetadata} of the requested key.
-	 */
-	getMetadata(id: KeyId): Promise<KeyMetadata>;
 
 	/**
 	 * Signs data with a private key.
@@ -76,6 +67,7 @@ export interface KeyStoreBackend {
 	 * @param data - The data to sign.
 	 * @param algorithm - Optional override for the signing algorithm.
 	 * @returns The resulting signature.
+	 * @throws {@link KeyNotFoundError} If the key is not found.
 	 */
 	sign(id: KeyId, data: Uint8Array, algorithm?: string): Promise<Uint8Array>;
 

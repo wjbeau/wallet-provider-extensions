@@ -6,24 +6,20 @@
  *
  * While this entry point still works for backward compatibility, it is recommended to
  * migrate to named exports or use specific sub-paths:
- * - `@algorandfoundation/keystore/extension`
  * - `@algorandfoundation/keystore/types`
- * - `@algorandfoundation/keystore/backend`
- * - `@algorandfoundation/keystore/storage`
+ * - `@algorandfoundation/keystore/errors`
  *
  * Migration example:
  * ```typescript
  * // From
- * import { WithKeyStore } from "@algorandfoundation/keystore";
+ * import { KeyStoreAPI } from "@algorandfoundation/keystore";
  *
  * // To
- * import { WithKeyStore } from "@algorandfoundation/keystore/extension";
+ * import { KeyStoreAPI } from "@algorandfoundation/keystore/types";
  * ```
  */
 
-export * from "./backend/xhd.ts";
-export * from "./ipc/index.ts";
-export * from "./keystore.ts";
-export * from "./storage/index.ts";
-export * from "./testing/index.ts";
+export * from "./crypto.ts";
+export * from "./errors.ts";
+export * from "./store.ts";
 export * from "./types/index.ts";

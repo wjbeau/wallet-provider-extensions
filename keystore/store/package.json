@@ -3,36 +3,21 @@
 	"version": "1.0.0-canary.1",
 	"description": "Basic Keystore.",
 	"type": "module",
-	"main": "../dist/index.js",
+	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"sideEffects": true,
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
 		},
-		"./extension": {
-			"types": "./dist/keystore.d.ts",
-			"import": "./dist/keystore.js"
-		},
 		"./types": {
 			"types": "./dist/types/index.d.ts",
 			"import": "./dist/types/index.js"
 		},
-		"./testing": {
-			"types": "./dist/testing/index.d.ts",
-			"import": "./dist/testing/index.js"
-		},
-		"./backend": {
-			"types": "./dist/backend/index.d.ts",
-			"import": "./dist/backend/index.js"
-		},
-		"./ipc": {
-			"types": "./dist/ipc/index.d.ts",
-			"import": "./dist/ipc/index.js"
-		},
-		"./storage": {
-			"types": "./dist/storage/index.d.ts",
-			"import": "./dist/storage/index.js"
+		"./errors": {
+			"types": "./dist/errors/index.d.ts",
+			"import": "./dist/errors/index.js"
 		}
 	},
 	"publishConfig": {
@@ -55,14 +40,14 @@
 		"directory": "keystore/store"
 	},
 	"dependencies": {
-		"@algorandfoundation/dp256": "^1.1.0",
 		"@algorandfoundation/wallet-provider": "^1.0.0-canary.1",
-		"@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
+		"@noble/hashes": "^2.0.1",
+		"@scure/base": "^2.0.0",
 		"@tanstack/store": "^0.8.0",
 		"before-after-hook": "^4.0.0"
 	},
 	"devDependencies": {
-		"vitest": "^1.0.0",
-		"@algorandfoundation/package-releaser": "0.0.1"
+		"@algorandfoundation/package-releaser": "0.0.1",
+		"vitest": "^1.0.0"
 	}
 }
