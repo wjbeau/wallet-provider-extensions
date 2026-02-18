@@ -58,11 +58,11 @@
 		"@algorandfoundation/dp256": "^1.1.0",
 		"@algorandfoundation/wallet-provider": "^1.0.0-canary.1",
 		"@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
-		"@algorandfoundation/package-releaser": "0.0.1",
 		"@tanstack/store": "^0.8.0",
 		"before-after-hook": "^4.0.0"
 	},
 	"devDependencies": {
-		"vitest": "^1.0.0"
+		"vitest": "^1.0.0",
+		"@algorandfoundation/package-releaser": "0.0.1"
 	}
 }
