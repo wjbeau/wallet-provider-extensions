@@ -329,7 +329,7 @@ const signature = await keystore.sign(keyId, data);
 
 ## Contributing
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for design details and [CODE_REVIEW.md](./CODE_REVIEW.md) for known issues and improvement areas.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for design details and [CODE_REVIEW.md](./CODE_REVIEW.md) for known issues and improvement areas.
 
 ## License
 

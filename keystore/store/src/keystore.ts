@@ -13,7 +13,7 @@ import type { KeyId, KeyStoreBackend } from "./types/index.ts";
  * Consumers can subscribe to state changes using TanStack Store selectors.
  * See {@link https://tanstack.com/store/latest docs} for details.
  */
-type KeyStoreState = {
+export type KeyStoreState = {
 	/** Array of available {@link KeyId}s currently stored by the backend */
 	keys: string[];
 	/**

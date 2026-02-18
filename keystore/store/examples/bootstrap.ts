@@ -6,7 +6,7 @@
  */
 
 import { createKeyStore, XHDKeyStoreBackend } from "../src/backend/xhd.ts";
-import type { KeyWrapper, RawBytesStorage, SeedWrapper } from "../src/index.ts";
+import type { KeyWrapper, RawBytesStorage, SeedWrapper } from "../src";
 import type { KeystoreConfig } from "../src/storage/factory.ts";
 
 // ============================================================================
