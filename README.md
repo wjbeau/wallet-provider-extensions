@@ -1,6 +1,8 @@
 # Wallet Provider Extensions
 
-<!-- TODO: Add Heading with badges -->
+[![CI](https://github.com/algorandfoundation/wallet-provider-extensions/actions/workflows/integrate.yaml/badge.svg)](https://github.com/algorandfoundation/wallet-provider-extensions/actions/workflows/integrate.yaml)
+[![License](https://img.shields.io/github/license/algorandfoundation/wallet-provider-extensions)](https://github.com/algorandfoundation/wallet-provider-extensions/blob/main/LICENSE)
+[![NPM Version](https://img.shields.io/npm/v/wallet-provider-extensions)](https://www.npmjs.com/package/wallet-provider-extensions)
 
 Based on the work of the [Wallet Provider](https://github.com/algorandfoundation/wallet-provider),
 this project adds support for various extensions that allow for cryptographic operations in specific contexts.
@@ -121,6 +123,4 @@ We would like to acknowledge the following individuals and entities for their co
     - [Lute](https://lute.app) and [Andrew Funk](https://github.com/acfunk) (@acfunk) for their contributions to web wallets, readily adopting the latest features.
     - [Kibis-is](https://kibis.is/) and [Kieran Roneill](https://github.com/kieranroneill) (@kieranroneill) for their work as an extension-based wallet and contributions to ARC standards such as ARC27.
     - [Defly](https://defly.app/) and [Kevin Wellenzohn](https://github.com/k13n) (@k13n) for pioneering wallet features and deep engagement with the Algorand ecosystem and ARC standards.
-
-<!-- TODO: Add Stars/Forks Badge -->
 
