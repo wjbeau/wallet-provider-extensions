@@ -20,6 +20,10 @@
  */
 
 export * from "./crypto.ts";
+export * from "./encoding.ts";
 export * from "./errors.ts";
+export * from "./generate.ts";
+export * from "./sign.ts";
 export * from "./store.ts";
 export * from "./types/index.ts";
+export * from "./verify.ts";

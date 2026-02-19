@@ -1,29 +1,32 @@
-import * as Keychain from 'react-native-keychain';
-import { createCipheriv, createDecipheriv, randomBytes } from 'react-native-quick-crypto';
-import { Buffer } from 'buffer';
+import * as Keychain from "react-native-keychain";
+import {
+	createCipheriv,
+	createDecipheriv,
+	randomBytes,
+} from "react-native-quick-crypto";
 
-const ALGORITHM = 'aes-256-gcm';
-
-
+const ALGORITHM = "aes-256-gcm";
 
 /**
  * Retrieves the master key from the Keychain, or generates a new one if it doesn't exist.
  * @returns The master key as a Buffer
  */
 export async function getMasterKey(): Promise<Buffer> {
-    console.log("getMasterKey");
-    const credentials = await Keychain.getGenericPassword({ service: 'app-secret' });
-    if (credentials) {
-        return Buffer.from(credentials.password, 'hex');
-    }
+	const credentials = await Keychain.getGenericPassword({
+		service: "app-secret",
+	});
+	if (credentials) {
+		return Buffer.from(credentials.password, "hex");
+	}
 
-    // Create new random key
-    const newKey = randomBytes(32);
-    await Keychain.setGenericPassword('master', newKey.toString('hex'), { service: 'app-secret' });
-    console.log("getMasterKey end");
-    //@ts-expect-error, this should be fine
-    return newKey;
+	// Create new random key
+	const newKey = randomBytes(32);
+	await Keychain.setGenericPassword("master", newKey.toString("hex"), {
+		service: "app-secret",
+	});
 
+	//@ts-expect-error, this should be fine
+	return newKey;
 }
 
 /**
@@ -32,20 +35,20 @@ export async function getMasterKey(): Promise<Buffer> {
  * @param data - The string data to encrypt
  * @returns A JSON string containing IV, Auth Tag, and encrypted content
  */
-export const encryptData = (key: Buffer, data: string) => {
-    const iv = randomBytes(12); // 96-bit IV for GCM
-    const cipher = createCipheriv(ALGORITHM, key, iv);
+export const encryptData = (key: Buffer, data: string): string => {
+	const iv = randomBytes(12); // 96-bit IV for GCM
+	const cipher = createCipheriv(ALGORITHM, key, iv);
 
-    let encrypted = cipher.update(data, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
-    const authTag = cipher.getAuthTag();
+	let encrypted = cipher.update(data, "utf8", "base64");
+	encrypted += cipher.final("base64");
+	const authTag = cipher.getAuthTag();
 
-    // Return a combined payload
-    return JSON.stringify({
-        iv: iv.toString('base64'),
-        tag: authTag.toString('base64'),
-        content: encrypted
-    });
+	// Return a combined payload
+	return JSON.stringify({
+		iv: iv.toString("base64"),
+		tag: authTag.toString("base64"),
+		content: encrypted,
+	});
 };
 
 /**
@@ -54,20 +57,16 @@ export const encryptData = (key: Buffer, data: string) => {
  * @param payloadStr - The JSON string containing IV, Auth Tag, and content
  * @returns The decrypted string
  */
-export const decryptData = (key: Buffer, payloadStr: string) => {
-    const { iv, tag, content } = JSON.parse(payloadStr);
+export const decryptData = (key: Buffer, payloadStr: string): string => {
+	const { iv, tag, content } = JSON.parse(payloadStr);
 
-    const decipher = createDecipheriv(
-        ALGORITHM,
-        key,
-        Buffer.from(iv, 'base64')
-    );
+	const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(iv, "base64"));
 
-    //@ts-expect-error, this is fine
-    decipher.setAuthTag(Buffer.from(tag, 'base64'));
+	//@ts-expect-error, this is fine
+	decipher.setAuthTag(Buffer.from(tag, "base64"));
 
-    let decrypted = decipher.update(content, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
+	let decrypted = decipher.update(content, "base64", "utf8");
+	decrypted += decipher.final("utf8");
 
-    return decrypted;
+	return decrypted;
 };

@@ -1,63 +1,61 @@
 {
-  "name": "@algorandfoundation/react-native-keystore",
-  "version": "0.0.1",
-  "description": "",
-  "main": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
-  "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "prepare": "bob build"
-  },
-  "author": "",
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "react-native": "^0.78.0",
-    "react-native-builder-bob": "^0.40.17",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
-  },
-  "files": [
-    "src",
-    "lib",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__"
-  ],
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      [
-        "module",
-        {
-          "esm": true
-        }
-      ],
-      "typescript"
-    ]
-  },
-  "eslintIgnore": [
-    "node_modules/",
-    "lib/"
-  ],
-  "dependencies": {
-    "@algorandfoundation/dp256": "^1.1.0",
-    "@algorandfoundation/keystore": "^1.0.0-canary.1",
-    "@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
-    "@scure/base": "^2.0.0",
-    "@scure/bip39": "^2.0.1",
-    "react-native-keychain": "^10.0.0",
-    "react-native-mmkv": "^4.1.2",
-    "react-native-quick-crypto": "^1.0.12"
-  }
+	"name": "@algorandfoundation/react-native-keystore",
+	"version": "0.0.1",
+	"description": "React Native Keystore for Algorand Providers. Supports Ed25519, XHD, and P-256 derived keys.",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./types": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/types/index.js"
+		},
+		"./errors": {
+			"types": "./dist/errors/index.d.ts",
+			"import": "./dist/errors/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"clean": "rm -rf dist coverage node_modules",
+		"lint": "biome check",
+		"lint:fix": "biome check --fix",
+		"docs": "typedoc",
+		"test": "vitest run",
+		"test:cov": "vitest run --coverage",
+		"bench": "vitest bench"
+	},
+	"author": "Algorand Foundation",
+	"license": "Apache-2.0",
+	"devDependencies": {
+		"react-native": "^0.78.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"files": [
+		"src",
+		"lib",
+		"!**/__tests__",
+		"!**/__fixtures__",
+		"!**/__mocks__"
+	],
+	"dependencies": {
+		"@algorandfoundation/dp256": "^1.1.0",
+		"@algorandfoundation/keystore": "^1.0.0-canary.1",
+		"@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
+		"@scure/base": "^2.0.0",
+		"@scure/bip39": "^2.0.1",
+		"react-native-keychain": "^10.0.0",
+		"react-native-mmkv": "^4.1.2",
+		"react-native-quick-crypto": "^1.0.12"
+	}
 }

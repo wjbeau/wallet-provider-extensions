@@ -14,37 +14,103 @@ import {useProvider} from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {randomBytes} from "react-native-quick-crypto";
 import {useState, useEffect} from "react";
-import {localStorage} from "@/stores/mmkv-local";
-import {useMMKVString} from "react-native-mmkv";
 
 // No LayoutAnimation needed anymore
+const ROOT_COLORS = ['#007AFF', '#34C759', '#5856D6', '#AF52DE', '#FF9500', '#FF3B30', '#FFCC00', '#5AC8FA'];
+
 export default function Index() {
-    const {keys, keystore} = useProvider();
-    const [status, setStatus] = useMMKVString('status', localStorage);
-    console.log('INDEX RENDERED', 'STATUS', status)
-    const [activeKey, setActiveKey] = useState<string | undefined>(undefined);
+    const {keys, keystore, status} = useProvider();
 
+    const [activeKey, setActiveKey] = useState<string | null>(null);
+    const [activeSeed, setActiveSeed] = useState<string | null>(null);
 
-    const handleAddSeed = async () => {
-        setStatus('generating custom seed');
+    const seeds = keys.filter(k => k.type === 'hd-seed');
+    const rootKeys = keys.filter(k => k.type === 'hd-root-key');
+    const derivedKeys = keys.filter(k => k.type !== 'hd-seed' && k.type !== 'hd-root-key');
+    
+    // Stable color mapping based on root hierarchy
+    const allRootKeys = [...seeds, ...rootKeys];
+    const rootKeyColors = allRootKeys.reduce((acc, rootKey) => {
+        // Find the top-most parent (the seed) for this root key to ensure consistent coloring
+        // Root keys might have parentKeyId or rootKeyId in metadata depending on how they were created
+        const seedId = rootKey.type === 'hd-root-key' 
+            ? (rootKey.metadata?.parentKeyId || rootKey.metadata?.rootKeyId || rootKey.metadata?.parentId || rootKey.id) as string
+            : rootKey.id;
+        
+        // Simple hash function for string ID
+        let hash = 0;
+        const idToHash = seedId || rootKey.id;
+        for (let i = 0; i < idToHash.length; i++) {
+            const char = idToHash.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash |= 0; // Convert to 32bit integer
+        }
+        acc[rootKey.id] = ROOT_COLORS[Math.abs(hash) % ROOT_COLORS.length];
+        return acc;
+    }, {} as Record<string, string>);
+
+    // Effect to set the first root key as active if the current active seed is removed
+    useEffect(() => {
+        if (rootKeys.length > 0) {
+            // Check if activeSeed is null or if it no longer exists in rootKeys
+            if (!activeSeed || !rootKeys.some(k => k.id === activeSeed)) {
+                setActiveSeed(rootKeys[0].id);
+            }
+        } else if (seeds.length > 0) {
+            // Fallback to seeds if no root keys
+            if (!activeSeed || !seeds.some(k => k.id === activeSeed)) {
+                setActiveSeed(seeds[0].id);
+            }
+        } else if (activeSeed !== null) {
+            setActiveSeed(null);
+        }
+    }, [rootKeys, seeds, activeSeed]);
+
+    const handleAddKey = async () => {
+        if(!activeSeed) {
+            Alert.alert('No Seed Selected', 'Please import a seed');
+            return;
+        }
+        // Pick the next available index for the derived key
+        const nextIndex = keys.filter(k => k.type === 'hd-derived-ed25519' && k?.metadata?.parentKeyId === activeSeed).length;
+        console.log('Next index:', nextIndex, keys.filter(k => k.type === 'hd-derived-ed25519'));
         const keyId = await keystore.generate({
-            type: 'hd-ed25519-derived',
+            type: 'hd-derived-ed25519',
             algorithm: 'EdDSA',
+            extractable: true,
+            keyUsages: ['sign', "verify"],
+            params: {
+                parentKeyId: activeSeed,
+                context: 0,
+                account: 0,
+                index: nextIndex,
+                derivation: 9
+            }
         })
 
         setActiveKey(keyId);
     };
 
     const handleImportSeed = async () => {
-        setStatus('importing custom seed');
         const keyId = await keystore.import({
             type: 'hd-seed',
             algorithm: 'raw',
             extractable: true,
+            keyUsages: ['deriveKey', 'deriveBits'],
             privateKey: randomBytes(64)
         }, 'bytes')
 
-        setActiveKey(keyId);
+        const rootKeyId = await keystore.generate({
+            type: 'hd-root-key',
+            algorithm: 'raw',
+            extractable: true,
+            keyUsages: ['deriveKey', 'deriveBits'],
+            params: {
+                parentKeyId: keyId
+            }
+        })
+
+        setActiveSeed(rootKeyId);
     }
 
     const handleExportKey = async (id: string) => {
@@ -86,7 +152,7 @@ export default function Index() {
                     <View style={styles.actionButtons}>
                         <TouchableOpacity
                             style={[styles.actionButton, status === 'computing' && {opacity: 0.5}]}
-                            onPress={handleAddSeed}
+                            onPress={handleAddKey}
                             disabled={status !== 'idle'}
                         >
                             <View style={[styles.iconCircle, {backgroundColor: '#E3F2FD'}]}>
@@ -109,51 +175,214 @@ export default function Index() {
                     </View>
                 </View>
 
-                <Text style={styles.sectionTitle}>Available Keys</Text>
-                {keys.length === 0 ? (
-                    <Animated.View 
-                        entering={FadeIn} 
+                <Text style={styles.sectionTitle}>Derived Keys</Text>
+                {derivedKeys.length === 0 ? (
+                    <Animated.View
+                        entering={FadeIn}
                         exiting={FadeOut}
                         style={styles.emptyState}
                     >
                         <Text style={styles.emptyStateText}>No derived keys yet.</Text>
                     </Animated.View>
                 ) : (
-                    keys.map((item, i) => (
-                        <Animated.View
-                            key={item.id || i}
-                            entering={FadeIn.duration(300)}
-                            exiting={FadeOut.duration(300)}
-                            layout={LinearTransition.springify()}
-                        >
-                            <TouchableOpacity
-                                style={[styles.keyCard, activeKey === item.id && styles.activeKeyCard]}
-                                onPress={() => setActiveKey(item.id)}
+                    derivedKeys.map((item, i) => {
+                        const parentColor = rootKeyColors[item.metadata?.parentKeyId as string] || '#666';
+                        return (
+                            <Animated.View
+                                key={item.id || i}
+                                entering={FadeIn.duration(300)}
+                                exiting={FadeOut.duration(300)}
+                                layout={LinearTransition.springify()}
                             >
-                                <View style={styles.keyInfo}>
-                                    <View style={[styles.keyIconContainer, activeKey === item.id && styles.activeKeyIconContainer]}>
-                                        <MaterialCommunityIcons
-                                            name="key"
-                                            size={20}
-                                            color={activeKey === item.id ? "#007AFF" : "#666"}
-                                        />
+                                <TouchableOpacity
+                                    style={[
+                                        styles.keyCard, 
+                                        activeKey === item.id && styles.activeKeyCard,
+                                        activeKey === item.id && { borderColor: parentColor }
+                                    ]}
+                                    onPress={() => setActiveKey(item.id)}
+                                >
+                                    <View style={styles.keyInfo}>
+                                        <View style={[
+                                            styles.keyIconContainer, 
+                                            { backgroundColor: `${parentColor}15` }
+                                        ]}>
+                                            <MaterialCommunityIcons
+                                                name="key"
+                                                size={20}
+                                                color={activeKey === item.id ? parentColor : `${parentColor}80`}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Text style={[
+                                                styles.keyType, 
+                                                activeKey === item.id && styles.activeKeyType,
+                                                activeKey === item.id && { color: parentColor }
+                                            ]}>
+                                                {item.type}
+                                                {item.type === 'hd-derived-ed25519' && item.metadata && (
+                                                    <Text style={styles.keyIndex}> (a:{item.metadata.account as number} i:{item.metadata.index as number})</Text>
+                                                )}
+                                                {(item as any).privateKey && (
+                                                    <MaterialCommunityIcons name="alert-circle" size={16} color="#FF3B30" style={styles.warningIcon} />
+                                                )}
+                                            </Text>
+                                            <Text style={styles.keyAddress}>{item.algorithm}</Text>
+                                        </View>
                                     </View>
-                                    <View>
-                                        <Text style={[styles.keyType, activeKey === item.id && styles.activeKeyType]}>{item.type}</Text>
-                                        <Text style={styles.keyAddress}>{item.algorithm}</Text>
+                                    <View style={styles.keyActions}>
+                                        <TouchableOpacity onPress={() => handleExportKey(item.id)} style={styles.actionIcon}>
+                                            <MaterialCommunityIcons name="export-variant" size={24} color="#007AFF" />
+                                            {item.extractable && (
+                                                <View style={styles.exportBadgeSmall} />
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => keystore.remove(item.id)}>
+                                            <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
+                                        </TouchableOpacity>
                                     </View>
-                                </View>
-                                <View style={styles.keyActions}>
-                                    <TouchableOpacity onPress={() => handleExportKey(item.id)} style={styles.actionIcon}>
-                                        <MaterialCommunityIcons name="export-variant" size={24} color="#007AFF" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => keystore.remove(item.id)}>
-                                        <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
-                                    </TouchableOpacity>
-                                </View>
-                            </TouchableOpacity>
-                        </Animated.View>
-                    ))
+                                </TouchableOpacity>
+                            </Animated.View>
+                        );
+                    })
+                )}
+
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Root Keys</Text>
+                {rootKeys.length === 0 ? (
+                    <Animated.View
+                        entering={FadeIn}
+                        exiting={FadeOut}
+                        style={styles.emptyState}
+                    >
+                        <Text style={styles.emptyStateText}>No root keys yet.</Text>
+                    </Animated.View>
+                ) : (
+                    rootKeys.map((item, i) => {
+                        const rootColor = rootKeyColors[item.id] || '#666';
+                        return (
+                            <Animated.View
+                                key={item.id || i}
+                                entering={FadeIn.duration(300)}
+                                exiting={FadeOut.duration(300)}
+                                layout={LinearTransition.springify()}
+                            >
+                                <TouchableOpacity
+                                    style={[
+                                        styles.keyCard, 
+                                        activeSeed === item.id && styles.activeKeyCard,
+                                        activeSeed === item.id && { borderColor: rootColor }
+                                    ]}
+                                    onPress={() => setActiveSeed(item.id)}
+                                >
+                                    <View style={styles.keyInfo}>
+                                        <View style={[
+                                            styles.keyIconContainer, 
+                                            { backgroundColor: `${rootColor}15` }
+                                        ]}>
+                                            <MaterialCommunityIcons
+                                                name="key-chain"
+                                                size={20}
+                                                color={activeSeed === item.id ? rootColor : `${rootColor}80`}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Text style={[
+                                                styles.keyType, 
+                                                activeSeed === item.id && styles.activeKeyType,
+                                                activeSeed === item.id && { color: rootColor }
+                                            ]}>
+                                                {item.type}
+                                                {(item as any).privateKey && (
+                                                    <MaterialCommunityIcons name="alert-circle" size={16} color="#FF3B30" style={styles.warningIcon} />
+                                                )}
+                                            </Text>
+                                            <Text style={styles.keyAddress}>{item.algorithm}</Text>
+                                        </View>
+                                    </View>
+                                    <View style={styles.keyActions}>
+                                        <TouchableOpacity onPress={() => handleExportKey(item.id)} style={styles.actionIcon}>
+                                            <MaterialCommunityIcons name="export-variant" size={24} color="#007AFF" />
+                                            {item.extractable && (
+                                                <View style={styles.exportBadgeSmall} />
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => keystore.remove(item.id)}>
+                                            <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        );
+                    })
+                )}
+
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Seeds</Text>
+                {seeds.length === 0 ? (
+                    <Animated.View
+                        entering={FadeIn}
+                        exiting={FadeOut}
+                        style={styles.emptyState}
+                    >
+                        <Text style={styles.emptyStateText}>No seeds yet.</Text>
+                    </Animated.View>
+                ) : (
+                    seeds.map((item, i) => {
+                        const rootColor = rootKeyColors[item.id] || '#666';
+                        return (
+                            <Animated.View
+                                key={item.id || i}
+                                entering={FadeIn.duration(300)}
+                                exiting={FadeOut.duration(300)}
+                                layout={LinearTransition.springify()}
+                            >
+                                <TouchableOpacity
+                                    style={[
+                                        styles.keyCard, 
+                                        activeSeed === item.id && styles.activeKeyCard,
+                                        activeSeed === item.id && { borderColor: rootColor }
+                                    ]}
+                                    onPress={() => setActiveSeed(item.id)}
+                                >
+                                    <View style={styles.keyInfo}>
+                                        <View style={[
+                                            styles.keyIconContainer, 
+                                            { backgroundColor: `${rootColor}15` }
+                                        ]}>
+                                            <MaterialCommunityIcons
+                                                name="seed-outline"
+                                                size={20}
+                                                color={activeSeed === item.id ? rootColor : `${rootColor}80`}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Text style={[
+                                                styles.keyType, 
+                                                activeSeed === item.id && styles.activeKeyType,
+                                                activeSeed === item.id && { color: rootColor }
+                                            ]}>
+                                                {item.type}
+                                                {(item as any).privateKey && (
+                                                    <MaterialCommunityIcons name="alert-circle" size={16} color="#FF3B30" style={styles.warningIcon} />
+                                                )}
+                                            </Text>
+                                            <Text style={styles.keyAddress}>{item.algorithm}</Text>
+                                        </View>
+                                    </View>
+                                    <View style={styles.keyActions}>
+                                        <TouchableOpacity onPress={() => handleExportKey(item.id)} style={styles.actionIcon}>
+                                            <MaterialCommunityIcons name="export-variant" size={24} color="#007AFF" />
+                                            {item.extractable && (
+                                                <View style={styles.exportBadgeSmall} />
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => keystore.remove(item.id)}>
+                                            <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        );
+                    })
                 )}
             </ScrollView>
         </SafeAreaView>
@@ -321,6 +550,25 @@ const styles = StyleSheet.create({
     },
     activeKeyType: {
         color: '#007AFF',
+    },
+    keyIndex: {
+        fontSize: 10,
+        color: '#666',
+        fontWeight: 'normal',
+    },
+    exportBadgeSmall: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: '#4CAF50',
+        borderWidth: 2,
+        borderColor: '#FFF',
+    },
+    warningIcon: {
+        marginLeft: 8,
     },
     keyAddress: {
         fontSize: 15,

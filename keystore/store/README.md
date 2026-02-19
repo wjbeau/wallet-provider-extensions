@@ -1,4 +1,4 @@
-# Keystore Store
+# @algorandfoundation/keystore
 
 Core types and reactive state management for the Algorand Wallet Provider Keystore.
 
@@ -13,9 +13,9 @@ By separating the store and types from the implementation, we enable:
 
 ## Core Components
 
-- **`KeyStoreAPI`**: The interface that all backends must implement.
-- **`keyStore`**: A reactive store for managing key metadata and operation status.
-- **`KeyStoreExtension`**: The interface exposed when added to a Wallet Provider.
+- [**`KeyStoreAPI`**](./src/types/backend.ts): The main interface that all backends must implement.
+- [**`keyStore`**](./src/store.ts): A reactive store for managing key metadata and operation status.
+- [**`KeyStoreExtension`**](./src/types/extension.ts): The interface exposed when added to a Wallet Provider.
 
 ## Implementation Examples
 
@@ -29,7 +29,7 @@ If you are looking for a concrete implementation, please refer to:
 To use the store, you typically use a concrete implementation that implements the `KeyStoreAPI`:
 
 ```typescript
-import { KeyStoreAPI } from "@algorandfoundation/keystore";
+import { KeyStoreAPI } from "@algorandfoundation/keystore/types";
 
 class MyBackend implements KeyStoreAPI {
   // Implement required methods: generate, import, sign, etc.
@@ -57,7 +57,7 @@ For detailed information on types and methods, see the [TypeDocs](https://algora
 
 - [**`KeyStoreAPI`**](./src/types/backend.ts): Main interface for cryptographic operations.
 - [**`KeyStoreState`**](./src/types/extension.ts): Reactive state structure.
-- [**`KeyState`**](./src/types/core.ts): Metadata for a single key.
+- [**`Key`**](./src/types/core.ts): Metadata for a single key.
 
 ## Security
 

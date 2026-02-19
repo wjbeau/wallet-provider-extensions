@@ -3,42 +3,44 @@ import {
 	clearKeyData,
 	decryptWithKeyData,
 	encryptWithKeyData,
-	signWithKeyData,
-	verifyWithKeyData,
 } from "./crypto.ts";
+import { signWithKeyData } from "./sign.ts";
 import type { Key, KeyData, KeyId, KeyStoreState } from "./types/index.ts";
+import { verifyWithKeyData } from "./verify.ts";
 
 /**
- * Adds a key to the store.
+ * Adds a key to the reactive store.
  *
- * @param store
- * @param key - The {@link Key} to add.
+ * @param store - The TanStack store instance for {@link KeyStoreState}.
+ * @param key - The {@link Key} metadata to add.
  */
 export function addKey(store: Store<KeyStoreState>, key: Key): void {
 	store.setState((s) => ({ ...s, keys: [...s.keys, key] }));
 }
 
 /**
- * Removes a key from the store by its ID.
+ * Removes a key from the reactive store by its ID.
  *
- * @param store
- * @param id - The {@link KeyId} of the key to remove.
+ * @param params - The removal parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.keyId - The {@link KeyId} of the key to remove.
  */
 export function removeKey({
 	store,
-	id,
+	keyId,
 }: {
 	store: Store<KeyStoreState>;
-	id: KeyId;
+	keyId: KeyId;
 }): void {
-	store.setState((s) => ({ ...s, keys: s.keys.filter((k) => k.id !== id) }));
+	store.setState((s) => ({ ...s, keys: s.keys.filter((k) => k.id !== keyId) }));
 }
 
 /**
  * Sets the current status of the keystore.
  *
- * @param store
- * @param status - A string representing the current operation (e.g., "signing", "generating").
+ * @param params - The status parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.status - A string representing the current operation (e.g., "signing", "generating", "idle").
  */
 export function setStatus({
 	store,
@@ -52,6 +54,9 @@ export function setStatus({
 
 /**
  * Clears all keys from the store and resets status to "idle".
+ *
+ * @param params - The store parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
  */
 export function clearKeyStore({
 	store,
@@ -64,9 +69,10 @@ export function clearKeyStore({
 /**
  * Retrieves a key from the store by its ID.
  *
- * @param store
- * @param id - The {@link KeyId} of the key to retrieve.
- * @returns The {@link Key} if found, otherwise undefined.
+ * @param params - The retrieval parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.id - The {@link KeyId} of the key to retrieve.
+ * @returns The {@link Key} metadata if found, otherwise undefined.
  */
 export function getKey({
 	store,
@@ -79,9 +85,11 @@ export function getKey({
 }
 
 /**
- * Initializes the keystore with a list of keys.
- * @param store
- * @param keys
+ * Initializes the keystore with a list of keys and sets status to "idle".
+ *
+ * @param params - The initialization parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.keys - The array of {@link Key} metadata to initialize with.
  */
 export function initializeKeyStore({
 	store,
@@ -93,6 +101,16 @@ export function initializeKeyStore({
 	store.setState({ keys, status: "idle" });
 }
 
+/**
+ * Encrypts data using the provided key data.
+ *
+ * @param params - The encryption parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.key - The {@link KeyData} containing the secret key.
+ * @param params.data - The data to encrypt.
+ * @param params.algorithm - Optional algorithm to use.
+ * @returns A promise that resolves to the encrypted data.
+ */
 export async function encrypt({
 	store,
 	key,
@@ -113,6 +131,16 @@ export async function encrypt({
 	}
 }
 
+/**
+ * Decrypts data using the provided key data.
+ *
+ * @param params - The decryption parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.key - The {@link KeyData} containing the secret key.
+ * @param params.data - The data to decrypt.
+ * @param params.algorithm - Optional algorithm to use.
+ * @returns A promise that resolves to the decrypted data.
+ */
 export async function decrypt({
 	store,
 	key,
@@ -132,6 +160,17 @@ export async function decrypt({
 	}
 }
 
+/**
+ * Verifies a signature using the provided key data.
+ *
+ * @param params - The verification parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.key - The {@link KeyData} containing the public key.
+ * @param params.data - The data that was signed.
+ * @param params.signature - The signature to verify.
+ * @param params.algorithm - Optional algorithm to use.
+ * @returns A promise that resolves to true if the signature is valid, false otherwise.
+ */
 export async function verify({
 	store,
 	key,
@@ -153,6 +192,17 @@ export async function verify({
 	}
 }
 
+/**
+ * Signs data using the provided key data.
+ *
+ * @param params - The signing parameters.
+ * @param params.store - The TanStack store instance for {@link KeyStoreState}.
+ * @param params.key - The {@link KeyData} containing the private key.
+ * @param params.parentKey - Optional parent key data for HD derivation.
+ * @param params.data - The data to sign.
+ * @param params.algorithm - Optional algorithm to use.
+ * @returns A promise that resolves to the signature.
+ */
 export async function sign({
 	store,
 	key,

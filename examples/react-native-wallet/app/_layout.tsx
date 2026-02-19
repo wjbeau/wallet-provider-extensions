@@ -12,7 +12,7 @@ install();
 async function bootstrap(){
   setStatus({store: keyStore as unknown as Store<KeyStoreState>, status: "loading"})
   const secrets = await Promise.all(storage.getAllKeys().map(async keyId => fetchSecret<KeyData>({keyId, masterKey: await getMasterKey()})))
-  initializeKeyStore({store: keyStore as unknown as Store<KeyStoreState>, keys: secrets.filter(Boolean) as Key[]})
+  initializeKeyStore({store: keyStore as unknown as Store<KeyStoreState>, keys: secrets.filter((k)=>k!==null).map(({privateKey, ...rest}: KeyData)=>rest) as Key[]})
 }
 bootstrap()
 export default function RootLayout() {
@@ -20,6 +20,7 @@ export default function RootLayout() {
     id: 'react-native-wallet',
     name: 'React Native Wallet',
   }, {
+    logs: true,
     keystore: {
       extension: {store: keyStore, hooks: keyStoreHooks}
     }

@@ -28,7 +28,7 @@ export interface KeyStoreAPI {
 	 *
 	 * @param options - Generation parameters including {@link KeyType} and {@link Algorithm}.
 	 * @returns The unique {@link KeyId} of the generated key.
-	 * @throws {@link KeyGenerationNotSupportedError} If the algorithm is not supported.
+	 * @throws {KeyGenerationNotSupportedError} If the algorithm is not supported.
 	 */
 	generate(options: GenerateOptions): Promise<KeyId>;
 
@@ -38,8 +38,8 @@ export interface KeyStoreAPI {
 	 * @param data - The raw key data to import.
 	 * @param format - The {@link KeyFormat} of the provided data.
 	 * @returns The unique {@link KeyId} assigned to the imported key.
-	 * @throws {@link InvalidKeyFormatError} If the format is invalid.
-	 * @throws {@link InvalidKeyDataError} If the key data is malformed.
+	 * @throws {InvalidKeyFormatError} If the format is invalid.
+	 * @throws {InvalidKeyDataError} If the key data is malformed.
 	 */
 	import(data: Omit<KeyData, "id">, format: KeyFormat): Promise<KeyId>;
 
@@ -56,7 +56,7 @@ export interface KeyStoreAPI {
 	 * Deletes a key from the keystore.
 	 *
 	 * @param id - The {@link KeyId} of the key to delete.
-	 * @throws {@link KeyNotFoundError} If the key is not found.
+	 * @throws {KeyNotFoundError} If the key is not found.
 	 */
 	remove(id: KeyId): Promise<void>;
 
@@ -67,7 +67,7 @@ export interface KeyStoreAPI {
 	 * @param data - The data to sign.
 	 * @param algorithm - Optional override for the signing algorithm.
 	 * @returns The resulting signature.
-	 * @throws {@link KeyNotFoundError} If the key is not found.
+	 * @throws {KeyNotFoundError} If the key is not found.
 	 */
 	sign(id: KeyId, data: Uint8Array, algorithm?: string): Promise<Uint8Array>;
 

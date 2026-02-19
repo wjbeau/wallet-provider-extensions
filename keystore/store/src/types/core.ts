@@ -97,6 +97,10 @@ export interface Key {
 	 */
 	algorithm: Algorithm;
 	/**
+	 * Key usages.
+	 */
+	keyUsages?: KeyUsage[];
+	/**
 	 * Key format, if applicable.
 	 */
 	format?: KeyFormat;
@@ -124,45 +128,63 @@ export interface KeyData extends Key {
 	privateKey?: Uint8Array;
 }
 
-// TODO: these may be able to be refactored into Subtle CryptoKeys, for now they just represent the different types we operate on
+/**
+ * Represents a Hierarchical Deterministic (HD) seed.
+ */
 export interface SeedData extends KeyData {
 	type: "hd-seed";
 }
 
+/**
+ * Represents an HD root key derived from a seed.
+ */
 export interface XHDRootKey extends KeyData {
 	type: "hd-root-key";
 	metadata?: {
+		/** Optional identifier of the parent key/seed */
 		parentId?: string;
 	};
 }
 
-// TODO: move this to an identity/accounts extensions
+/**
+ * Represents metadata for a key derived via XHD (Extended HD) derivation.
+ *
+ * @remarks
+ * This is primarily used for Ed25519 keys in the Algorand ecosystem.
+ */
 export interface XHDDerivedKeyData extends KeyData {
 	type: "hd-derived-ed25519";
 	metadata: {
+		/** The full derivation path (e.g., "m/44'/283'/0'/0/0") */
 		path: string;
+		/** Account index */
 		account: number;
+		/** Context index */
 		context: number;
+		/** Address index */
 		index: number;
+		/** Derivation index */
 		derivation: number;
-		rootKeyId: string;
+		/** ID of the root key used for derivation */
+		parentKeyId: string;
 	};
 }
 
-// TODO: move this to a passkey extensions
+/**
+ * Represents metadata for an HD-derived passkey.
+ */
 export interface XHDPasskey extends KeyData {
 	type: "hd-derived-passkey";
 	metadata: {
+		/** The origin (RP ID) of the passkey */
 		origin: string;
+		/** The user handle associated with the passkey */
 		userHandle: string;
+		/** Optional usage counter */
 		counter?: number;
-		/**
-		 * The root key ID.
-		 */
-		rootKeyId: string;
-		/**
-		 * The passphrase ID used with this key.
-		 */
+		/** ID of the root key used for derivation */
+		parentKeyId: string;
+		/** Optional identifier for the passphrase used to protect this key */
 		passphraseId?: string;
 	};
 }
@@ -174,7 +196,11 @@ export interface GenerateOptions {
 	/** Key type */
 	type: KeyType;
 	/** Algorithm */
-	algorithm: Algorithm;
+	algorithm: Algorithm; // TODO: leverage subtle Algorithms?
+	/** Whether the key can be extracted from the key store */
+	extractable: boolean;
+	/** Key usage */
+	keyUsages: KeyUsage[];
 	/** Key size in bits (e.g., 2048 for RSA) */
 	keySize?: number;
 	/** Curve for ECC (e.g., 'P-256') */

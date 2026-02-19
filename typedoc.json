@@ -4,7 +4,8 @@
   "alwaysCreateEntryPointModule": true,
   "entryPoints": [
     "keystore/store",
-    "keystore/react-native"
+    "keystore/react-native",
+    "log"
   ],
   "readme": "./README.md"
 }
