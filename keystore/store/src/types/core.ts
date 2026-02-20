@@ -143,6 +143,8 @@ export interface XHDRootKey extends KeyData {
 	metadata?: {
 		/** Optional identifier of the parent key/seed */
 		parentId?: string;
+		/** Optional identifier of the root key/seed */
+		rootKeyId?: string;
 	};
 }
 

@@ -14,6 +14,7 @@ import {
 	type KeyStoreState,
 	type KeyType,
 	removeKey as removeKeystoreKey,
+	requiresParentKey,
 	type SeedData,
 	setStatus,
 	type XHDDerivedKeyData,
@@ -47,6 +48,7 @@ const dp256 = new DeterministicP256();
 
 /**
  * Removes a key from the reactive store and persistent storage.
+ * @param params - The removal parameters
  * @param params.store - The reactive store instance
  * @param params.keyId - The ID of the key to remove
  */
@@ -64,6 +66,7 @@ export async function removeKey({
 
 /**
  * Clears all keys from the reactive store and persistent storage.
+ * @param params - The clear parameters
  * @param params.store - The reactive store instance
  */
 export async function clear({
@@ -78,20 +81,14 @@ export async function clear({
 /**
  * Generates a new key pair, stores it, and updates the reactive store.
  * Supports various algorithm types via options.
- * @param params.store - The reactive store instance
- * @param params.algorithm - The algorithm to use for generation
- * @param params.extractable - Whether the private key can be exported
- * @param params.keyUsages - Intended usages for the key
+ * @param options - The generation parameters
+ * @param options.store - The reactive store instance
+ * @param options.algorithm - The algorithm to use for generation
+ * @param options.extractable - Whether the private key can be exported
+ * @param options.keyUsages - Intended usages for the key
  * @returns The generated KeyId
  */
-export async function generateKey({
-	store,
-	algorithm,
-	type,
-	params,
-	extractable = false,
-	keyUsages = ["sign"],
-}: {
+export async function generateKey(options: {
 	store: Store<KeyStoreState>;
 	type: KeyType;
 	algorithm: Algorithm;
@@ -99,14 +96,21 @@ export async function generateKey({
 	keyUsages: KeyUsage[];
 	params?: Record<string, any>;
 }): Promise<KeyId> {
+	const {
+		store,
+		algorithm,
+		type,
+		params,
+		extractable = false,
+		keyUsages = ["sign"],
+	} = options;
 	// Signal that we are generating a key
 	setStatus({ store, status: "generating" });
 
 	let parentKey: XHDRootKey | SeedData | null = null;
 	let keyData: KeyData | null = null;
-
+	const parentRequired = requiresParentKey({ type });
 	try {
-		const parentRequired = ["hd-root-key", "hd-derived-ed25519"].includes(type);
 		if (parentRequired && typeof params?.parentKeyId === "undefined") {
 			throw new InvalidKeyDataError(
 				`XHD derived keys require a rootKeyId, please upload it first using importSeed()`,
@@ -118,6 +122,11 @@ export async function generateKey({
 		if (parentRequired && !parentKey) {
 			throw new KeyNotFoundError(params?.parentKeyId);
 		}
+		console.log(
+			parentKey?.type,
+			typeof parentKey?.privateKey,
+			parentKey?.privateKey instanceof Uint8Array,
+		);
 		keyData = await generateKeyStoreKey({
 			keyData: {
 				type,
@@ -146,29 +155,38 @@ export async function generateKey({
 
 export async function importSeed({
 	store,
-	keyData,
+	seed,
+	name,
 }: {
 	store: Store<KeyStoreState>;
-	keyData: Omit<SeedData, "id">;
+	seed: Uint8Array | string;
+	name?: string;
 }): Promise<KeyId> {
 	setStatus({ store, status: "importing" });
 	const id = generateId();
 
-	try {
-		if (keyData.type !== "hd-seed" && keyData.format !== "raw") {
-			throw new InvalidKeyDataError("Only supports importing raw seeds");
-		}
+	let privateKey: Uint8Array;
+	const metadata: any = {};
 
-		if (typeof keyData.privateKey === "undefined") {
-			throw new InvalidKeyDataError("Seed is required");
+	try {
+		if (typeof seed === "string") {
+			throw new InvalidKeyDataError("Mnemonic import is not implemented yet");
 		}
+		privateKey = seed;
+
 		await commit({
 			store,
 			keyData: {
 				id,
-				...keyData,
 				type: "hd-seed",
-			} as any,
+				name: name || "Imported Seed",
+				algorithm: "raw",
+				format: "bytes",
+				extractable: true,
+				keyUsages: ["deriveKey", "deriveBits"],
+				privateKey,
+				metadata,
+			} as SeedData,
 		});
 	} finally {
 		setStatus({ store, status: "idle" });
@@ -190,6 +208,7 @@ export function parsePath(path: string): number[] {
 
 /**
  * Derives a new key from an existing seed in the keystore.
+ * @param params - The derivation parameters
  * @param params.store - The reactive store instance
  * @param params.seedId - The ID of the seed to derive from
  * @param params.path - The derivation path
@@ -429,67 +448,76 @@ export async function importKey({
 	keyData,
 }: {
 	store: Store<KeyStoreState>;
-	keyData: Omit<KeyData, "id"> | Uint8Array<ArrayBufferLike>;
+	keyData: Omit<KeyData, "id"> | Uint8Array | string;
 	//format?: KeyFormat, // TODO: Align with Subtle's KeyFormat in the future?
 	//algorithm?: Algorithm, // TODO: align with SubtleAlgorithm in the future?
 	//extractable?: boolean, // TODO: align with SubtleExtractable in the future?
 	//keyUsages: KeyUsage[] // TODO: leverage for keyData
 }): Promise<KeyId> {
-	if (keyData instanceof Uint8Array) {
-		// TODO: Check format and algorith for the key bytes to handle it appropriately
-		// We only support our bespoke KeyData objects for now
-		throw new InvalidKeyDataError(
-			"Importing raw or encoded keys is not currently supported",
-		);
-	}
-	// Ensure this is a KeyData object
-	if (!(keyData as KeyData).type) {
-		throw new InvalidKeyFormatError(
-			"Only KeyData objects are allowed currently",
-		);
-	}
+	try {
+		if (keyData instanceof Uint8Array || typeof keyData === "string") {
+			// TODO: Check format and algorith for the key bytes to handle it appropriately
+			// We only support our bespoke KeyData objects for now
+			throw new InvalidKeyDataError(
+				"Importing raw or encoded keys is not currently supported. Use KeyData instead.",
+			);
+		}
+		// Ensure this is a KeyData object
+		if (!(keyData as KeyData).type) {
+			throw new InvalidKeyFormatError(
+				"Only KeyData objects are allowed currently",
+			);
+		}
 
-	switch (keyData.type) {
-		case "hd-seed": {
-			if (keyData.algorithm !== "raw" && keyData.format !== "raw") {
-				throw new InvalidKeyDataError("Only supports importing raw seeds");
+		switch (keyData.type) {
+			case "hd-seed": {
+				if (
+					typeof keyData.privateKey === "undefined" ||
+					!(keyData.privateKey instanceof Uint8Array)
+				) {
+					throw new InvalidKeyDataError(
+						"Seed is required and must be a Uint8Array",
+					);
+				}
+				return importSeed({
+					store,
+					seed: keyData.privateKey,
+					name: (keyData as any).name,
+				});
 			}
-			if (
-				typeof keyData.privateKey === "undefined" ||
-				!(keyData.privateKey instanceof Uint8Array)
-			) {
-				throw new InvalidKeyDataError(
-					"Seed is required and must be a Uint8Array",
-				);
+			case "hd-root-key": {
+				if (keyData.algorithm !== "raw" && keyData.format !== "raw") {
+					throw new InvalidKeyDataError("Only supports importing raw seeds");
+				}
+				if (
+					typeof keyData.privateKey === "undefined" ||
+					!(keyData.privateKey instanceof Uint8Array)
+				) {
+					console.log(keyData.privateKey);
+					throw new InvalidKeyDataError(
+						"Seed is required and must be a Uint8Array",
+					);
+				}
+				return importSeed({
+					store,
+					seed: keyData.privateKey as Uint8Array,
+					name: (keyData as any).name,
+				});
 			}
-
-			return importSeed({ store, keyData: keyData as SeedData });
-		}
-		case "hd-root-key": {
-			if (keyData.algorithm !== "raw" && keyData.format !== "raw") {
-				throw new InvalidKeyDataError("Only supports importing raw seeds");
+			case "hd-derived-ed25519": {
+				if (keyData.algorithm !== "EdDSA" && keyData.format !== "") {
+				}
+				return importEd25519Key({ store, keyData: keyData as SeedData });
 			}
-			if (
-				typeof keyData.privateKey === "undefined" ||
-				!(keyData.privateKey instanceof Uint8Array)
-			) {
-				throw new InvalidKeyDataError(
-					"Seed is required and must be a Uint8Array",
-				);
+			case "hd-derived-passkey": {
+				return importPasskey({ store, keyData: keyData as XHDPasskey });
 			}
-			return importSeed({ store, keyData: keyData as SeedData });
-		}
-		case "hd-derived-ed25519": {
-			if (keyData.algorithm !== "EdDSA" && keyData.format !== "") {
+			default: {
+				throw new InvalidKeyDataError(`Unknown key type: ${keyData.type}`);
 			}
-			return importEd25519Key({ store, keyData: keyData as SeedData });
 		}
-		case "hd-derived-passkey": {
-			return importPasskey({ store, keyData: keyData as XHDPasskey });
-		}
-		default: {
-			throw new InvalidKeyDataError(`Unknown key type: ${keyData.type}`);
-		}
+	} finally {
+		setStatus({ store, status: "idle" });
 	}
 }
 

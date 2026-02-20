@@ -28,7 +28,11 @@ export async function signXHDPasskey({
 		throw new InvalidKeyDataError("Key is not a passkey");
 	}
 
-	if (root.type !== "hd-root-key" || typeof root.privateKey === "undefined") {
+	if (
+		root.type !== "hd-root-key" ||
+		typeof root.privateKey === "undefined" ||
+		!(root.privateKey instanceof Uint8Array)
+	) {
 		throw new InvalidKeyDataError("Root key is not a seed key");
 	}
 
@@ -66,7 +70,11 @@ export async function signXHDEd25519({
 	) {
 		throw new InvalidKeyDataError("Key does not have a private key");
 	}
-	if (root.type !== "hd-root-key" || typeof root.privateKey === "undefined") {
+	if (
+		root.type !== "hd-root-key" ||
+		typeof root.privateKey === "undefined" ||
+		!(root.privateKey instanceof Uint8Array)
+	) {
 		throw new InvalidKeyDataError("Root key is not available");
 	}
 
@@ -134,7 +142,9 @@ export async function signWithKeyData({
 			}
 			case "hd-derived-passkey": {
 				if (typeof key.metadata?.parentKeyId === "undefined") {
-					throw new InvalidKeyDataError("Passkey does not have a parent key ID");
+					throw new InvalidKeyDataError(
+						"Passkey does not have a parent key ID",
+					);
 				}
 				if (typeof parentKey === "undefined") {
 					throw new InvalidKeyDataError(

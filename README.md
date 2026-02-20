@@ -9,7 +9,7 @@ this project adds support for various extensions that allow for cryptographic op
 
 ## What are Extensions?
 
-Extensions are modular components that enhance the capabilities of a wallet or provider. They allow for the addition of specialized features—such as secret management, logging, or custom transaction signing—without bloating the core provider implementation. 
+Extensions are modular components that enhance the capabilities of a wallet or provider. They allow for the addition of specialized features—such as secret management, logging, or custom signing—without bloating the core provider implementation. 
 
 An extension typically consists of:
 1.  **State**: Data managed by the extension (e.g., a list of stored secrets).
@@ -19,7 +19,9 @@ An extension typically consists of:
 
 The following extension packages are available in this workspace:
 
-- **[Keystore](./keystore)**: Securely manage cryptographic secrets and keys.
+- **[Keystore Core](./keystore/store)**: Core types and interfaces for secret management.
+- **[React Native Keystore](./keystore/react-native)**: Secure implementation for React Native using Keychain/MMKV.
+- **[Log Store](./log)**: Generalized logging extension for tracking wallet activity.
 
 ## Creating a New Extension
 
@@ -75,36 +77,43 @@ export default loggerExtension;
 
 ## Using Extensions in a Provider
 
-Extensions are designed to be used within a Wallet Provider. When initializing a provider, you can include these extensions to expose their functionality.
+Extensions are typically used by extending the base `Provider` class. This "concrete provider" pattern provides full type safety for both the core provider and all its extensions.
 
 ```typescript
-import type {KeyStoreExtension} from "@algorandfoundation/keystore/types";
-import {createKeyStore} from "@algorandfoundation/keystore/storage";
-import {WithKeyStoreExtension, keyStore} from "@algorandfoundation/keystore/extension";
-import {LoggerExtension} from "./logger-extension";
+import { Provider } from "@algorandfoundation/wallet-provider";
+import { WithKeyStore } from "@algorandfoundation/react-native-keystore";
+import { WithLogStore } from "@algorandfoundation/log-store";
+import { keyStore } from "./stores/keystore";
+import { logStore } from "./stores/logstore";
 
-// A Provider can be extended with multiple extensions
-type MyExtendedProvider = Provider & KeyStoreExtension & LoggerExtension;
+// 1. Define your application's provider with extensions
+export class MyProvider extends Provider<typeof MyProvider.EXTENSIONS> {
+    static EXTENSIONS = [
+        WithLogStore,
+        WithKeyStore,
+    ] as const
 
-// Create the keystore backend with secure storage (once per app)
-const keystore = createKeyStore({
-  mode: "wrapped",
-  // Note: These may be provided by packages in the future that have strong opinions.
-  rawStorage: new AsyncStorageRaw(), // Implement in your app for raw storage
-  keyWrapper: new ReactNativeKeychainWrapper(), // Use the wrapper for your platform
-  seedWrapper: new ReactNativeSecureEnclaveWrapper() // Use the wrapper for your platform
-})
+    // Add properties for type-safe access to extension state/APIs
+    logs!: string[]
+    keys!: any[]
+    status!: string
+}
 
-// Then bootstrap the keystore with existing keys
-await syncKeysMetadata(keystore)
+// 2. Initialize the provider with required options
+const provider = new MyProvider({
+  id: 'my-app',
+  name: 'My Application',
+}, {
+  logs: { store: logStore },
+  keystore: {
+    extension: { store: keyStore }
+  }
+});
 
-const provider = new Provider({
-  api: {keystore: keystore}
-}).withExtensions([WithKeyStoreExtension]) as MyExtendedProvider;
-
-// Now you can access extension APIs directly on the provider
-provider.keystore.add(mySecret);
-provider.logger.log("Secret added");
+// 3. Access extension APIs directly on the provider
+await provider.keystore.generate({ type: "hd-seed", algorithm: "raw" });
+provider.log("Generated a new seed");
+console.log(provider.keys); // Reactive list of keys
 ```
 
 

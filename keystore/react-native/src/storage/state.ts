@@ -1,4 +1,5 @@
 import {
+	clearKeyData,
 	InvalidKeyDataError,
 	type KeyData,
 	type KeyId,
@@ -63,31 +64,30 @@ export async function commit({
 	store: Store<KeyStoreState>;
 	keyData: KeyData;
 }): Promise<void> {
-	console.log('Commiting', keyData.id);
 	if (typeof keyData.id === "undefined")
 		throw new InvalidKeyDataError(
 			"KeyData must have an ID before committing to storage. Please use generateKey() to generate a new key.",
 		);
 	setStatus({ store, status: "commiting" });
+
 	try {
 		// Never allow the master key to touch memory.
 		storage.set(keyData.id, encryptData(await getMasterKey(), encode(keyData)));
 		// remove the private keys from keyData
 		const { privateKey, publicKey, ...keyState } = keyData;
 		// clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
-		clearBuffer(keyData.privateKey);
-		clearBuffer(keyData.publicKey);
 		clearBuffer(privateKey);
 		clearBuffer(publicKey);
 		delete keyData.privateKey;
 		delete keyData.publicKey;
-		console.log(keyState);
+
 		// Reflect the change in the reactive store
 		store.setState((state) => ({
 			...state,
 			keys: [{ ...keyState }, ...state.keys],
 		}));
 	} finally {
+		clearKeyData(keyData);
 		setStatus({ store, status: "idle" });
 	}
 }

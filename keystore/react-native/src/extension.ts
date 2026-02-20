@@ -9,6 +9,7 @@ import {
 	type KeyStoreAPI,
 	type KeyStoreExtension,
 	type KeyStoreExtOptions,
+	requiresParentKey,
 	sign,
 	signWithKeyData,
 	verify,
@@ -73,6 +74,16 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 			/** Generates a new key pair and stores it */
 			generate: (options): Promise<KeyId> => {
 				log.debug("(extension.ts) Generating Key", options, context);
+
+				if (
+					requiresParentKey(options) &&
+					typeof options?.params?.parentKeyId === "undefined"
+				) {
+					throw new InvalidKeyDataError(
+						"Parent key ID is required for generating derived keys",
+					);
+				}
+
 				return keyStoreHooks("generate", store.generateKey, {
 					log,
 					store: keyStore,
@@ -87,9 +98,25 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 			import: (data, _format): Promise<KeyId> => {
 				log.debug(
 					"(extension.ts) Import Key",
-					{ ...data.metadata, type: data.type, algorithm: data.algorithm },
+					typeof data === "string" || data instanceof Uint8Array
+						? { type: "raw" }
+						: {
+								...data.metadata,
+								type: (data as any).type,
+								algorithm: (data as any).algorithm,
+							},
 					context,
 				);
+				if (
+					typeof data !== "string" &&
+					!(data instanceof Uint8Array) &&
+					(!(data.privateKey instanceof Uint8Array) ||
+						data.privateKey instanceof Buffer)
+				) {
+					throw new InvalidKeyDataError(
+						"Invalid key data format, must be string, Uint8Array, or have Uint8Array privateKey property",
+					);
+				}
 				return store.importKey({ store: keyStore, keyData: data });
 			},
 			/** Exports public key data for a given key ID */
@@ -142,7 +169,8 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 								});
 								if (!parentKey)
 									throw new KeyNotFoundError(
-										(key as XHDDerivedKeyData | XHDPasskey).metadata.parentKeyId,
+										(key as XHDDerivedKeyData | XHDPasskey).metadata
+											.parentKeyId,
 									);
 							}
 							if (!parentKey) {
@@ -170,17 +198,12 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 						clearKeyData(key);
 					}
 				}),
-			/** Imports a raw seed for HD wallet derivation */
-			importSeed: (seed): Promise<KeyId> =>
-				store.importKey({
+			/** Imports a raw seed or BIP39 mnemonic for HD wallet derivation */
+			importSeed: (seed, options): Promise<KeyId> =>
+				store.importSeed({
 					store: keyStore,
-					keyData: {
-						type: "hd-seed",
-						algorithm: "raw",
-						format: "bytes",
-						extractable: true,
-						privateKey: seed,
-					},
+					seed,
+					name: options?.name,
 				}),
 			/** Derives a new key from a stored seed using a path */
 			deriveFromSeed: (seedId, path, options): Promise<KeyId> =>

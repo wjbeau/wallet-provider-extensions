@@ -59,7 +59,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"directory": "logs",
+		"directory": "log",
 		"url": "https://github.com/algorandfoundation/wallet-provider-extensions.git"
 	}
 }

@@ -74,8 +74,13 @@ export async function generateXHDRootKeyFromSeed(
 	seed: SeedData,
 ): Promise<XHDRootKey> {
 	try {
-		if (seed.type !== "hd-seed" || typeof seed.privateKey === "undefined") {
-			throw new InvalidKeyDataError("XHD root keys require a hd-seed");
+		if (
+			seed.type !== "hd-seed" ||
+			typeof seed.privateKey === "undefined" ||
+			!(seed.privateKey instanceof Uint8Array)
+		) {
+			console.log("!!!!!!!!!!!!", typeof seed.privateKey, seed.type);
+			throw new InvalidKeyDataError("XHD root keys require a raw hd-seed");
 		}
 		const id = generateId();
 		return {
@@ -98,6 +103,7 @@ export async function generateXHDRootKeyFromSeed(
 
 /**
  * Generates a derived key or passkey from a parent root key.
+ * @param params - The generation parameters
  * @param params.key - Partial key data for the derived key
  * @param params.parentKey - The parent root key
  * @returns The fully populated derived key or passkey
@@ -112,16 +118,17 @@ export async function generateXHDFromParent({
 	const id = generateId();
 
 	let pk: Uint8Array<ArrayBufferLike> | undefined;
-
 	try {
 		switch (key.type) {
 			case "hd-derived-ed25519": {
 				if (
 					typeof parentKey.privateKey === "undefined" ||
+					!(parentKey.privateKey instanceof Uint8Array) ||
 					parentKey.type !== "hd-root-key"
 				) {
+					console.log(typeof parentKey.privateKey, parentKey.type);
 					throw new InvalidKeyDataError(
-						"XHD derived keys require a hd-root-key",
+						"XHD derived keys require a raw hd-root-key",
 					);
 				}
 
@@ -171,10 +178,11 @@ export async function generateXHDFromParent({
 			case "hd-derived-passkey": {
 				if (
 					typeof parentKey.privateKey === "undefined" ||
+					!(parentKey.privateKey instanceof Uint8Array) ||
 					parentKey.type !== "hd-root-key"
 				) {
 					throw new InvalidKeyDataError(
-						"XHD derived keys require a hd-root-key",
+						"XHD derived keys require a raw hd-root-key",
 					);
 				}
 
@@ -249,9 +257,9 @@ export async function generateKey({
 								"XHD derived keys require a rootKeyId, please upload it first using importSeed()",
 							);
 						}
-						if (!parentKey)
+						if (!parentKey || !(parentKey?.privateKey instanceof Uint8Array))
 							throw new InvalidKeyDataError(
-								"Seed is required to generate root key",
+								"Seed is required to generate root key and must be a Uint8Array",
 							);
 						return {
 							...keyData,
@@ -270,7 +278,7 @@ export async function generateKey({
 						"XHD derived keys require a rootKeyId, please upload it first using importSeed()",
 					);
 				}
-				if (!parentKey)
+				if (!parentKey || !(parentKey?.privateKey instanceof Uint8Array))
 					throw new InvalidKeyDataError(
 						"Seed is required to generate root key",
 					);

@@ -30,7 +30,7 @@ const provider = new MyProvider({ id: "my-provider", name: "My Wallet" });
 // 2) Emit logs through the provider API
 provider.log.info("Initialized wallet", { scope: "init" });
 provider.log.warn("Low balance warning", { account: "ABC123" });
-provider.log.error("Transaction failed", { txId: "XYZ" });
+provider.log.error("Operation failed", { errorId: "XYZ" });
 
 // 3) Read logs from provider state
 console.log(provider.logs);
@@ -87,7 +87,7 @@ export function LogList() {
 
 ## Tips & Best Practices
 
-- Use metadata to attach helpful context such as `account`, `txId`, or `scope`.
+- Use metadata to attach helpful context such as `account`, `requestId`, or `scope`.
 - Consider piping `provider.logs` to your own transport (e.g., remote telemetry) if you need persistence.
 - `console.*` calls are mirrored for convenience during development. In production, filter or redirect as needed.
 

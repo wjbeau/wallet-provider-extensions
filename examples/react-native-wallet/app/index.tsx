@@ -97,7 +97,7 @@ export default function Index() {
             algorithm: 'raw',
             extractable: true,
             keyUsages: ['deriveKey', 'deriveBits'],
-            privateKey: randomBytes(64)
+            privateKey: new Uint8Array(randomBytes(64))
         }, 'bytes')
 
         const rootKeyId = await keystore.generate({
@@ -118,7 +118,7 @@ export default function Index() {
             const keyData = await keystore.export(id);
             Alert.alert(
                 "Key Material",
-                JSON.stringify(keyData, (key, value) => {
+                JSON.stringify(keyData, (_key, value) => {
                     if (value instanceof Uint8Array) {
                         return Array.from(value).map(b => b.toString(16).padStart(2, '0')).join('');
                     }

@@ -47,7 +47,7 @@ export interface KeyStoreState {
 	 * - `"generating"` — creating a new key/seed
 	 * - `"importing"` — importing an existing key
 	 * - `"deriving"` — deriving a key from a seed
-	 * - `"signing"` — signing data/transactions
+	 * - `"signing"` — signing arbitrary data
 	 * - `"encrypting"` / `"decrypting"` — performing crypto on payloads
 	 */
 	status: string;

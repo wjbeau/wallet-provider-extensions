@@ -7,8 +7,8 @@ This package provides the base interfaces and reactive store for managing crypto
 ## Why This Exists
 
 By separating the store and types from the implementation, we enable:
-- **Pluggable Backends**: Easily swap between different storage mechanisms (React Native, Browser Extension, Cloud KMS).
-- **Type Safety**: Unified interfaces for all keystore-related operations.
+- **Environment Specific Implementations**: Use specialized extensions for different contexts (e.g., React Native, Browser Extension, Cloud KMS) that all fulfill the same contract.
+- **Type Safety**: Unified interfaces for all keystore-related operations, including arbitrary data signing and HD derivation.
 - **Reactive State**: Built-in state management using [@tanstack/store](https://tanstack.com/store) for UI-safe key metadata.
 
 ## Core Components

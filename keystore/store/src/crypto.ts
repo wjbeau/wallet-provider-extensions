@@ -7,7 +7,17 @@ import {
 	crypto_secretbox_open_easy,
 } from "@algorandfoundation/xhd-wallet-api/dist/sumo.facade.js";
 import { InvalidKeyDataError } from "./errors.ts";
-import type { KeyData } from "./types/index.ts";
+import type { Key, KeyData } from "./types/index.ts";
+
+export const derivableTypes: string[] = [
+	"hd-root-key",
+	"hd-derived-ed25519",
+	"hd-derived-passkey",
+];
+
+export function requiresParentKey(key: Partial<Key>): boolean {
+	return typeof key.type !== "undefined" && derivableTypes.includes(key.type);
+}
 
 /**
  * Clears sensitive key material from a KeyData object.
@@ -18,7 +28,8 @@ export function clearKeyData(key?: Partial<KeyData> | null): void {
 	if (
 		key &&
 		typeof key !== "undefined" &&
-		typeof key.privateKey !== "undefined"
+		typeof key.privateKey !== "undefined" &&
+		key.privateKey instanceof Uint8Array
 	) {
 		clearBuffer(key.privateKey);
 		delete key.privateKey;

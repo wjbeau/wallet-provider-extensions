@@ -1,6 +1,6 @@
 # @algorandfoundation/react-native-keystore
 
-A secure, pluggable key management system for the Algorand Wallet Provider. Manage cryptographic keys, derive HD wallets from BIP39 seeds, and sign transactions—all while keeping private keys locked away in a secure vault.
+A secure key management system for the Algorand Wallet Provider. Manage cryptographic keys, derive HD wallets from BIP39 seeds, and sign arbitrary data—all while keeping private keys locked away in a secure vault.
 
 ## Why This Exists
 
@@ -9,27 +9,41 @@ Building a non-custodial wallet requires a **secure, isolated key vault**. The K
 - **Users** import their BIP39 mnemonic once
 - **Wallet UI** requests signatures without ever seeing the seed or private keys
 - **Keystore backend** handles all cryptographic operations securely
-- **Keys never leave the vault** — they stay in-memory, HSM, or cloud KMS
+- **Keys are cleared from memory** immediately after use, never staying in memory
 - **Every operation is audited** for compliance and security forensics
 
 This architecture enables:
 - ✅ Non-custodial key management (users control keys)
 - ✅ Multi-account support from a single seed (Algorand's `m/44'/283'/account'/change/index`)
-- ✅ Isolated, secure communication (IPC for browser extensions)
-- ✅ Pluggable backends for different security levels (software → HSM → cloud)
 - ✅ Ed25519 signing for Algorand
 
 ## Quick Start
 
 ### 1. Initialize the Keystore
 
+The keystore is typically used as an extension for the Algorand Wallet Provider.
+
 ```typescript
 import { WithKeyStore } from "@algorandfoundation/react-native-keystore";
 import { Provider } from "@algorandfoundation/wallet-provider";
+import { keyStore } from "./stores/keystore";
+import { keyStoreHooks } from "./stores/hooks";
 
-const ProviderWithKeystore = Provider.withExtensions([WithKeyStore]);
-const provider = new ProviderWithKeystore({
-  // options
+// Use the concrete provider pattern
+class MyProvider extends Provider<typeof MyProvider.EXTENSIONS> {
+  static EXTENSIONS = [WithKeyStore] as const;
+}
+
+const provider = new MyProvider({
+  id: "my-app",
+  name: "My Application"
+}, {
+  keystore: {
+    extension: {
+      store: keyStore,
+      hooks: keyStoreHooks
+    }
+  }
 });
 ```
 
@@ -37,21 +51,26 @@ const provider = new ProviderWithKeystore({
 
 ```typescript
 const keyId = await provider.keystore.generate({
-  type: "ecc",
+  type: "hd-derived-ed25519",
   algorithm: "EdDSA",
   extractable: false,
-  keyUsages: ["sign"]
+  keyUsages: ["sign"],
+  params: {
+    parentKeyId: seedId,
+    account: 0,
+    index: 0
+  }
 });
 
 console.log(keyId); // "abc-123..."
 ```
 
-### 3. Sign a Transaction
+### 3. Sign Arbitrary Data
 
 ```typescript
-const transactionBytes = new Uint8Array([1, 2, 3, ...]);
+const data = new Uint8Array([1, 2, 3, ...]);
 
-const signature = await provider.keystore.sign(keyId, transactionBytes);
+const signature = await provider.keystore.sign(keyId, data);
 // Private key never exposed — signature is returned directly
 ```
 
@@ -81,8 +100,8 @@ const account1 = await provider.keystore.deriveFromSeed(
 );
 
 // Sign with any account — keys are isolated
-const sig0 = await provider.keystore.sign(account0, transactionBytes);
-const sig1 = await provider.keystore.sign(account1, transactionBytes);
+const sig0 = await provider.keystore.sign(account0, data);
+const sig1 = await provider.keystore.sign(account1, data);
 ```
 
 ## API Overview
@@ -102,7 +121,7 @@ const keyData = await provider.keystore.export(keyId);
 
 // Sign and verify
 const signature = await provider.keystore.sign(keyId, data);
-const isValid = await keystore.verify(keyId, data, signature);
+const isValid = await provider.keystore.verify(keyId, data, signature);
 
 // HD Wallet derivation
 const derivedKeyId = await provider.keystore.deriveFromSeed(seedId, "m/44'/283'/0'/0/0");
@@ -119,8 +138,9 @@ await provider.keystore.clear();
 ### Private Keys
 
 - ✅ **Never exported** from the keystore
-- ✅ **Never exposed** to the wallet UI
-- ✅ **Always encrypted** at rest (using Keychain/MMKV)
+- ✅ **Never exposed** to the wallet UI or React state
+- ✅ **Always encrypted** at rest (Stored in MMKV, encrypted with Keychain-backed master key)
+- ✅ **Ephemeral in memory** — cleared immediately after use via `clearBuffer`
 - ✅ **Isolated** per derivation path (multi-account support)
 
 ### Seeds (BIP39)
@@ -128,11 +148,14 @@ await provider.keystore.clear();
 - ✅ **Never exported** after import
 - ✅ **Never shared** with wallet UI
 - ✅ **Derivation happens inside** the secure backend
+- ✅ **Ephemeral in memory** — seeds are cleared after derivation
 - ✅ **Child keys are isolated** — deriving Account 0 doesn't expose the seed
 
-## Architecture
+## Architecture & Bootstrapping
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for design details.
+For more detailed information, see:
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — Design details and storage flow.
+- [BOOTSTRAPPING.md](./BOOTSTRAPPING.md) — Complete integration and startup guide.
 
 ## License
 

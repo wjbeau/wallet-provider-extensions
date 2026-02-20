@@ -15,7 +15,7 @@ import type { KeyStoreState } from "./extension.ts";
  * Think of it as a "key manager" that can create, store, and use cryptographic keys.
  *
  * Use cases:
- * - Generate keys for signing blockchain transactions.
+ * - Generate keys for signing arbitrary data.
  * - Import keys from external sources (e.g., other wallets).
  * - Derive new keys from a master seed for HD wallets.
  * - Sign data with private keys and verify signatures with public keys.
@@ -28,7 +28,6 @@ export interface KeyStoreAPI {
 	 *
 	 * @param options - Generation parameters including {@link KeyType} and {@link Algorithm}.
 	 * @returns The unique {@link KeyId} of the generated key.
-	 * @throws {KeyGenerationNotSupportedError} If the algorithm is not supported.
 	 */
 	generate(options: GenerateOptions): Promise<KeyId>;
 
@@ -41,7 +40,10 @@ export interface KeyStoreAPI {
 	 * @throws {InvalidKeyFormatError} If the format is invalid.
 	 * @throws {InvalidKeyDataError} If the key data is malformed.
 	 */
-	import(data: Omit<KeyData, "id">, format: KeyFormat): Promise<KeyId>;
+	import(
+		data: Omit<KeyData, "id"> | Uint8Array | string,
+		format: KeyFormat,
+	): Promise<KeyId>;
 
 	/**
 	 * Exports a key from the keystore (usually public key only, for security).
@@ -132,13 +134,13 @@ export interface KeyStoreAPI {
 	): Promise<Uint8Array>;
 
 	/**
-	 * Imports a raw seed (64 bytes / 512 bits) for HD wallets.
+	 * Imports a raw seed (64 bytes / 512 bits) or a BIP39 mnemonic for HD wallets.
 	 *
-	 * @param seed - The raw seed bytes.
+	 * @param seed - The raw seed bytes or BIP39 mnemonic string.
 	 * @param options - Optional configuration for the seed.
 	 * @returns The {@link KeyId} assigned to the seed.
 	 */
-	importSeed?(seed: Uint8Array, options?: KeyOptions): Promise<KeyId>;
+	importSeed?(seed: Uint8Array | string, options?: KeyOptions): Promise<KeyId>;
 
 	/**
 	 * Derives a new key from a seed using HD derivation path.

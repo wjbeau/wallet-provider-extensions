@@ -2,8 +2,6 @@
  * @module default
  * @packageDocumentation
  *
- * @todo Deprecate the default entry point with `export *` is deprecated to improve tree-shaking and maintainability.
- *
  * While this entry point still works for backward compatibility, it is recommended to
  * migrate to named exports or use specific sub-paths:
  * - `@algorandfoundation/keystore/types`
