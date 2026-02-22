@@ -14,6 +14,7 @@ import {useProvider} from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {randomBytes} from "react-native-quick-crypto";
 import {useState, useEffect} from "react";
+import { Link } from "expo-router";
 
 // No LayoutAnimation needed anymore
 const ROOT_COLORS = ['#007AFF', '#34C759', '#5856D6', '#AF52DE', '#FF9500', '#FF3B30', '#FFCC00', '#5AC8FA'];
@@ -142,7 +143,15 @@ export default function Index() {
                         <Text style={styles.statusText}>{status}</Text>
                     </View>
                 </View>
-                {status === 'computing' && <ActivityIndicator size="small" color="#007AFF" />}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Link href="/accounts" asChild>
+                        <TouchableOpacity style={styles.navButton}>
+                            <MaterialCommunityIcons name="account-group" size={24} color="#007AFF" />
+                            <Text style={styles.navButtonText}>Accounts</Text>
+                        </TouchableOpacity>
+                    </Link>
+                    {status === 'computing' && <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 10 }} />}
+                </View>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -435,6 +444,24 @@ const styles = StyleSheet.create({
     welcomeText: {
         fontSize: 14,
         color: '#666',
+    },
+    navButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFF',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    navButtonText: {
+        marginLeft: 4,
+        color: '#007AFF',
+        fontWeight: '600',
     },
     walletName: {
         fontSize: 22,

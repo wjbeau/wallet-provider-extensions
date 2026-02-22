@@ -6,6 +6,7 @@ import {keyStoreHooks} from "@/stores/before-after";
 import {fetchSecret, getMasterKey, storage} from "@algorandfoundation/react-native-keystore";
 import {initializeKeyStore, Key, KeyData, KeyStoreState, setStatus} from "@algorandfoundation/keystore";
 import { Store } from "@tanstack/store";
+import {accountsStore} from "@/stores/accounts";
 
 install();
 
@@ -21,6 +22,12 @@ export default function RootLayout() {
     name: 'React Native Wallet',
   }, {
     logs: true,
+    accounts: {
+      store: accountsStore,
+      keystore: {
+        autoPopulate: true,
+      }
+    },
     keystore: {
       extension: {store: keyStore, hooks: keyStoreHooks}
     }

@@ -14,6 +14,8 @@
   "dependencies": {
     "@algorandfoundation/wallet-provider": "^1.0.0-canary.2",
     "@algorandfoundation/react-native-keystore": "^0.0.1",
+    "@algorandfoundation/accounts-store": "0.0.1",
+    "@algorandfoundation/accounts-keystore-extension": "0.0.1",
     "@algorandfoundation/log-store": "^0.0.1",
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/bottom-tabs": "^7.4.0",

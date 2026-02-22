@@ -5,6 +5,7 @@
   "workspaces": [
     "build/**",
     "log/**",
+    "accounts/**",
     "keystore/**",
     "!keystore/react-native/lib/**",
     "examples/**"
