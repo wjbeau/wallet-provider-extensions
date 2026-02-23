@@ -1,3 +1,10 @@
+# [keystore@1.0.0-canary.6](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.5...keystore@1.0.0-canary.6) (2026-02-23)
+
+
+### Bug Fixes
+
+* add watcher for logstore builds ([12d54d3](https://github.com/algorandfoundation/wallet-provider-extensions/commit/12d54d3cb26df8ae4acce71dec2fa14424598d45))
+
 # [keystore@1.0.0-canary.5](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.4...keystore@1.0.0-canary.5) (2026-02-23)
 
 
