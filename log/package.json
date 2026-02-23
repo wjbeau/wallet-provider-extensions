@@ -5,19 +5,11 @@
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"sideEffects": false,
+	"sideEffects": true,
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
-		},
-		"./types": {
-			"types": "./dist/types/index.d.ts",
-			"import": "./dist/types/index.js"
-		},
-		"./errors": {
-			"types": "./dist/errors/index.d.ts",
-			"import": "./dist/errors/index.js"
 		}
 	},
 	"scripts": {
@@ -37,15 +29,6 @@
 		"access": "public",
 		"provenance": true
 	},
-	"files": [
-		"*.js",
-		"*.js.map",
-		"*.d.ts",
-		"*.d.ts.map",
-		"src/*.ts",
-		"!src/*.bench.ts",
-		"!src/*.test.ts"
-	],
 	"dependencies": {
 		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3"
 	},
