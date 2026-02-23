@@ -1,16 +1,15 @@
 import type { ExtensionOptions } from "@algorandfoundation/wallet-provider";
+import type { Store } from "@tanstack/store";
 import type { HookCollection } from "before-after-hook";
-import type {Store} from "@tanstack/store";
 
 /**
  * Options for the AccountStore extension.
  */
 export interface AccountStoreOptions extends ExtensionOptions {
 	accounts: {
-		store: Store<AccountStoreState>,
-		hooks: HookCollection<any>
-	}
-
+		store: Store<AccountStoreState>;
+		hooks: HookCollection<any>;
+	};
 }
 
 export type AccountType = "ed25519" | "lsig" | "falcon" | string;
@@ -82,7 +81,7 @@ export interface AccountStoreExtension extends AccountStoreState {
 	 */
 	account: {
 		store: AccountStoreApi;
-	}
+	};
 }
 
 /**

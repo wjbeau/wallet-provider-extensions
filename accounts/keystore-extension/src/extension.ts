@@ -1,11 +1,21 @@
-import type {Account, AccountStoreExtension, AccountStoreState} from "@algorandfoundation/accounts-store";
-import type {Key, KeyId, KeyStoreExtension, KeyStoreState, XHDDerivedKeyData} from "@algorandfoundation/keystore";
+import type {
+	Account,
+	AccountStoreExtension,
+	AccountStoreState,
+} from "@algorandfoundation/accounts-store";
+import type {
+	Key,
+	KeyId,
+	KeyStoreExtension,
+	KeyStoreState,
+	XHDDerivedKeyData,
+} from "@algorandfoundation/keystore";
 import type { Extension } from "@algorandfoundation/wallet-provider";
+import type { Store } from "@tanstack/store";
 import type {
 	AccountsKeystoreExtension,
 	AccountsKeystoreExtensionOptions,
 } from "./types.ts";
-import type {Store} from "@tanstack/store";
 
 /**
  * Extension that bridges the account store and keystore.
@@ -45,7 +55,9 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 
 		// TODO: Transfer helper
 		transfer(amount: bigint, account: Account) {
-			console.log(`Transferring ${amount} from ${address} to ${account.address}`);
+			console.log(
+				`Transferring ${amount} from ${address} to ${account.address}`,
+			);
 		},
 		// TODO: TransactionSigners
 		sign: async (txns: Uint8Array[]) => {
@@ -62,45 +74,56 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 	// Initial population if enabled
 	if (autoPopulate) {
 		console.log("Auto-populating accounts from keystore...");
-		const keys = [...((provider.keys as Key[])?? [])] ;
+		const keys = [...((provider.keys as Key[]) ?? [])];
 		for (const key of keys) {
 			console.log(`Adding account for key ${key.id}-${key.type}...`);
 			if (key.type === "hd-derived-ed25519") {
-				provider.account.store.addAccount(createKeyAccount(key.id, (key as XHDDerivedKeyData)?.metadata?.address?.algorand as string ?? "TODO: Add addresses to types"));
+				provider.account.store.addAccount(
+					createKeyAccount(
+						key.id,
+						((key as XHDDerivedKeyData)?.metadata?.address
+							?.algorand as string) ?? "TODO: Add addresses to types",
+					),
+				);
 			}
 		}
 
-
-
-		keyStore.subscribe((state)=>{
+		keyStore.subscribe((state) => {
 			const newKeys = (state as unknown as KeyStoreState).keys;
 
 			// Find the difference between keys and newKeys
-			const addedKeys = newKeys.filter(newKey =>
-				!keys.some(existingKey => existingKey.id === newKey.id)
+			const addedKeys = newKeys.filter(
+				(newKey) => !keys.some((existingKey) => existingKey.id === newKey.id),
 			);
 
-			if(addedKeys.length === 0) return;
+			if (addedKeys.length === 0) return;
 
-			addedKeys.forEach(k => {
+			addedKeys.forEach((k) => {
 				keys.push(k);
-			})
+			});
 
-			const accounts = [...accountStore.state.accounts] as unknown as Account[]
+			const accounts = [...accountStore.state.accounts] as unknown as Account[];
 
 			// Process only the newly added keys
-			addedKeys.forEach(k => {
-				if(k.type === "hd-derived-ed25519") {
-					console.log(`Adding account for key ${k.id}-${k.type}...`)
-					const address = (k as XHDDerivedKeyData)?.metadata?.address?.algorand as string;
-						if(address) {
-							provider.account.store.addAccount(createKeyAccount(k.id, address));
-						}
+			addedKeys.forEach((k) => {
+				if (k.type === "hd-derived-ed25519") {
+					console.log(`Adding account for key ${k.id}-${k.type}...`);
+					const address = (k as XHDDerivedKeyData)?.metadata?.address
+						?.algorand as string;
+					if (address) {
+						provider.account.store.addAccount(createKeyAccount(k.id, address));
+					}
 				}
-			})
-			if (keys.some(k => k.type === "hd-derived-ed25519")) console.log(`Found ${keys.length} keys, ${keys.filter(k => k.type === "hd-derived-ed25519").length} HD keys`)
-			if (accounts.some(a => a.type === "ed25519")) console.log(`Found ${accounts.length} accounts, ${accounts.filter(a => a.type === "ed25519").length} non-accounts`)
-		})
+			});
+			if (keys.some((k) => k.type === "hd-derived-ed25519"))
+				console.log(
+					`Found ${keys.length} keys, ${keys.filter((k) => k.type === "hd-derived-ed25519").length} HD keys`,
+				);
+			if (accounts.some((a) => a.type === "ed25519"))
+				console.log(
+					`Found ${accounts.length} accounts, ${accounts.filter((a) => a.type === "ed25519").length} non-accounts`,
+				);
+		});
 
 		// We can also listen for new keys added to the keystore
 		provider.key.store.hooks.after("generate", async (keyId: KeyId) => {

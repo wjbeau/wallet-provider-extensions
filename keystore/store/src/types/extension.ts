@@ -70,5 +70,5 @@ export interface KeyStoreExtension extends KeyStoreState {
 			 */
 			hooks: HookCollection<any>;
 		};
-	}
+	};
 }

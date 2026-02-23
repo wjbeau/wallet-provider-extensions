@@ -7,6 +7,7 @@ import {
 import * as bip39 from "@scure/bip39";
 import { wordlist as englishWordList } from "@scure/bip39/wordlists/english.js";
 import { clearKeyData, getBIP44PathFromContext } from "./crypto.ts";
+import { encodeAddress } from "./encoding.ts";
 import { InvalidKeyDataError } from "./errors.ts";
 import { dp256, xhd } from "./libs.ts";
 import type {
@@ -17,7 +18,6 @@ import type {
 	XHDPasskey,
 	XHDRootKey,
 } from "./types/index.ts";
-import {encodeAddress} from "./encoding.ts";
 
 /**
  * Options for BIP39 mnemonic generation.
@@ -171,7 +171,7 @@ export async function generateXHDFromParent({
 					metadata: {
 						...metadata,
 						address: {
-							algorand: encodeAddress(pk)
+							algorand: encodeAddress(pk),
 						},
 						parentKeyId: parentKey.id,
 					},

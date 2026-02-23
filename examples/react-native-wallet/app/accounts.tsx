@@ -6,7 +6,6 @@ import {
     SafeAreaView,
     ScrollView,
     StatusBar,
-    ActivityIndicator,
 } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import {useProvider} from "@/hooks/useProvider";

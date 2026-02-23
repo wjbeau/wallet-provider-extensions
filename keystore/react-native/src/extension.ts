@@ -103,10 +103,10 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 						typeof data === "string" || data instanceof Uint8Array
 							? { type: "raw" }
 							: {
-								...data.metadata,
-								type: (data as any).type,
-								algorithm: (data as any).algorithm,
-							},
+									...data.metadata,
+									type: (data as any).type,
+									algorithm: (data as any).algorithm,
+								},
 						context,
 					);
 					if (
@@ -128,7 +128,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 				remove: (id) =>
 					keyStoreHooks(
 						"remove",
-						async function handleRemove({ keyId }: {keyId: KeyId}) {
+						async function handleRemove({ keyId }: { keyId: KeyId }) {
 							await store.removeKey({ store: keyStore, keyId });
 						},
 						{ keyId: id },
@@ -147,9 +147,9 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 					keyStoreHooks(
 						"sign",
 						async function handleSign({
-													  id,
-													  data,
-												  }: {
+							id,
+							data,
+						}: {
 							id: string;
 							data: Uint8Array<ArrayBufferLike>;
 						}) {
@@ -176,7 +176,9 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 										);
 								}
 								if (!parentKey) {
-									throw new InvalidKeyDataError("Missing parent key for HD key");
+									throw new InvalidKeyDataError(
+										"Missing parent key for HD key",
+									);
 								}
 								return sign({ store: keyStore, key, parentKey, data });
 							} finally {
@@ -195,7 +197,13 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 							key = await fetchSecret<KeyData>({ keyId: id });
 							if (!key) throw new KeyNotFoundError(id);
 							// Verify the signature
-							return verify({ store: keyStore, key, data, signature, algorithm });
+							return verify({
+								store: keyStore,
+								key,
+								data,
+								signature,
+								algorithm,
+							});
 						} finally {
 							clearKeyData(key);
 						}
@@ -266,9 +274,9 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 					keyStoreHooks(
 						"batchSign",
 						async ({
-								   ids,
-								   data,
-							   }: {
+							ids,
+							data,
+						}: {
 							ids: KeyId[];
 							data: Uint8Array<ArrayBufferLike>[];
 						}) => {
@@ -290,10 +298,10 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 									keys.map((key, i) => {
 										return key
 											? signWithKeyData({
-												key,
-												data: data[i] as Uint8Array<ArrayBufferLike>,
-												parentKey: parentKeys[i] as KeyData,
-											})
+													key,
+													data: data[i] as Uint8Array<ArrayBufferLike>,
+													parentKey: parentKeys[i] as KeyData,
+												})
 											: null;
 									}),
 								);
@@ -309,6 +317,6 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 					),
 				hooks: keyStoreHooks,
 			},
-		}
+		},
 	} as KeyStoreExtension;
 };

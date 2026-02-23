@@ -1,4 +1,4 @@
-import type {Extension} from "@algorandfoundation/wallet-provider";
+import type { Extension } from "@algorandfoundation/wallet-provider";
 import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 import {
@@ -44,21 +44,19 @@ export const WithAccountStore: Extension<AccountStoreExtension> = (
 		account: {
 			store: provider.account?.store || {
 				async addAccount(account: Account) {
-					return hooks("add", addAccount, {store, account});
+					return hooks("add", addAccount, { store, account });
 				},
 				async removeAccount(address: string) {
-					return hooks("remove", removeAccount, {store, address});
+					return hooks("remove", removeAccount, { store, address });
 				},
 				async getAccount(address: string) {
-					return hooks("get", getAccount, {store, address});
+					return hooks("get", getAccount, { store, address });
 				},
 				async clear() {
-					return hooks("clear", clearAccounts, {store});
+					return hooks("clear", clearAccounts, { store });
 				},
 				hooks,
 			},
-
-
 		},
 	} as AccountStoreExtension;
 };
