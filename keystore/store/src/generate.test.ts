@@ -78,7 +78,7 @@ describe("generate.ts", () => {
 		const derived = await generateXHDFromParent({ key: keyData, parentKey });
 		expect(derived.type).toBe("hd-derived-ed25519");
 		expect(derived.metadata.parentKeyId).toBe("root-1");
-		expect(new Uint8Array(Object.values(derived.privateKey as any))).toEqual(
+		expect(new Uint8Array(Object.values(derived.publicKey as any))).toEqual(
 			new Uint8Array([1, 2, 3]),
 		);
 	});
