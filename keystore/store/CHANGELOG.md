@@ -1,3 +1,11 @@
+# [keystore@1.0.0-canary.3](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.2...keystore@1.0.0-canary.3) (2026-02-23)
+
+
+### Features
+
+* pure interfaces with example app ([638b8b3](https://github.com/algorandfoundation/wallet-provider-extensions/commit/638b8b341d454635415b60f3dd5672642a08f7b2))
+* react-native-keystore alignment ([44a2f0f](https://github.com/algorandfoundation/wallet-provider-extensions/commit/44a2f0fb6efb14e37afbafa3d7f6ab84da5b268c))
+
 # [keystore@1.0.0-canary.2](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.1...keystore@1.0.0-canary.2) (2026-02-18)
 
 
