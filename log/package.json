@@ -1,6 +1,6 @@
 {
 	"name": "@algorandfoundation/log-store",
-	"version": "1.0.0-canary.1",
+	"version": "1.0.0-canary.2",
 	"description": "Generalized log for extensions",
 	"type": "module",
 	"main": "dist/index.js",
@@ -22,13 +22,13 @@
 		"test": "vitest run",
 		"test:cov": "vitest run --coverage",
 		"bench": "vitest bench",
-		"release": "package-releaser"
+		"release": "package-releaser --dry-run"
 	},
 	"author": "Algorand Foundation",
 	"license": "Apache-2.0",
 	"publishConfig": {
 		"access": "public",
-		"provenance": true
+		"provenance": false
 	},
 	"dependencies": {
 		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3"
