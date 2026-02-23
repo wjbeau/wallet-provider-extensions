@@ -5,7 +5,6 @@
   "skipErrorChecking": true,
   "exclude": ["**/*.test.ts", "**/*.bench.ts"],
   "entryPoints": [
-    "build",
     "keystore/store",
     "keystore/react-native",
     "log"
