@@ -50,7 +50,7 @@
 	],
 	"dependencies": {
 		"@algorandfoundation/dp256": "^1.1.0",
-		"@algorandfoundation/keystore": "^1.0.0-canary.1",
+		"@algorandfoundation/keystore": "^1.0.0-canary.2",
 		"@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
 		"@scure/base": "^2.0.0",
 		"@scure/bip39": "^2.0.1",
