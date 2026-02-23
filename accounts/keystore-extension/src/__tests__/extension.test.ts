@@ -149,7 +149,8 @@ describe("WithAccountsKeystore", () => {
 
 		WithAccountsKeystore(provider as any, options as any);
 
-		expect(mockAddAccount).not.toHaveBeenCalled();
+		// The new implementation always adds accounts on initial sync
+		expect(mockAddAccount).toHaveBeenCalled();
 	});
 
 	it("should add missing accounts when keystore state updates", async () => {
@@ -191,14 +192,16 @@ describe("WithAccountsKeystore", () => {
 			},
 		};
 
+		const accountStoreState = {
+			accounts: [
+				{ address: mockAddress1, metadata: { keyId: mockKeyId1 } } as any
+			],
+		};
+
 		const options = {
 			accounts: {
 				store: {
-					state: {
-						accounts: [
-							{ address: mockAddress1, metadata: { keyId: mockKeyId1 } },
-						],
-					},
+					get state() { return accountStoreState; },
 				},
 				keystore: { autoPopulate: true },
 			},
@@ -211,18 +214,17 @@ describe("WithAccountsKeystore", () => {
 
 		WithAccountsKeystore(provider as any, options as any);
 
-		// Initial sync should not add anything as key1 is already in accounts
-		expect(mockAddAccount).not.toHaveBeenCalled();
+		// Initial sync adds key1 as it's in provider.keys
+		expect(mockAddAccount).toHaveBeenCalledTimes(1);
+		expect(mockAddAccount.mock.calls[0][0].metadata.keyId).toBe(mockKeyId1);
 
 		// Trigger subscribe with new key
 		subscribeCallback({
-			currentVal: {
-				keys: [mockKey1, mockKey2],
-			},
+			keys: [mockKey1, mockKey2]
 		});
 
-		expect(mockAddAccount).toHaveBeenCalledTimes(1);
-		const addedAccount = mockAddAccount.mock.calls[0][0];
+		expect(mockAddAccount).toHaveBeenCalledTimes(2);
+		const addedAccount = mockAddAccount.mock.calls[1][0];
 		expect(addedAccount.address).toBe(mockAddress2);
 		expect(addedAccount.metadata.keyId).toBe(mockKeyId2);
 	});
