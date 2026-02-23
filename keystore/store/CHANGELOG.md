@@ -1,3 +1,10 @@
+# [keystore@1.0.0-canary.5](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.4...keystore@1.0.0-canary.5) (2026-02-23)
+
+
+### Bug Fixes
+
+* rollback build optimization for log-store ([340ca78](https://github.com/algorandfoundation/wallet-provider-extensions/commit/340ca78317a742cd300abd26ac0c27f1197ba225))
+
 # [keystore@1.0.0-canary.4](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.3...keystore@1.0.0-canary.4) (2026-02-23)
 
 
