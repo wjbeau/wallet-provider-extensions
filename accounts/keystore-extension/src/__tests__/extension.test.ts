@@ -194,14 +194,16 @@ describe("WithAccountsKeystore", () => {
 
 		const accountStoreState = {
 			accounts: [
-				{ address: mockAddress1, metadata: { keyId: mockKeyId1 } } as any
+				{ address: mockAddress1, metadata: { keyId: mockKeyId1 } } as any,
 			],
 		};
 
 		const options = {
 			accounts: {
 				store: {
-					get state() { return accountStoreState; },
+					get state() {
+						return accountStoreState;
+					},
 				},
 				keystore: { autoPopulate: true },
 			},
@@ -220,7 +222,7 @@ describe("WithAccountsKeystore", () => {
 
 		// Trigger subscribe with new key
 		subscribeCallback({
-			keys: [mockKey1, mockKey2]
+			keys: [mockKey1, mockKey2],
 		});
 
 		expect(mockAddAccount).toHaveBeenCalledTimes(2);

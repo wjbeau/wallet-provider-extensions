@@ -2,7 +2,12 @@ import { Provider } from "@algorandfoundation/wallet-provider";
 import { Store } from "@tanstack/store";
 import { describe, expect, it } from "vitest";
 import { WithAccountStore } from "./extension.ts";
-import { addAccount, clearAccounts, getAccount, removeAccount } from "./store.ts";
+import {
+	addAccount,
+	clearAccounts,
+	getAccount,
+	removeAccount,
+} from "./store.ts";
 import type { Account, AccountStoreState } from "./types.ts";
 
 describe("Account Store Extension", () => {
