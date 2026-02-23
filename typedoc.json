@@ -2,8 +2,17 @@
   "name": "Wallet Provider Extensions",
   "entryPointStrategy": "packages",
   "alwaysCreateEntryPointModule": true,
+  "skipErrorChecking": true,
+  "exclude": ["**/*.test.ts", "**/*.bench.ts"],
   "entryPoints": [
-    "keystore"
+    "keystore/store",
+    "keystore/react-native",
+    "log"
   ],
-  "readme": "./README.md"
+ 	"externalSymbolLinkMappings": {
+		"@algorandfoundation/xhd-wallet-api": {
+			"KeyContext": "https://algorandfoundation.github.io/xhd-wallet-api/enums/KeyContext.html"
+		}
+	},
+	"readme": "./README.md"
 }
