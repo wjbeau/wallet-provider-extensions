@@ -20,7 +20,7 @@ import { Link } from "expo-router";
 const ROOT_COLORS = ['#007AFF', '#34C759', '#5856D6', '#AF52DE', '#FF9500', '#FF3B30', '#FFCC00', '#5AC8FA'];
 
 export default function Index() {
-    const {keys, keystore, status} = useProvider();
+    const {keys, key, status} = useProvider();
 
     const [activeKey, setActiveKey] = useState<string | null>(null);
     const [activeSeed, setActiveSeed] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export default function Index() {
         // Pick the next available index for the derived key
         const nextIndex = keys.filter(k => k.type === 'hd-derived-ed25519' && k?.metadata?.parentKeyId === activeSeed).length;
         console.log('Next index:', nextIndex, keys.filter(k => k.type === 'hd-derived-ed25519'));
-        const keyId = await keystore.generate({
+        const keyId = await key.store.generate({
             type: 'hd-derived-ed25519',
             algorithm: 'EdDSA',
             extractable: true,
@@ -93,7 +93,7 @@ export default function Index() {
     };
 
     const handleImportSeed = async () => {
-        const keyId = await keystore.import({
+        const keyId = await key.store.import({
             type: 'hd-seed',
             algorithm: 'raw',
             extractable: true,
@@ -101,7 +101,7 @@ export default function Index() {
             privateKey: new Uint8Array(randomBytes(64))
         }, 'bytes')
 
-        const rootKeyId = await keystore.generate({
+        const rootKeyId = await key.store.generate({
             type: 'hd-root-key',
             algorithm: 'raw',
             extractable: true,
@@ -116,7 +116,7 @@ export default function Index() {
 
     const handleExportKey = async (id: string) => {
         try {
-            const keyData = await keystore.export(id);
+            const keyData = await key.store.export(id);
             Alert.alert(
                 "Key Material",
                 JSON.stringify(keyData, (_key, value) => {
@@ -175,7 +175,7 @@ export default function Index() {
                             </View>
                             <Text style={styles.actionText}>Import</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton} onPress={() => keystore.clear()} disabled={status !== 'idle'}>
+                        <TouchableOpacity style={styles.actionButton} onPress={() => key.store.clear()} disabled={status !== 'idle'}>
                             <View style={[styles.iconCircle, {backgroundColor: '#FFF3E0'}]}>
                                 <MaterialCommunityIcons name="delete-sweep-outline" size={24} color="#FF9800" />
                             </View>
@@ -246,7 +246,7 @@ export default function Index() {
                                                 <View style={styles.exportBadgeSmall} />
                                             )}
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => keystore.remove(item.id)}>
+                                        <TouchableOpacity onPress={() => key.store.remove(item.id)}>
                                             <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
                                         </TouchableOpacity>
                                     </View>
@@ -315,7 +315,7 @@ export default function Index() {
                                                 <View style={styles.exportBadgeSmall} />
                                             )}
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => keystore.remove(item.id)}>
+                                        <TouchableOpacity onPress={() => key.store.remove(item.id)}>
                                             <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
                                         </TouchableOpacity>
                                     </View>
@@ -384,7 +384,7 @@ export default function Index() {
                                                 <View style={styles.exportBadgeSmall} />
                                             )}
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => keystore.remove(item.id)}>
+                                        <TouchableOpacity onPress={() => key.store.remove(item.id)}>
                                             <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
                                         </TouchableOpacity>
                                     </View>

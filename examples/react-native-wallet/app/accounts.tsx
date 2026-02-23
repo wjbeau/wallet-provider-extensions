@@ -18,7 +18,7 @@ export default function Accounts() {
 
     const handleRemoveAccount = async (address: string) => {
         try {
-            await account.removeAccount(address);
+            await account.store.removeAccount(address);
         } catch (error: any) {
             console.error("Failed to remove account", error);
         }
@@ -48,7 +48,7 @@ export default function Accounts() {
                     <Text style={styles.balanceLabel}>Total Accounts</Text>
                     <Text style={styles.balanceAmount}>{accounts.length}</Text>
                     <View style={styles.actionButtons}>
-                         <TouchableOpacity style={styles.actionButton} onPress={() => account.clear()} disabled={status !== 'idle'}>
+                         <TouchableOpacity style={styles.actionButton} onPress={() => account.store.clear()} disabled={status !== 'idle'}>
                             <View style={[styles.iconCircle, {backgroundColor: '#FFF3E0'}]}>
                                 <MaterialCommunityIcons name="delete-sweep-outline" size={24} color="#FF9800" />
                             </View>

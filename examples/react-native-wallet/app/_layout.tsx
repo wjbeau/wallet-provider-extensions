@@ -29,7 +29,8 @@ export default function RootLayout() {
       }
     },
     keystore: {
-      extension: {store: keyStore, hooks: keyStoreHooks}
+      store: keyStore,
+      hooks: keyStoreHooks
     }
   })}><Stack /></AlgorandProvider>;
 }

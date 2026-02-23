@@ -1,10 +1,11 @@
-import type {Account, AccountStoreExtension} from "@algorandfoundation/accounts-store";
-import type {Key, KeyId, KeyStoreExtension, XHDDerivedKeyData} from "@algorandfoundation/keystore";
+import type {Account, AccountStoreExtension, AccountStoreState} from "@algorandfoundation/accounts-store";
+import type {Key, KeyId, KeyStoreExtension, KeyStoreState, XHDDerivedKeyData} from "@algorandfoundation/keystore";
 import type { Extension } from "@algorandfoundation/wallet-provider";
 import type {
 	AccountsKeystoreExtension,
 	AccountsKeystoreExtensionOptions,
 } from "./types.ts";
+import type {Store} from "@tanstack/store";
 
 /**
  * Extension that bridges the account store and keystore.
@@ -28,7 +29,8 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 		);
 	}
 
-	const keyStore = options.keystore.store;
+	const keyStore: Store<KeyStoreState> = options.keystore.store;
+	const accountStore: Store<AccountStoreState> = options.accounts.store;
 	const { autoPopulate = true } = options.accounts.keystore ?? {};
 
 	/**
@@ -60,7 +62,7 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 	// Initial population if enabled
 	if (autoPopulate) {
 		console.log("Auto-populating accounts from keystore...");
-		const keys = (provider.keys as Key[]) ?? [];
+		const keys = [...((provider.keys as Key[])?? [])] ;
 		for (const key of keys) {
 			console.log(`Adding account for key ${key.id}-${key.type}...`);
 			if (key.type === "hd-derived-ed25519") {
@@ -69,18 +71,35 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 		}
 
 
-		keyStore.subscribe((state)=>{
-			// Find new keys by comparing current keys with previous keys
-			const prevKeyIds = new Set(state.prevVal.keys.map(k => k.id));
-			const newKeys = state.currentVal.keys.filter(key => !prevKeyIds.has(key.id));
 
-			newKeys.forEach((key) => {
-				if (key.type === "hd-derived-ed25519" && key.metadata?.address) {
-					const address = (key as XHDDerivedKeyData).metadata.address.algorand as string;
-					console.log(`New key ${key.id} detected, adding account...`);
-					provider.account.store.addAccount(createKeyAccount(key.id, address));
+		keyStore.subscribe((state)=>{
+			const newKeys = (state as unknown as KeyStoreState).keys;
+
+			// Find the difference between keys and newKeys
+			const addedKeys = newKeys.filter(newKey =>
+				!keys.some(existingKey => existingKey.id === newKey.id)
+			);
+
+			if(addedKeys.length === 0) return;
+
+			addedKeys.forEach(k => {
+				keys.push(k);
+			})
+
+			const accounts = [...accountStore.state.accounts] as unknown as Account[]
+
+			// Process only the newly added keys
+			addedKeys.forEach(k => {
+				if(k.type === "hd-derived-ed25519") {
+					console.log(`Adding account for key ${k.id}-${k.type}...`)
+					const address = (k as XHDDerivedKeyData)?.metadata?.address?.algorand as string;
+						if(address) {
+							provider.account.store.addAccount(createKeyAccount(k.id, address));
+						}
 				}
 			})
+			if (keys.some(k => k.type === "hd-derived-ed25519")) console.log(`Found ${keys.length} keys, ${keys.filter(k => k.type === "hd-derived-ed25519").length} HD keys`)
+			if (accounts.some(a => a.type === "ed25519")) console.log(`Found ${accounts.length} accounts, ${accounts.filter(a => a.type === "ed25519").length} non-accounts`)
 		})
 
 		// We can also listen for new keys added to the keystore
