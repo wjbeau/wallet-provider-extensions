@@ -17,6 +17,7 @@ import type {
 	XHDPasskey,
 	XHDRootKey,
 } from "./types/index.ts";
+import {encodeAddress} from "./encoding.ts";
 
 /**
  * Options for BIP39 mnemonic generation.
@@ -79,7 +80,6 @@ export async function generateXHDRootKeyFromSeed(
 			typeof seed.privateKey === "undefined" ||
 			!(seed.privateKey instanceof Uint8Array)
 		) {
-			console.log("!!!!!!!!!!!!", typeof seed.privateKey, seed.type);
 			throw new InvalidKeyDataError("XHD root keys require a raw hd-seed");
 		}
 		const id = generateId();
@@ -126,7 +126,6 @@ export async function generateXHDFromParent({
 					!(parentKey.privateKey instanceof Uint8Array) ||
 					parentKey.type !== "hd-root-key"
 				) {
-					console.log(typeof parentKey.privateKey, parentKey.type);
 					throw new InvalidKeyDataError(
 						"XHD derived keys require a raw hd-root-key",
 					);
@@ -168,9 +167,12 @@ export async function generateXHDFromParent({
 					algorithm: "EdDSA",
 					format: "bytes",
 					extractable: true,
-					privateKey: { ...pk },
+					publicKey: new Uint8Array(pk),
 					metadata: {
 						...metadata,
+						address: {
+							algorand: encodeAddress(pk)
+						},
 						parentKeyId: parentKey.id,
 					},
 				} as XHDDerivedKeyData;

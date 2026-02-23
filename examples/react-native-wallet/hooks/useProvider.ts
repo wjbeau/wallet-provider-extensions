@@ -13,10 +13,10 @@ export function useProvider(){
         function beforeGenerate(){
             console.log('Hooking into before generate')
         }
-        provider.keystore.hooks.before('generate', beforeGenerate)
+        provider.key.store.hooks.before('generate', beforeGenerate)
 
         return ()=> {
-            provider.keystore.hooks.remove('generate', beforeGenerate)
+            provider.key.store.hooks.remove('generate', beforeGenerate)
         }
     }, []);
 

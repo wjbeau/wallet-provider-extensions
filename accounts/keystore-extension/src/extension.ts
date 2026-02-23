@@ -1,5 +1,5 @@
-import type { Account } from "@algorandfoundation/accounts-store";
-import type { Key, KeyId } from "@algorandfoundation/keystore";
+import type {Account, AccountStoreExtension} from "@algorandfoundation/accounts-store";
+import type {Key, KeyId, KeyStoreExtension, XHDDerivedKeyData} from "@algorandfoundation/keystore";
 import type { Extension } from "@algorandfoundation/wallet-provider";
 import type {
 	AccountsKeystoreExtension,
@@ -13,8 +13,8 @@ import type {
  * in the keystore, providing a sign method that leverages the keystore backend.
  */
 export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
-	provider,
-	options: AccountsKeystoreExtensionOptions = {},
+	provider: KeyStoreExtension & AccountStoreExtension,
+	options: AccountsKeystoreExtensionOptions,
 ) => {
 	// Ensure dependencies are present
 	if (!provider.account) {
@@ -22,26 +22,35 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 			"AccountsKeystore extension requires WithAccountStore extension to be present on the provider.",
 		);
 	}
-	if (!provider.keystore) {
+	if (!provider.key) {
 		throw new Error(
 			"AccountsKeystore extension requires WithKeyStore extension to be present on the provider.",
 		);
 	}
 
-	const { autoPopulate = true } = options.accounts?.keystore ?? {};
+	const keyStore = options.keystore.store;
+	const { autoPopulate = true } = options.accounts.keystore ?? {};
 
 	/**
 	 * Creates an account object for a given key ID and address.
 	 */
 	const createKeyAccount = (keyId: string, address: string): Account => ({
 		address,
+		type: "ed25519",
+		assets: [],
 		metadata: { keyId },
+		balance: BigInt(0),
+
+		// TODO: Transfer helper
+		transfer(amount: bigint, account: Account) {
+			console.log(`Transferring ${amount} from ${address} to ${account.address}`);
+		},
 		// TODO: TransactionSigners
 		sign: async (txns: Uint8Array[]) => {
 			// Sign each transaction using the keystore
 			const signedTxns: Uint8Array[] = [];
 			for (const txn of txns) {
-				const signed = await provider.keystore.sign(keyId, txn);
+				const signed = await provider.key.store.sign(keyId, txn);
 				signedTxns.push(signed);
 			}
 			return signedTxns;
@@ -55,19 +64,28 @@ export const WithAccountsKeystore: Extension<AccountsKeystoreExtension> = (
 		for (const key of keys) {
 			console.log(`Adding account for key ${key.id}-${key.type}...`);
 			if (key.type === "hd-derived-ed25519") {
-				provider.account.store.addAccount(createKeyAccount(key.id, key?.metadata?.address as string ?? "TODO: Add addresses to types"));
+				provider.account.store.addAccount(createKeyAccount(key.id, (key as XHDDerivedKeyData)?.metadata?.address?.algorand as string ?? "TODO: Add addresses to types"));
 			}
 		}
 
-		// Listen for new keys added to the keystore
-		provider.keystore.hooks.after("generate", async (keyId: KeyId) => {
-			const key: Key = provider.keys?.find((k: Key) => k.id === keyId);
-			const address = (key.metadata?.address as string) || key.id;
-			console.log(`Added key ${keyId} to keystore, adding account...`);
-			if ((address && address.length === 58) || key.type === "hd-derived-ed25519") {
-				console.log(`Adding account for key ${keyId}...`);
-				await provider.account.store.addAccount(createKeyAccount(key.id, address));
-			}
+
+		keyStore.subscribe((state)=>{
+			// Find new keys by comparing current keys with previous keys
+			const prevKeyIds = new Set(state.prevVal.keys.map(k => k.id));
+			const newKeys = state.currentVal.keys.filter(key => !prevKeyIds.has(key.id));
+
+			newKeys.forEach((key) => {
+				if (key.type === "hd-derived-ed25519" && key.metadata?.address) {
+					const address = (key as XHDDerivedKeyData).metadata.address.algorand as string;
+					console.log(`New key ${key.id} detected, adding account...`);
+					provider.account.store.addAccount(createKeyAccount(key.id, address));
+				}
+			})
+		})
+
+		// We can also listen for new keys added to the keystore
+		provider.key.store.hooks.after("generate", async (keyId: KeyId) => {
+			console.log(`Key ${keyId} was generated successfully.`);
 		});
 	}
 

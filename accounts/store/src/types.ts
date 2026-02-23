@@ -1,10 +1,28 @@
 import type { ExtensionOptions } from "@algorandfoundation/wallet-provider";
 import type { HookCollection } from "before-after-hook";
+import type {Store} from "@tanstack/store";
 
 /**
  * Options for the AccountStore extension.
  */
-export type AccountStoreExtensionOptions = ExtensionOptions;
+export interface AccountStoreOptions extends ExtensionOptions {
+	accounts: {
+		store: Store<AccountStoreState>,
+		hooks: HookCollection<any>
+	}
+
+}
+
+export type AccountType = "ed25519" | "lsig" | "falcon" | string;
+
+export interface AccountAsset {
+	id: string;
+	name: string;
+	type: string;
+	balance: bigint;
+	metadata: Record<string, any>;
+	transfer?(amount: bigint, account: Account): void;
+}
 
 /**
  * Represents an account that can sign transactions.
@@ -14,14 +32,35 @@ export interface Account {
 	 * The public address of the account.
 	 */
 	address: string;
+
+	/**
+	 *
+	 */
+	balance: bigint;
+
+	/**
+	 *
+	 */
+	assets: AccountAsset[];
+
+	/**
+	 * Type of account
+	 */
+	type: AccountType;
 	/**
 	 * A method to sign a transaction or a set of transactions.
 	 *
 	 * @param txns - The transactions to sign.
 	 * @returns The signed transactions.
 	 */
-	sign: (txns: Uint8Array[]) => Promise<Uint8Array[]>;
+	sign?: (txns: Uint8Array[]) => Promise<Uint8Array[]>;
+
+	/**
+	 * Subclass via the metadata
+	 */
 	metadata?: Record<string, any>;
+
+	transfer?(amount: bigint, account: Account): void;
 }
 
 /**

@@ -34,7 +34,7 @@
 		"directory": "accounts/keystore-extension"
 	},
 	"dependencies": {
-		"@algorandfoundation/wallet-provider": "^1.0.0-canary.2",
+		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3",
 		"@algorandfoundation/accounts-store": "0.0.1",
 		"@algorandfoundation/keystore": "1.0.0-canary.1"
 	},

@@ -157,6 +157,8 @@ export interface XHDRootKey extends KeyData {
 export interface XHDDerivedKeyData extends KeyData {
 	type: "hd-derived-ed25519";
 	metadata: {
+		/** Address Mapping */
+		address: Record<string, unknown>;
 		/** The full derivation path (e.g., "m/44'/283'/0'/0/0") */
 		path: string;
 		/** Account index */

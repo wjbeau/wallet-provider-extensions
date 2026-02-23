@@ -3,26 +3,23 @@ import type { Store } from "@tanstack/store";
 import type { HookCollection } from "before-after-hook";
 
 import type { KeyStoreAPI } from "./backend.ts";
-import type { EncryptionConfig, Key, KeyId } from "./core.ts";
+import type { Key, KeyId } from "./core.ts";
 
 /**
  * Configuration for the keystore extension.
  */
-export interface KeyStoreExtOptions extends ExtensionOptions {
+export interface KeyStoreOptions extends ExtensionOptions {
 	/** API configuration */
 	api?: {
-		/** The {@link KeyStoreAPI} backend implementation to use */
+		/** The optional {@link KeyStoreAPI} backend implementation to use */
 		keystore?: KeyStoreAPI;
 	};
 	/** Keystore-specific settings */
 	keystore: {
-		extension: { store: Store<KeyStoreState>; hooks: HookCollection<any> };
-		// Note: Other options will be available in specific contexts like ReactNative
-		//extension: {vault: ReactNativeVault, store: Store<KeyStoreState>, hooks: HookCollection<any>}
-		/** Whether to enable audit logging */
-		enableAudit?: boolean;
-		/** Data encryption settings. See {@link EncryptionConfig} */
-		encryption?: EncryptionConfig;
+		store: Store<KeyStoreState>;
+		hooks: HookCollection<any>;
+		// Note: Other options could be available in specific contexts like ReactNative
+		//vault: ReactNativeVault
 	};
 }
 
@@ -58,18 +55,20 @@ export interface KeyStoreState {
  */
 export interface KeyStoreExtension extends KeyStoreState {
 	/** The keystore backend with added support for hooks */
-	keystore: KeyStoreAPI & {
-		/**
-		 * Hook collection for intercepting keystore operations.
-		 *
-		 * Supported operation ids include (non-exhaustive):
-		 * `"generating"`, `"importing"`, `"exporting"`, `"removing"`,
-		 * `"listing"`, `"getting metadata"`, `"signing"`, `"verifying"`,
-		 * `"encrypting"`, `"decrypting"`, `"deriving"`, `"importing seed"`,
-		 * `"logging audit event"`, `"getting audit logs"`, `"batch signing"`.
-		 *
-		 * Powered by {@link https://github.com/gr2m/before-after-hook before-after-hook}.
-		 */
-		hooks: HookCollection<any>;
-	};
+	key: {
+		store: KeyStoreAPI & {
+			/**
+			 * Hook collection for intercepting keystore operations.
+			 *
+			 * Supported operation ids include (non-exhaustive):
+			 * `"generating"`, `"importing"`, `"exporting"`, `"removing"`,
+			 * `"listing"`, `"getting metadata"`, `"signing"`, `"verifying"`,
+			 * `"encrypting"`, `"decrypting"`, `"deriving"`, `"importing seed"`,
+			 * `"logging audit event"`, `"getting audit logs"`, `"batch signing"`.
+			 *
+			 * Powered by {@link https://github.com/gr2m/before-after-hook before-after-hook}.
+			 */
+			hooks: HookCollection<any>;
+		};
+	}
 }

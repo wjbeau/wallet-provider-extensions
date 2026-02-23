@@ -34,7 +34,7 @@
 		"directory": "accounts/store"
 	},
 	"dependencies": {
-		"@algorandfoundation/wallet-provider": "^1.0.0-canary.2",
+		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3",
 		"@noble/hashes": "^2.0.1",
 		"@scure/base": "^2.0.0"
 	},

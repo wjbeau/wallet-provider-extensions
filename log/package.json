@@ -47,7 +47,7 @@
 		"!src/*.test.ts"
 	],
 	"dependencies": {
-		"@algorandfoundation/wallet-provider": "^1.0.0-canary.2"
+		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3"
 	},
 	"devDependencies": {
 		"@algorandfoundation/package-releaser": "0.0.1",
