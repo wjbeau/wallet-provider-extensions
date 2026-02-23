@@ -1,3 +1,10 @@
+# [keystore@1.0.0-canary.4](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.3...keystore@1.0.0-canary.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* lock keystore dependencies ([c60daf7](https://github.com/algorandfoundation/wallet-provider-extensions/commit/c60daf7cc096313796e8ed109acc07b286e289ad))
+
 # [keystore@1.0.0-canary.3](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.2...keystore@1.0.0-canary.3) (2026-02-23)
 
 
