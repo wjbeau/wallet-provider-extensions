@@ -1,6 +1,6 @@
 {
 	"name": "@algorandfoundation/react-native-keystore",
-	"version": "0.0.1",
+	"version": "1.0.0-canary.1",
 	"description": "React Native Keystore for Algorand Providers. Supports Ed25519, XHD, and P-256 derived keys.",
 	"type": "module",
 	"main": "dist/index.js",
@@ -10,19 +10,11 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js"
-		},
-		"./types": {
-			"types": "./dist/types/index.d.ts",
-			"import": "./dist/types/index.js"
-		},
-		"./errors": {
-			"types": "./dist/errors/index.d.ts",
-			"import": "./dist/errors/index.js"
 		}
 	},
 	"publishConfig": {
 		"access": "public",
-		"provenance": true
+		"provenance": false
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
@@ -41,16 +33,9 @@
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18"
 	},
-	"files": [
-		"src",
-		"lib",
-		"!**/__tests__",
-		"!**/__fixtures__",
-		"!**/__mocks__"
-	],
 	"dependencies": {
 		"@algorandfoundation/dp256": "^1.1.0",
-		"@algorandfoundation/keystore": "1.0.0-canary.3",
+		"@algorandfoundation/keystore": "1.0.0-canary.7",
 		"@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1",
 		"@scure/base": "^2.0.0",
 		"@scure/bip39": "^2.0.1",
