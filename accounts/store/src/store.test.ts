@@ -1,86 +1,94 @@
 import { Provider } from "@algorandfoundation/wallet-provider";
 import { Store } from "@tanstack/store";
 import { describe, expect, it } from "vitest";
-import { WithLogStore } from "./extension.ts";
-import { addLog, clearLogs, getLog, removeLog } from "./store.ts";
-import type { LogMessage, LogStoreState } from "./types.ts";
+import { WithAccountStore } from "./extension.ts";
+import { addAccount, clearAccounts, getAccount, removeAccount } from "./store.ts";
+import type { Account, AccountStoreState } from "./types.ts";
 
-describe("Log Store Extension", () => {
+describe("Account Store Extension", () => {
 	it("should align with README usage", async () => {
-		const MyProvider = Provider.withExtensions([WithLogStore]);
+		const MyProvider = Provider.withExtensions([WithAccountStore]);
 		const provider = new MyProvider({ id: "test", name: "Test" }) as any;
 
-		// Access log store methods
-		await provider.log.info("Hello");
-		expect(provider.logs).toHaveLength(1);
-		expect(provider.logs[0].message).toEqual("Hello");
+		// Access account store methods
+		const mockAddress = "A".repeat(58);
+		await provider.account.store.addAccount({
+			address: mockAddress,
+			type: "ed25519",
+			balance: BigInt(0),
+			assets: [],
+		});
+		expect(provider.accounts).toHaveLength(1);
+		expect(provider.accounts[0].address).toEqual(mockAddress);
 
-		await provider.log.clear();
-		expect(provider.logs).toHaveLength(0);
+		await provider.account.store.clear();
+		expect(provider.accounts).toHaveLength(0);
 	});
 
 	describe("store functions", () => {
-		it("should add a log", () => {
-			const store = new Store<LogStoreState>({
-				logs: [],
+		it("should add an account", () => {
+			const store = new Store<AccountStoreState>({
+				accounts: [],
 			});
-			const log: LogMessage = {
-				id: "1",
-				timestamp: new Date(),
-				level: "info",
-				message: "test",
+			const account: Account = {
+				address: "A".repeat(58),
+				type: "ed25519",
+				balance: BigInt(0),
+				assets: [],
 			};
-			addLog({ store, log });
-			expect(store.state.logs).toContain(log);
+			addAccount({ store, account });
+			expect(store.state.accounts).toContain(account);
 		});
 
-		it("should remove a log", () => {
-			const log: LogMessage = {
-				id: "1",
-				timestamp: new Date(),
-				level: "info",
-				message: "test",
+		it("should remove an account", () => {
+			const mockAddress = "A".repeat(58);
+			const account: Account = {
+				address: mockAddress,
+				type: "ed25519",
+				balance: BigInt(0),
+				assets: [],
 			};
-			const store = new Store<LogStoreState>({
-				logs: [log],
+			const store = new Store<AccountStoreState>({
+				accounts: [account],
 			});
-			removeLog({ store, logId: "1" });
-			expect(store.state.logs).not.toContain(log);
+			removeAccount({ store, address: mockAddress });
+			expect(store.state.accounts).not.toContain(account);
 		});
 
-		it("should get a log", () => {
-			const log: LogMessage = {
-				id: "1",
-				timestamp: new Date(),
-				level: "info",
-				message: "test",
+		it("should get an account", () => {
+			const mockAddress = "A".repeat(58);
+			const account: Account = {
+				address: mockAddress,
+				type: "ed25519",
+				balance: BigInt(0),
+				assets: [],
 			};
-			const store = new Store<LogStoreState>({
-				logs: [log],
+			const store = new Store<AccountStoreState>({
+				accounts: [account],
 			});
-			const found = getLog({ store, logId: "1" });
-			expect(found).toEqual(log);
+			const found = getAccount({ store, address: mockAddress });
+			expect(found).toEqual(account);
 		});
 
-		it("should return undefined for non-existent log", () => {
-			const store = new Store<LogStoreState>({
-				logs: [],
+		it("should return undefined for non-existent account", () => {
+			const store = new Store<AccountStoreState>({
+				accounts: [],
 			});
-			const found = getLog({ store, logId: "non-existent" });
+			const found = getAccount({ store, address: "non-existent" });
 			expect(found).toBeUndefined();
 		});
-		it("should clear logs", () => {
-			const log: LogMessage = {
-				id: "1",
-				timestamp: new Date(),
-				level: "info",
-				message: "test",
+		it("should clear accounts", () => {
+			const account: Account = {
+				address: "A".repeat(58),
+				type: "ed25519",
+				balance: BigInt(0),
+				assets: [],
 			};
-			const store = new Store<LogStoreState>({
-				logs: [log],
+			const store = new Store<AccountStoreState>({
+				accounts: [account],
 			});
-			clearLogs({ store });
-			expect(store.state.logs).toHaveLength(0);
+			clearAccounts({ store });
+			expect(store.state.accounts).toHaveLength(0);
 		});
 	});
 });

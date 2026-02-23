@@ -1,28 +1,31 @@
 import { Store } from "@tanstack/store";
 import { bench, describe } from "vitest";
-import { addLog, getLog, removeLog } from "./store.ts";
-import type { LogMessage, LogStoreState } from "./types.ts";
+import { addAccount, getAccount, removeAccount } from "./store.ts";
+import type { Account, AccountStoreState } from "./types.ts";
 
-describe("Log Store Benchmarks", () => {
-	const store = new Store<LogStoreState>({
-		logs: [],
+describe("Account Store Benchmarks", () => {
+	const store = new Store<AccountStoreState>({
+		accounts: [],
 	});
-	const baseLog: LogMessage = {
-		id: "test-log",
-		timestamp: new Date(),
-		level: "info",
-		message: "benchmark",
+	const baseAccount: Account = {
+		address: "A".repeat(58),
+		type: "ed25519",
+		balance: BigInt(0),
+		assets: [],
 	};
 
-	bench("addLog", () => {
-		addLog({ store, log: { ...baseLog, id: Math.random().toString(36) } });
+	bench("addAccount", () => {
+		addAccount({
+			store,
+			account: { ...baseAccount, address: Math.random().toString(36) },
+		});
 	});
 
-	bench("getLog", () => {
-		getLog({ store, logId: baseLog.id });
+	bench("getAccount", () => {
+		getAccount({ store, address: baseAccount.address });
 	});
 
-	bench("removeLog", () => {
-		removeLog({ store, logId: baseLog.id });
+	bench("removeAccount", () => {
+		removeAccount({ store, address: baseAccount.address });
 	});
 });
