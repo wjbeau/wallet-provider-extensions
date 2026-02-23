@@ -39,7 +39,7 @@
 		"@scure/base": "^2.0.0"
 	},
 	"peerDependencies": {
-		"@algorandfoundation/log-store": "0.0.1",
+		"@algorandfoundation/log-store": "1.0.0-canary.1",
 		"@tanstack/store": "^0.8.0",
 		"before-after-hook": "^4.0.0"
 	},
@@ -49,7 +49,7 @@
 		}
 	},
 	"devDependencies": {
-		"@algorandfoundation/log-store": "0.0.1",
+		"@algorandfoundation/log-store": "1.0.0-canary.1",
 		"@algorandfoundation/package-releaser": "0.0.1",
 		"vitest": "^1.0.0"
 	}
