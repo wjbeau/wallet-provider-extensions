@@ -5,16 +5,16 @@ import { dp256, xhd } from "./libs.ts";
 import type {
 	KeyData,
 	XHDDerivedKeyData,
-	XHDPasskey,
+	XHDDomainP256KeyData,
 	XHDRootKey,
 } from "./types/index.ts";
 
-export async function signXHDPasskey({
+export async function signXHDDomainP256KeyData({
 	key,
 	root,
 	data,
 }: {
-	key: XHDPasskey;
+	key: XHDDomainP256KeyData;
 	root: XHDRootKey;
 	data: Uint8Array;
 }): Promise<Uint8Array<ArrayBufferLike>> {
@@ -24,8 +24,8 @@ export async function signXHDPasskey({
 		);
 	}
 
-	if (key.type !== "hd-derived-passkey") {
-		throw new InvalidKeyDataError("Key is not a passkey");
+	if (key.type !== "hd-derived-p256") {
+		throw new InvalidKeyDataError("Key is not a P256 key");
 	}
 
 	if (
@@ -140,24 +140,22 @@ export async function signWithKeyData({
 					data,
 				});
 			}
-			case "hd-derived-passkey": {
+			case "hd-derived-p256": {
 				if (typeof key.metadata?.parentKeyId === "undefined") {
 					throw new InvalidKeyDataError(
-						"Passkey does not have a parent key ID",
+						"P256 key does not have a parent key ID",
 					);
 				}
 				if (typeof parentKey === "undefined") {
-					throw new InvalidKeyDataError(
-						"Passkey key does not have a parent key",
-					);
+					throw new InvalidKeyDataError("P256 key does not have a parent key");
 				}
 				if (key.metadata.parentKeyId !== parentKey.id) {
 					throw new InvalidKeyDataError(
 						"Parent key does not match root key ID",
 					);
 				}
-				return signXHDPasskey({
-					key: key as XHDPasskey,
+				return signXHDDomainP256KeyData({
+					key: key as XHDDomainP256KeyData,
 					root: parentKey as XHDRootKey,
 					data,
 				});
