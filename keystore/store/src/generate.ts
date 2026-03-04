@@ -209,7 +209,7 @@ export async function generateXHDFromParent({
 				return {
 					...key,
 					id,
-					algorithm: "ES256",
+					algorithm: "P256",
 					format: "bytes",
 					extractable: true,
 					publicKey: dp256.getPurePKBytes(pk),
@@ -249,7 +249,9 @@ export async function generateKey({
 					case "hd-seed": {
 						return {
 							...keyData,
-							...(await generateSeedData()),
+							...(await generateSeedData(
+								keyData.metadata.params as BIP39GenerationOptions,
+							)),
 							id,
 						} as SeedData;
 					}
@@ -295,10 +297,10 @@ export async function generateKey({
 				} as XHDDerivedKeyData;
 			}
 
-			case "ES256": {
+			case "P256": {
 				if (typeof keyData.metadata.parentKeyId === "undefined") {
 					throw new InvalidKeyDataError(
-						"ES256 require a rootKeyId, please upload it first using importSeed()",
+						"P256 require a rootKeyId, please upload it first using importSeed()",
 					);
 				}
 				if (

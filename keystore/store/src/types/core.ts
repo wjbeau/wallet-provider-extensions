@@ -39,11 +39,11 @@ export type KeyFormat = "raw" | "pem" | "der" | "jwk" | "openpgp" | string;
 /**
  * Supported algorithms:
  * - `RS256`: RSA PKCS#1 v1.5 with SHA-256
- * - `ES256`: ECDSA using P-256 and SHA-256
+ * - `P256`: ECDSA using P-256 and SHA-256
  * - `EdDSA`: EdDSA using Ed25519
  * - `raw`: raw bytes (e.g., storing seed material)
  */
-export type Algorithm = "RS256" | "ES256" | "EdDSA" | "raw" | string;
+export type Algorithm = "RS256" | "P256" | "EdDSA" | "raw" | string;
 
 // TODO: Align with SubtleCrypto algorithms and general options?
 // export type SubtleAlgorithm = {
@@ -182,7 +182,7 @@ export interface XHDDerivedKeyData extends KeyData {
  */
 export interface XHDDomainP256KeyData extends KeyData {
 	type: "hd-derived-p256";
-	algorithm: "ES256";
+	algorithm: "P256";
 	metadata: {
 		/** The origin (RP ID) of the P256 key */
 		origin: string;

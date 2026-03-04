@@ -9,8 +9,11 @@ import {
 	generateXHDFromParent,
 	generateXHDRootKeyFromSeed,
 } from "./generate.ts";
-import type { SeedData } from "./types/core.ts";
-
+import type {
+	SeedData,
+	XHDDomainP256KeyData,
+	XHDRootKey,
+} from "./types/core.ts";
 
 vi.mock("@algorandfoundation/wallet-provider", () => ({
 	generateId: () => "mocked-id",
@@ -62,7 +65,10 @@ describe("generate.ts", () => {
 			},
 		} as any;
 
-		const derived = await generateXHDFromParent({ key: keyData, parentKey: rootKey });
+		const derived = await generateXHDFromParent({
+			key: keyData,
+			parentKey: rootKey,
+		});
 		expect(derived.type).toBe("hd-derived-ed25519");
 		expect(derived.metadata.parentKeyId).toBe(rootKey.id);
 		expect(derived.publicKey).toBeDefined();
@@ -91,5 +97,68 @@ describe("generate.ts", () => {
 			parentKey: seed,
 		});
 		expect(rootKey.type).toBe("hd-root-key");
+
+		const p256KeyData = {
+			type: "hd-derived-p256" as const,
+			algorithm: "P256" as const,
+			extractable: true,
+			metadata: { parentKeyId: rootKey.id },
+		};
+		const p256Key = await generateKey({
+			keyData: p256KeyData,
+			parentKey: rootKey,
+		});
+		expect(p256Key.type).toBe("hd-derived-p256");
+		expect(p256Key.algorithm).toBe("P256");
+	});
+
+	it("generateKey creates deterministic P256 keys from same seed", async () => {
+		const seedPrivateKey = new Uint8Array(64).fill(0x42);
+		const seed: SeedData = {
+			id: "seed-1",
+			type: "hd-seed",
+			algorithm: "raw",
+			extractable: true,
+			privateKey: seedPrivateKey,
+			metadata: {},
+		} as any;
+
+		const generateDeterministicP256 = async (s: SeedData) => {
+			const rootKey = (await generateKey({
+				keyData: {
+					type: "hd-root-key",
+					algorithm: "raw",
+					extractable: true,
+					metadata: { parentKeyId: s.id },
+				},
+				parentKey: s,
+			})) as XHDRootKey;
+			const p256Key = (await generateKey({
+				keyData: {
+					type: "hd-derived-p256",
+					algorithm: "P256",
+					extractable: true,
+					metadata: {
+						parentKeyId: rootKey.id,
+						origin: "test.com",
+						userHandle: "user-1",
+					},
+				},
+				parentKey: rootKey,
+			})) as XHDDomainP256KeyData;
+			return p256Key;
+		};
+
+		const key1 = await generateDeterministicP256(seed);
+		// Need to provide a fresh copy of seed because generateKey might clear it
+		const seed2: SeedData = {
+			...seed,
+			privateKey: new Uint8Array(seedPrivateKey),
+		};
+		const key2 = await generateDeterministicP256(seed2);
+
+		expect(key1.publicKey).toEqual(key2.publicKey);
+		expect(key1.privateKey).toEqual(key2.privateKey);
+		expect(key1.publicKey).toBeDefined();
 	});
 });

@@ -51,7 +51,7 @@ describe("sign.ts", () => {
 		const p256Key = (await generateKey({
 			keyData: {
 				type: "hd-derived-p256",
-				algorithm: "ES256",
+				algorithm: "P256",
 				metadata: {
 					origin: "https://example.com",
 					userHandle: "user",
