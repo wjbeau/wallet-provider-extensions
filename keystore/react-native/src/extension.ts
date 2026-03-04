@@ -300,7 +300,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 										if (!key) return null;
 										let pKey: KeyData | null = null;
 										if (key.metadata?.parentKeyId) {
-											pKey = await fetchSecret<KeyData>({ keyId: key.metadata.parentKeyId });
+											pKey = await fetchSecret<KeyData>({ keyId: key.metadata.parentKeyId as string });
 										} else if (key.metadata?.rootKey) {
 											pKey = key.metadata.rootKey as KeyData;
 										}

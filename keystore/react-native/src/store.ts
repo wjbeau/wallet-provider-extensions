@@ -4,7 +4,6 @@ import {
 	clearKeyStore,
 	type DeriveOptions,
 	generateKey as generateKeyStoreKey,
-	generateXHDFromParent,
 	InvalidKeyDataError,
 	InvalidKeyFormatError,
 	type KeyData,
@@ -42,6 +41,20 @@ import type {
 import {xhd, dp256} from './libs.ts'
 import { DecodingError } from "./errors.ts";
 import { commit, fetchSecret, storage } from "./storage/state.ts";
+
+/**
+ * Type guard for SeedData
+ */
+function isSeedData(key: any): key is SeedData {
+	return key?.type === "hd-seed";
+}
+
+/**
+ * Type guard for XHDRootKey
+ */
+function isXHDRootKey(key: any): key is XHDRootKey {
+	return key?.type === "hd-root-key";
+}
 
 /**
  * Removes a key from the reactive store and persistent storage.
@@ -129,13 +142,12 @@ export async function generateKey(options: {
 
 		// If we are generating a P256 key, we need the root key
 		if (
-			(mappedType === "hd-derived-p256" || mappedType === "ecc" || algorithm === "P256") &&
-			(parentKey?.type === "hd-root-key" || parentKey?.type === "hd-seed")
+			(mappedType === "hd-derived-p256" || mappedType === "ecc" || algorithm === "P256")
 		) {
 			let rootKey: XHDRootKey | null = null;
-			if (parentKey.type === "hd-seed") {
+			if (isSeedData(parentKey)) {
 				// Generate a temporary root key from the seed
-				const rootKeyData = await generateKeyStoreKey({
+				const rootKeyData = (await generateKeyStoreKey({
 					keyData: {
 						type: "hd-root-key",
 						algorithm: "raw",
@@ -147,44 +159,48 @@ export async function generateKey(options: {
 						type: "hd-seed",
 						format: "raw",
 					} as any,
-				});
-				rootKey = rootKeyData as XHDRootKey;
-			} else {
-				rootKey = parentKey as XHDRootKey;
+				})) as XHDRootKey;
+				rootKey = rootKeyData;
+			} else if (isXHDRootKey(parentKey)) {
+				rootKey = parentKey;
 			}
 
-			if (rootKey) {
-				const derivedKeyData = await generateKeyStoreKey({
-					keyData: {
-						id: generateId(),
-						type: "hd-derived-p256",
-						algorithm: "P256",
-						extractable,
-						keyUsages: keyUsages,
-						metadata: {
-							...params,
-							createdAt: new Date(),
-							parentKeyId: rootKey.id,
-						},
-					} as any,
-					parentKey: {
-						...rootKey,
-						type: "hd-root-key",
-						privateKey: rootKey.privateKey,
-					} as any,
-				});
-				await commit({ store, keyData: derivedKeyData });
-				if (parentKey.type === "hd-seed") clearKeyData(rootKey);
-				return derivedKeyData.id;
+			if(!rootKey){
+				throw new InvalidKeyDataError(
+					`XHD derived keys require a rootKeyId, please upload it first using importSeed()`,
+				);
 			}
+
+			const derivedKeyData = await generateKeyStoreKey({
+				keyData: {
+					id: generateId(),
+					type: "hd-derived-p256",
+					algorithm: "P256",
+					extractable,
+					keyUsages: keyUsages,
+					metadata: {
+						...params,
+						createdAt: new Date(),
+						parentKeyId: rootKey.id,
+					},
+				} as any,
+				parentKey: {
+					...rootKey,
+					type: "hd-root-key",
+					privateKey: rootKey.privateKey,
+				} as any,
+			});
+			await commit({ store, keyData: derivedKeyData });
+			if (parentKey && isSeedData(parentKey)) clearKeyData(rootKey);
+			return derivedKeyData.id;
 		}
 
 		// For root key generation, the parent MUST be an hd-seed with format raw
 		// AND it must have the seed in privateKey.
 		const finalParentKey = parentKey ? {
 			...parentKey,
-			type: (parentKey.type === "hd-seed" || mappedType === "hd-root-key") ? "hd-seed" : parentKey.type,
-			format: (parentKey.type === "hd-seed" || mappedType === "hd-root-key") ? "raw" : (parentKey as any).format,
+			type: (isSeedData(parentKey) || mappedType === "hd-root-key") ? "hd-seed" : (parentKey as any).type,
+			format: (isSeedData(parentKey) || mappedType === "hd-root-key") ? "raw" : (parentKey as any).format,
 			privateKey: parentKey.privateKey,
 			seed: parentKey.privateKey,
 			key: parentKey.privateKey,
@@ -296,14 +312,17 @@ export async function deriveFromSeed({
 }): Promise<KeyId> {
 	setStatus({ store, status: "deriving" });
 
-	let rootKey: XHDRootKey | null = null;
+	let rootKey: XHDRootKey | SeedData | null = null;
 	let derivedKey: KeyData | XHDDerivedKeyData | XHDDomainP256KeyData | null =
 		null;
 	try {
-		rootKey = await fetchSecret<XHDRootKey>({ keyId: seedId });
-		if (!rootKey) throw new KeyNotFoundError(seedId);
-		if (rootKey.type !== "hd-root-key" && rootKey.type !== "hd-seed")
+		const secret = await fetchSecret<KeyData>({ keyId: seedId });
+		if (!secret) throw new KeyNotFoundError(seedId);
+		if (!isXHDRootKey(secret) && !isSeedData(secret))
 			throw new InvalidKeyDataError("Not a root key");
+		
+		rootKey = secret;
+
 		if (typeof rootKey.privateKey === "undefined") {
 			throw new InvalidKeyDataError("Could find root key material");
 		}
@@ -311,8 +330,8 @@ export async function deriveFromSeed({
 			options?.curve === "secp256r1" || options?.algorithm === "P256";
 
 		if (isP256) {
-			const seedId = rootKey.type === "hd-seed" ? rootKey.id : (rootKey.metadata as any)?.parentKeyId;
-			const seedKey = seedId === rootKey.id ? rootKey : await fetchSecret<SeedData>({ keyId: seedId });
+			const seedId = isSeedData(rootKey) ? rootKey.id : (rootKey as any).metadata?.parentKeyId;
+			const seedKey = seedId === rootKey.id ? rootKey : await fetchSecret<SeedData>({ keyId: seedId as string });
 			
 			derivedKey = (await generateKeyStoreKey({
 				keyData: {
@@ -487,22 +506,30 @@ export async function importXHDDomainP256Key({
 		},
 	} as any;
 
+	let openKey: XHDRootKey | null = null;
 	try {
-		// Get the seed from the root key ID
-		const openKey = await fetchSecret<XHDRootKey>({
+		// Get the secret from the root key ID
+		const secret = await fetchSecret<KeyData>({
 			keyId: keyData.metadata.parentKeyId,
 		});
-		if (!openKey) throw new KeyNotFoundError(keyData.metadata.parentKeyId);
+		if (!secret) throw new KeyNotFoundError(keyData.metadata.parentKeyId);
+		
 		// Check for the correct type
-		if (typeof openKey.privateKey === "undefined") {
+		if (typeof secret.privateKey === "undefined") {
 			throw new DecodingError("Could not decrypt root key");
 		}
-		if (openKey.type !== "hd-root-key") {
+		if (!isXHDRootKey(secret)) {
 			// Clear the buffers
-			clearBuffer(openKey.privateKey);
-			delete openKey.privateKey;
+			clearBuffer(secret.privateKey);
+			delete (secret as any).privateKey;
 
 			throw new InvalidKeyDataError("Root key is not a seed key");
+		}
+		
+		openKey = secret;
+
+		if (typeof openKey.privateKey === "undefined") {
+			throw new DecodingError("Could not decrypt root key");
 		}
 
 		const keyPair = await dp256.genDomainSpecificKeyPair(
@@ -579,13 +606,15 @@ export async function importKey({
 					keyData: {
 						id: keyId,
 						type: "hd-seed",
-						name: (keyData as any).name || "Imported Seed",
 						algorithm: "raw",
 						format: "raw", // Must be "raw" for core keystore to recognize it as a seed
 						extractable: true,
 						keyUsages: ["deriveKey", "deriveBits"],
 						privateKey: new Uint8Array(keyData.privateKey),
-						metadata: keyData.metadata || {},
+						metadata: {
+							...(keyData.metadata || {}),
+							name: (keyData as any).name || "Imported Seed",
+						},
 					},
 				});
 				return keyId;
@@ -610,13 +639,15 @@ export async function importKey({
 					keyData: {
 						id: keyId,
 						type: "hd-root-key",
-						name: (keyData as any).name || "Imported Root Key",
 						algorithm: "raw",
 						format: "raw",
 						extractable: true,
 						keyUsages: ["deriveKey", "deriveBits"],
 						privateKey: new Uint8Array(keyData.privateKey),
-						metadata: keyData.metadata || {},
+						metadata: {
+							...(keyData.metadata || {}),
+							name: (keyData as any).name || "Imported Root Key",
+						},
 					},
 				});
 				return keyId;
