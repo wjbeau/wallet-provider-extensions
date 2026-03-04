@@ -1,22 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
-
-// Mock dependencies that rely on native modules or complex setups
-vi.mock("./storage/state.ts", () => ({
-	commit: vi.fn().mockResolvedValue(undefined),
-	storage: {
-		remove: vi.fn(),
-		clearAll: vi.fn(),
-	},
-}));
-
-vi.mock("@algorandfoundation/wallet-provider", () => ({
-	generateId: vi.fn().mockReturnValue("test-id"),
-	clearBuffer: vi.fn(),
-}));
-
 import type { KeyStoreState } from "@algorandfoundation/keystore";
 import { Store } from "@tanstack/store";
-// Import the functions AFTER mocking
+import { describe, expect, it } from "vitest";
+import { fetchSecret } from "./storage/state.ts";
 import { importKey, importSeed, parsePath } from "./store.ts";
 
 describe("react-native-keystore store.ts logic", () => {
@@ -64,19 +49,22 @@ describe("react-native-keystore store.ts logic", () => {
 		});
 
 		it("should import a raw Uint8Array seed", async () => {
-			const rawSeed = new Uint8Array(64).fill(1);
+			const rawSeed = new Uint8Array(64);
+			for (let i = 0; i < 64; i++) rawSeed[i] = i;
+			const expectedHex = Buffer.from(rawSeed).toString("hex");
 			const id = await importSeed({ store, seed: rawSeed, name: "Raw Seed" });
 
-			expect(id).toBe("test-id");
-			const { commit } = await import("./storage/state.ts");
-			expect(commit).toHaveBeenCalledWith(
-				expect.objectContaining({
-					keyData: expect.objectContaining({
-						type: "hd-seed",
-						privateKey: rawSeed,
-						name: "Raw Seed",
-					}),
-				}),
+			expect(id).toBeDefined();
+
+			// Verify it was committed to storage
+			const committed = await fetchSecret<any>({ keyId: id });
+			expect(committed).toMatchObject({
+				type: "hd-seed",
+				name: "Raw Seed",
+			});
+			// Compare hex strings
+			expect(Buffer.from(committed.privateKey).toString("hex")).toBe(
+				expectedHex,
 			);
 		});
 	});
@@ -100,8 +88,11 @@ describe("react-native-keystore store.ts logic", () => {
 		});
 
 		it("should import a SeedData object with Uint8Array privateKey", async () => {
-			const rawSeed = new Uint8Array(64).fill(1);
+			const rawSeed = new Uint8Array(64);
+			for (let i = 0; i < 64; i++) rawSeed[i] = i;
+			const expectedHex = Buffer.from(rawSeed).toString("hex");
 			const keyData = {
+				id: "imported-key-id",
 				type: "hd-seed" as const,
 				algorithm: "raw" as const,
 				format: "bytes" as const,
@@ -110,7 +101,16 @@ describe("react-native-keystore store.ts logic", () => {
 				privateKey: rawSeed,
 			};
 			const id = await importKey({ store, keyData });
-			expect(id).toBe("test-id");
+			expect(id).toBe("imported-key-id");
+
+			const committed = await fetchSecret<any>({ keyId: id });
+			expect(committed).toMatchObject({
+				type: "hd-seed",
+			});
+			// Compare hex strings
+			expect(Buffer.from(committed.privateKey).toString("hex")).toBe(
+				expectedHex,
+			);
 		});
 	});
 });

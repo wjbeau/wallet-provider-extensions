@@ -74,12 +74,14 @@ export async function commit({
 		// Never allow the master key to touch memory.
 		storage.set(keyData.id, encryptData(await getMasterKey(), encode(keyData)));
 		// remove the private keys from keyData
-		const { privateKey, publicKey, ...keyState } = keyData;
+		const { privateKey, publicKey, seed, ...keyState } = keyData as any;
 		// clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
 		clearBuffer(privateKey);
 		clearBuffer(publicKey);
-		delete keyData.privateKey;
-		delete keyData.publicKey;
+		clearBuffer(seed);
+		delete (keyData as any).privateKey;
+		delete (keyData as any).publicKey;
+		delete (keyData as any).seed;
 
 		// Reflect the change in the reactive store
 		store.setState((state) => ({
@@ -97,7 +99,7 @@ export function encode(key: KeyData): string {
 	return base64url.encode(
 		encoder.encode(
 			JSON.stringify(key, (_key, value) => {
-				if (value instanceof Uint8Array) {
+				if (value instanceof Uint8Array || (value && value.constructor && value.constructor.name === 'Uint8Array')) {
 					return Array.from(value);
 				}
 				return value;
@@ -108,7 +110,10 @@ export function encode(key: KeyData): string {
 export function decode(data: string): KeyData {
 	const decoder = new TextDecoder();
 	return JSON.parse(decoder.decode(base64url.decode(data)), (key, value) => {
-		if (key.endsWith("Key") && Array.isArray(value)) {
+		if (
+			(key.endsWith("Key") || key === "privateKey" || key === "publicKey" || key === "seed" || key === "key") &&
+			Array.isArray(value)
+		) {
 			return new Uint8Array(value);
 		}
 		return value;

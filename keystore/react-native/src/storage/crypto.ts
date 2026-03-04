@@ -61,9 +61,7 @@ export const decryptData = (key: Buffer, payloadStr: string): string => {
 	const { iv, tag, content } = JSON.parse(payloadStr);
 
 	const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(iv, "base64"));
-
-	//@ts-expect-error, this is fine
-	decipher.setAuthTag(Buffer.from(tag, "base64"));
+	decipher.setAuthTag(Buffer.from(tag, "base64") as any);
 
 	let decrypted = decipher.update(content, "base64", "utf8");
 	decrypted += decipher.final("utf8");
