@@ -74,7 +74,7 @@ export async function commit({
 		// Never allow the master key to touch memory.
 		storage.set(keyData.id, encryptData(await getMasterKey(), encode(keyData)));
 		// remove the private keys from keyData
-		const { privateKey, publicKey, seed, ...keyState } = keyData as any;
+		const { privateKey, seed, ...keyState } = keyData as any;
 		// clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
 		clearBuffer(privateKey);
 		clearBuffer(seed);
