@@ -97,7 +97,12 @@ export function encode(key: KeyData): string {
 	return base64url.encode(
 		encoder.encode(
 			JSON.stringify(key, (_key, value) => {
-				if (value instanceof Uint8Array || (value && value.constructor && value.constructor.name === 'Uint8Array')) {
+				if (
+					value instanceof Uint8Array ||
+					(value &&
+						value.constructor &&
+						value.constructor.name === "Uint8Array")
+				) {
 					return Array.from(value);
 				}
 				return value;
@@ -109,7 +114,11 @@ export function decode(data: string): KeyData {
 	const decoder = new TextDecoder();
 	return JSON.parse(decoder.decode(base64url.decode(data)), (key, value) => {
 		if (
-			(key.endsWith("Key") || key === "privateKey" || key === "publicKey" || key === "seed" || key === "key") &&
+			(key.endsWith("Key") ||
+				key === "privateKey" ||
+				key === "publicKey" ||
+				key === "seed" ||
+				key === "key") &&
 			Array.isArray(value)
 		) {
 			return new Uint8Array(value);

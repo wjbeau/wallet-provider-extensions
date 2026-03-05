@@ -1,4 +1,8 @@
-import { type KeyData, type KeyStoreState, type KeyStoreOptions } from "@algorandfoundation/keystore";
+import type {
+	KeyData,
+	KeyStoreOptions,
+	KeyStoreState,
+} from "@algorandfoundation/keystore";
 import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 import { describe, expect, it, vi } from "vitest";
@@ -40,7 +44,11 @@ describe("WithKeyStore Extension", () => {
 
 	it("should reflect store changes in keys and status", () => {
 		const { extension, store } = createTestSetup();
-		store.setState((s) => ({ ...s, status: "busy", keys: [{ id: "test" } as any] }));
+		store.setState((s) => ({
+			...s,
+			status: "busy",
+			keys: [{ id: "test" } as any],
+		}));
 		expect(extension.status).toBe("busy");
 		expect(extension.keys).toHaveLength(1);
 		expect(extension.keys[0].id).toBe("test");
@@ -170,15 +178,22 @@ describe("WithKeyStore Extension", () => {
 				params: { parentKeyId: seedId },
 			});
 
-			const derivedId = await extension.key.store.deriveFromSeed(rootKeyId, "m/44'/283'/0'/0/0");
+			const derivedId = await extension.key.store.deriveFromSeed(
+				rootKeyId,
+				"m/44'/283'/0'/0/0",
+			);
 
 			const data = new TextEncoder().encode("hello world");
 			const signature = await extension.key.store.sign(derivedId, data);
-			
+
 			expect(signature).toBeDefined();
 			expect(signBeforeHook).toHaveBeenCalled();
 
-			const isValid = await extension.key.store.verify(derivedId, data, signature);
+			const isValid = await extension.key.store.verify(
+				derivedId,
+				data,
+				signature,
+			);
 			expect(typeof isValid).toBe("boolean");
 		});
 
@@ -207,7 +222,10 @@ describe("WithKeyStore Extension", () => {
 			expect(encrypted).toBeDefined();
 			expect(encrypted).not.toEqual(data);
 
-			const decrypted = await extension.key.store.decryptWithKey(keyId, encrypted);
+			const decrypted = await extension.key.store.decryptWithKey(
+				keyId,
+				encrypted,
+			);
 			expect(new Uint8Array(decrypted)).toEqual(data);
 		});
 
@@ -234,13 +252,22 @@ describe("WithKeyStore Extension", () => {
 				params: { parentKeyId: seedId },
 			});
 
-			const id1 = await extension.key.store.deriveFromSeed(rootKeyId, "m/44'/283'/0'/0/0");
-			const id2 = await extension.key.store.deriveFromSeed(rootKeyId, "m/44'/283'/0'/0/1");
+			const id1 = await extension.key.store.deriveFromSeed(
+				rootKeyId,
+				"m/44'/283'/0'/0/0",
+			);
+			const id2 = await extension.key.store.deriveFromSeed(
+				rootKeyId,
+				"m/44'/283'/0'/0/1",
+			);
 
 			const data1 = new TextEncoder().encode("msg1");
 			const data2 = new TextEncoder().encode("msg2");
 
-			const signatures = await extension.key.store.batchSign([id1, id2], [data1, data2]);
+			const signatures = await extension.key.store.batchSign(
+				[id1, id2],
+				[data1, data2],
+			);
 			expect(signatures).toHaveLength(2);
 			expect(signatures[0]).toBeDefined();
 			expect(signatures[1]).toBeDefined();

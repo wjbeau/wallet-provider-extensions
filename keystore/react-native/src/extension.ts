@@ -189,7 +189,12 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 									type: "hd-root-key",
 									format: "raw",
 								} as any;
-								return sign({ store: keyStore, key, parentKey: finalParentKey, data });
+								return sign({
+									store: keyStore,
+									key,
+									parentKey: finalParentKey,
+									data,
+								});
 							} finally {
 								clearKeyData(key);
 								clearKeyData(parentKey);
@@ -300,7 +305,9 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 										if (!key) return null;
 										let pKey: KeyData | null = null;
 										if (key.metadata?.parentKeyId) {
-											pKey = await fetchSecret<KeyData>({ keyId: key.metadata.parentKeyId as string });
+											pKey = await fetchSecret<KeyData>({
+												keyId: key.metadata.parentKeyId as string,
+											});
 										} else if (key.metadata?.rootKey) {
 											pKey = key.metadata.rootKey as KeyData;
 										}
