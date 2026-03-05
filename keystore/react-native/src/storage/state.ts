@@ -77,10 +77,8 @@ export async function commit({
 		const { privateKey, publicKey, seed, ...keyState } = keyData as any;
 		// clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
 		clearBuffer(privateKey);
-		clearBuffer(publicKey);
 		clearBuffer(seed);
 		delete (keyData as any).privateKey;
-		delete (keyData as any).publicKey;
 		delete (keyData as any).seed;
 
 		// Reflect the change in the reactive store
