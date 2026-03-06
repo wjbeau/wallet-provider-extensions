@@ -11,7 +11,9 @@
     "examples/**"
   ],
   "scripts": {
-    "build": "npm run build -w @algorandfoundation/log-store && npm run build -w @algorandfoundation/keystore && npm run build -w @algorandfoundation/accounts-store && npm run build --workspaces --if-present",
+    "build": "npm run build:first && npm run build:accounts",
+    "build:first": "npm run build -w log --if-present && npm run build -w keystore/store --if-present",
+    "build:accounts": "npm run build -w accounts/store --if-present",
     "clean": "npm run clean --workspaces --if-present && rm -rf coverage node_modules docs",
     "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present",

@@ -1,43 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-// Mock external crypto suite used by encrypt/decrypt to keep tests deterministic
-vi.mock("@algorandfoundation/xhd-wallet-api/dist/sumo.facade.js", () => {
-	return {
-		crypto_generichash: (len: number, _input: Uint8Array) =>
-			new Uint8Array(len).fill(2),
-		crypto_secretbox_easy: (
-			data: Uint8Array,
-			_nonce: Uint8Array,
-			_key: Uint8Array,
-		) => {
-			// simple XOR transform to emulate encryption deterministically
-			const out = new Uint8Array(data.length);
-			for (let i = 0; i < data.length; i++) out[i] = data[i] ^ 0x03;
-			return out;
-		},
-		crypto_secretbox_open_easy: (
-			cipher: Uint8Array,
-			_nonce: Uint8Array,
-			_key: Uint8Array,
-		) => {
-			const out = new Uint8Array(cipher.length);
-			for (let i = 0; i < cipher.length; i++) out[i] = cipher[i] ^ 0x03;
-			return out;
-		},
-	};
-});
-
-// Mock node:crypto's randomBytes to return a fixed nonce for deterministic output
-vi.mock("node:crypto", async (orig) => {
-	const actual: any = await (orig as any)();
-	return {
-		...actual,
-		randomBytes: (len: number) =>
-			new Uint8Array(Array.from({ length: len }, () => 1)),
-		subtle: actual.subtle,
-	};
-});
-
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	clearKeyData,
 	decryptWithKeyData,
@@ -74,7 +35,6 @@ describe("crypto.ts", () => {
 				configurable: true,
 			});
 		}
-		vi.clearAllMocks();
 	});
 
 	it("clearKeyData removes privateKey field if present", () => {
@@ -97,11 +57,8 @@ describe("crypto.ts", () => {
 			key: { ...key },
 			data: plaintext,
 		});
-		// Expect nonce(24 bytes of 0x01) + transformed ciphertext
-		expect((encrypted as Uint8Array).length).toBe(24 + plaintext.length);
-		expect(Array.from((encrypted as Uint8Array).slice(0, 24))).toEqual(
-			new Array(24).fill(1),
-		);
+		// Expect nonce(24 bytes) + transformed ciphertext
+		expect((encrypted as Uint8Array).length).toBe(24 + plaintext.length + 16);
 
 		const decrypted = await decryptWithKeyData({
 			key: { ...key },

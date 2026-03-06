@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@algorandfoundation/wallet-provider": "^1.0.0-canary.3",
-    "@algorandfoundation/react-native-keystore": "1.0.0-canary.1",
+    "@algorandfoundation/react-native-keystore": "1.0.0-canary.3",
     "@algorandfoundation/accounts-store": "0.0.1",
     "@algorandfoundation/accounts-keystore-extension": "0.0.1",
     "@algorandfoundation/log-store": "1.0.0-canary.2",

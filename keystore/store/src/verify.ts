@@ -29,7 +29,7 @@ export async function verifyWithKeyData({
 		}
 
 		// TODO: Switch case with bespoke handlers
-		if (key.algorithm === "ES256" || key.algorithm === "P-256") {
+		if (key.algorithm === "P256" || key.algorithm === "P-256") {
 			const fullPublicKey = new Uint8Array(65);
 			fullPublicKey[0] = 0x04;
 			fullPublicKey.set(key.publicKey, 1);
@@ -41,6 +41,7 @@ export async function verifyWithKeyData({
 				false,
 				["verify"],
 			);
+
 			return await subtle.verify(
 				{ name: "ECDSA", hash: "SHA-256" },
 				cryptoKey,

@@ -1,6 +1,6 @@
 {
 	"name": "@algorandfoundation/keystore",
-	"version": "1.0.0-canary.7",
+	"version": "1.0.0-canary.12",
 	"description": "Basic Keystore.",
 	"type": "module",
 	"main": "dist/index.js",

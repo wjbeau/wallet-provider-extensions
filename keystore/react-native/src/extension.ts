@@ -14,7 +14,7 @@ import {
 	signWithKeyData,
 	verify,
 	type XHDDerivedKeyData,
-	type XHDPasskey,
+	type XHDDomainP256KeyData,
 } from "@algorandfoundation/keystore";
 import type { LogStoreExtension } from "@algorandfoundation/log-store";
 import type { Extension, Provider } from "@algorandfoundation/wallet-provider";
@@ -166,21 +166,35 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 									typeof key?.metadata?.parentKeyId !== "undefined"
 								) {
 									parentKey = await fetchSecret<KeyData>({
-										keyId: (key as XHDDerivedKeyData | XHDPasskey).metadata
-											.parentKeyId,
+										keyId: (key as XHDDerivedKeyData | XHDDomainP256KeyData)
+											.metadata.parentKeyId,
 									});
 									if (!parentKey)
 										throw new KeyNotFoundError(
-											(key as XHDDerivedKeyData | XHDPasskey).metadata
+											(key as XHDDerivedKeyData | XHDDomainP256KeyData).metadata
 												.parentKeyId,
 										);
+								} else if (key?.metadata?.rootKey) {
+									parentKey = key.metadata.rootKey as KeyData;
 								}
 								if (!parentKey) {
 									throw new InvalidKeyDataError(
 										"Missing parent key for HD key",
 									);
 								}
-								return sign({ store: keyStore, key, parentKey, data });
+								// Ensure parent key is properly formatted for signing
+								// Ed25519 expects an hd-root-key
+								const finalParentKey = {
+									...parentKey,
+									type: "hd-root-key",
+									format: "raw",
+								} as any;
+								return sign({
+									store: keyStore,
+									key,
+									parentKey: finalParentKey,
+									data,
+								});
 							} finally {
 								clearKeyData(key);
 								clearKeyData(parentKey);
@@ -287,16 +301,27 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
 									ids.map((id) => fetchSecret<KeyData>({ keyId: id })),
 								);
 								parentKeys = await Promise.all(
-									keys.map((key) =>
-										fetchSecret<KeyData>({
-											keyId: (key as XHDDerivedKeyData | XHDPasskey).metadata
-												.parentKeyId,
-										}),
-									),
+									keys.map(async (key) => {
+										if (!key) return null;
+										let pKey: KeyData | null = null;
+										if (key.metadata?.parentKeyId) {
+											pKey = await fetchSecret<KeyData>({
+												keyId: key.metadata.parentKeyId as string,
+											});
+										} else if (key.metadata?.rootKey) {
+											pKey = key.metadata.rootKey as KeyData;
+										}
+										if (!pKey) return null;
+										return {
+											...pKey,
+											type: "hd-root-key",
+											format: "raw",
+										} as any;
+									}),
 								);
 								return Promise.all(
 									keys.map((key, i) => {
-										return key
+										return key && parentKeys[i]
 											? signWithKeyData({
 													key,
 													data: data[i] as Uint8Array<ArrayBufferLike>,

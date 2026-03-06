@@ -12,7 +12,7 @@ import type { Key, KeyData } from "./types/index.ts";
 export const derivableTypes: string[] = [
 	"hd-root-key",
 	"hd-derived-ed25519",
-	"hd-derived-passkey",
+	"hd-derived-p256",
 ];
 
 export function requiresParentKey(key: Partial<Key>): boolean {

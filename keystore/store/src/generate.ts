@@ -15,7 +15,7 @@ import type {
 	KeyData,
 	SeedData,
 	XHDDerivedKeyData,
-	XHDPasskey,
+	XHDDomainP256KeyData,
 	XHDRootKey,
 } from "./types/index.ts";
 
@@ -102,19 +102,19 @@ export async function generateXHDRootKeyFromSeed(
 }
 
 /**
- * Generates a derived key or passkey from a parent root key.
+ * Generates a derived key or P256 key from a parent root key.
  * @param params - The generation parameters
  * @param params.key - Partial key data for the derived key
  * @param params.parentKey - The parent root key
- * @returns The fully populated derived key or passkey
+ * @returns The fully populated derived key or P256 key
  */
 export async function generateXHDFromParent({
 	key,
 	parentKey,
 }: {
-	key: Partial<XHDDerivedKeyData> | Partial<XHDPasskey>;
+	key: Partial<XHDDerivedKeyData> | Partial<XHDDomainP256KeyData>;
 	parentKey: XHDRootKey;
-}): Promise<XHDDerivedKeyData | XHDPasskey> {
+}): Promise<XHDDerivedKeyData | XHDDomainP256KeyData> {
 	const id = generateId();
 
 	let pk: Uint8Array<ArrayBufferLike> | undefined;
@@ -177,7 +177,7 @@ export async function generateXHDFromParent({
 					},
 				} as XHDDerivedKeyData;
 			}
-			case "hd-derived-passkey": {
+			case "hd-derived-p256": {
 				if (
 					typeof parentKey.privateKey === "undefined" ||
 					!(parentKey.privateKey instanceof Uint8Array) ||
@@ -209,7 +209,7 @@ export async function generateXHDFromParent({
 				return {
 					...key,
 					id,
-					algorithm: "P-256",
+					algorithm: "P256",
 					format: "bytes",
 					extractable: true,
 					publicKey: dp256.getPurePKBytes(pk),
@@ -218,7 +218,7 @@ export async function generateXHDFromParent({
 						...metadata,
 						parentKeyId: parentKey.id,
 					},
-				} as XHDPasskey;
+				} as XHDDomainP256KeyData;
 			}
 			default:
 				throw new InvalidKeyDataError("Invalid key type");
@@ -249,7 +249,9 @@ export async function generateKey({
 					case "hd-seed": {
 						return {
 							...keyData,
-							...(await generateSeedData()),
+							...(await generateSeedData(
+								keyData.metadata.params as BIP39GenerationOptions,
+							)),
 							id,
 						} as SeedData;
 					}
@@ -293,6 +295,33 @@ export async function generateKey({
 					})),
 					id,
 				} as XHDDerivedKeyData;
+			}
+
+			case "P256": {
+				if (typeof keyData.metadata.parentKeyId === "undefined") {
+					throw new InvalidKeyDataError(
+						"P256 require a rootKeyId, please upload it first using importSeed()",
+					);
+				}
+				if (
+					!(
+						parentKey &&
+						parentKey.type === "hd-root-key" &&
+						parentKey.privateKey instanceof Uint8Array
+					)
+				)
+					throw new InvalidKeyDataError(
+						"Seed is required to generate P256 key",
+					);
+
+				keyData.type = "hd-derived-p256";
+				return {
+					...keyData,
+					...(await generateXHDFromParent({
+						key: keyData as XHDDomainP256KeyData,
+						parentKey: parentKey as XHDRootKey,
+					})),
+				};
 			}
 			default: {
 				throw new InvalidKeyDataError(

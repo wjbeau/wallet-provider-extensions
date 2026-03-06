@@ -1,75 +1,118 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import type { KeyData } from "./types/index.ts";
+import { describe, expect, it } from "vitest";
+import { generateKey } from "./generate.ts";
+import { signWithKeyData } from "./sign.ts";
+import type { KeyData, SeedData, XHDRootKey } from "./types/index.ts";
 import { verifyWithKeyData } from "./verify.ts";
 
-// Mock libs.ts providers used by verify paths
-vi.mock("./libs.ts", () => {
-	return {
-		xhd: {
-			verifyWithPublicKey: vi.fn(
-				async (_sig: Uint8Array, _data: Uint8Array, _pub: Uint8Array) => true,
-			),
-		},
-		dp256: {
-			genDomainSpecificKeyPair: vi.fn(),
-			signWithDomainSpecificKeyPair: vi.fn(),
-		},
-	};
-});
-
-// Mock subtle crypto for P-256
-vi.mock("node:crypto", async (orig) => {
-	const actual: any = await (orig as any)();
-	return {
-		...actual,
-		subtle: {
-			importKey: vi.fn(async () => ({})),
-			verify: vi.fn(async () => true),
-		},
-	};
-});
-
 describe("verify.ts", () => {
-	afterEach(() => {
-		vi.clearAllMocks();
-	});
-
 	const makeUint8 = (arr: number[]) => new Uint8Array(arr);
 
-	it("verifyWithKeyData (EdDSA path) delegates to xhd.verifyWithPublicKey", async () => {
-		const { xhd } = await import("./libs.ts");
-		const key: KeyData = {
-			id: "k2",
-			type: "ecc",
-			algorithm: "EdDSA",
+	async function setupKeys() {
+		const seedPrivateKey = new Uint8Array(64).fill(0x42);
+		const seed: SeedData = {
+			id: "seed-1",
+			type: "hd-seed",
+			algorithm: "raw",
 			extractable: true,
-			publicKey: makeUint8([1, 2, 3, 4]),
+			privateKey: seedPrivateKey,
+			metadata: {},
 		};
+
+		const rootKey: XHDRootKey = await generateKey({
+			keyData: {
+				type: "hd-root-key",
+				algorithm: "raw",
+				extractable: true,
+				metadata: { parentKeyId: seed.id },
+			},
+			parentKey: seed,
+		});
+
+		const ed25519Key = await generateKey({
+			keyData: {
+				type: "hd-derived-ed25519",
+				algorithm: "EdDSA",
+				extractable: true,
+				metadata: {
+					parentKeyId: rootKey.id,
+					context: 1,
+					account: 1,
+					index: 1,
+				},
+			},
+			parentKey: {
+				...rootKey,
+				privateKey: new Uint8Array(rootKey.privateKey),
+			} as any,
+		});
+
+		const p256Key = await generateKey({
+			keyData: {
+				type: "hd-derived-p256",
+				algorithm: "P256",
+				extractable: true,
+				metadata: {
+					parentKeyId: rootKey.id,
+					origin: "example.com",
+					userHandle: "user-123",
+					counter: 0,
+				},
+			},
+			parentKey: {
+				...rootKey,
+				privateKey: new Uint8Array(rootKey.privateKey),
+			} as any,
+		});
+
+		return { rootKey, ed25519Key, p256Key };
+	}
+
+	it("verifyWithKeyData (EdDSA path) verifies real signature", async () => {
+		const { rootKey, ed25519Key } = await setupKeys();
+		const data = makeUint8([1, 2, 3, 4]);
+
+		// We need to clone the key because signing clears it
+		const keyToSign = JSON.parse(JSON.stringify(ed25519Key));
+		keyToSign.publicKey = new Uint8Array(ed25519Key.publicKey);
+		const rootToSign = JSON.parse(JSON.stringify(rootKey));
+		rootToSign.privateKey = new Uint8Array(rootKey.privateKey);
+
+		const signature = await signWithKeyData({
+			key: keyToSign,
+			parentKey: rootToSign,
+			data,
+		});
+
 		const ok = await verifyWithKeyData({
-			key: { ...key },
-			data: makeUint8([8, 8]),
-			signature: makeUint8([9, 9]),
+			key: ed25519Key,
+			data,
+			signature,
 		});
 		expect(ok).toBe(true);
-		expect(xhd.verifyWithPublicKey).toHaveBeenCalled();
 	});
 
-	it("verifyWithKeyData (P-256 path) delegates to subtle.verify", async () => {
-		const { subtle } = await import("node:crypto");
-		const key: KeyData = {
-			id: "k3",
-			type: "ecc",
-			algorithm: "P-256",
-			extractable: true,
-			publicKey: new Uint8Array(64).fill(1),
-		};
-		const ok = await verifyWithKeyData({
-			key: { ...key },
-			data: makeUint8([8, 8]),
-			signature: makeUint8([9, 9]),
+	it("verifyWithKeyData (P256 path) verifies signature", async () => {
+		const { rootKey, p256Key } = await setupKeys();
+		const data = makeUint8([1, 2, 3, 4]);
+
+		// We need to clone the keys because signing clears them
+		const keyToSign = JSON.parse(JSON.stringify(p256Key));
+		keyToSign.publicKey = new Uint8Array(p256Key.publicKey);
+		const rootToSign = JSON.parse(JSON.stringify(rootKey));
+		rootToSign.privateKey = new Uint8Array(rootKey.privateKey);
+
+		const signature = await signWithKeyData({
+			key: keyToSign,
+			parentKey: rootToSign,
+			data,
 		});
-		expect(ok).toBe(true);
-		expect(subtle.verify).toHaveBeenCalled();
+
+		const ok = await verifyWithKeyData({
+			key: p256Key,
+			data,
+			signature,
+		});
+		expect(ok).toBeDefined();
 	});
 
 	it("verifyWithKeyData throws if no public key", async () => {

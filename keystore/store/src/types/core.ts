@@ -18,7 +18,7 @@ export type KeyType =
 	| "hd-seed"
 	| "hd-root-key"
 	| "hd-derived-ed25519"
-	| "hd-derived-passkey"
+	| "hd-derived-p256"
 	| string;
 
 /**
@@ -39,11 +39,11 @@ export type KeyFormat = "raw" | "pem" | "der" | "jwk" | "openpgp" | string;
 /**
  * Supported algorithms:
  * - `RS256`: RSA PKCS#1 v1.5 with SHA-256
- * - `ES256`: ECDSA using P-256 and SHA-256
+ * - `P256`: ECDSA using P-256 and SHA-256
  * - `EdDSA`: EdDSA using Ed25519
  * - `raw`: raw bytes (e.g., storing seed material)
  */
-export type Algorithm = "RS256" | "ES256" | "EdDSA" | "raw" | string;
+export type Algorithm = "RS256" | "P256" | "EdDSA" | "raw" | string;
 
 // TODO: Align with SubtleCrypto algorithms and general options?
 // export type SubtleAlgorithm = {
@@ -100,6 +100,8 @@ export interface Key {
 	 * Key usages.
 	 */
 	keyUsages?: KeyUsage[];
+	/** Public key bytes (if available) */
+	publicKey?: Uint8Array;
 	/**
 	 * Key format, if applicable.
 	 */
@@ -122,8 +124,6 @@ export interface Key {
  * Data for a key, including optional public key and metadata.
  */
 export interface KeyData extends Key {
-	/** Public key bytes (if available) */
-	publicKey?: Uint8Array;
 	/** Private key bytes (usually for import only, never exported for existing keys) */
 	privateKey?: Uint8Array;
 }
@@ -133,6 +133,7 @@ export interface KeyData extends Key {
  */
 export interface SeedData extends KeyData {
 	type: "hd-seed";
+	algorithm: "raw";
 }
 
 /**
@@ -140,6 +141,7 @@ export interface SeedData extends KeyData {
  */
 export interface XHDRootKey extends KeyData {
 	type: "hd-root-key";
+	algorithm: "raw";
 	metadata?: {
 		/** Optional identifier of the parent key/seed */
 		parentId?: string;
@@ -156,6 +158,7 @@ export interface XHDRootKey extends KeyData {
  */
 export interface XHDDerivedKeyData extends KeyData {
 	type: "hd-derived-ed25519";
+	algorithm: "EdDSA";
 	metadata: {
 		/** Address Mapping */
 		address: Record<string, unknown>;
@@ -175,14 +178,15 @@ export interface XHDDerivedKeyData extends KeyData {
 }
 
 /**
- * Represents metadata for an HD-derived passkey.
+ * Represents metadata for an HD-derived P256 key.
  */
-export interface XHDPasskey extends KeyData {
-	type: "hd-derived-passkey";
+export interface XHDDomainP256KeyData extends KeyData {
+	type: "hd-derived-p256";
+	algorithm: "P256";
 	metadata: {
-		/** The origin (RP ID) of the passkey */
+		/** The origin (RP ID) of the P256 key */
 		origin: string;
-		/** The user handle associated with the passkey */
+		/** The user handle associated with the P256 key */
 		userHandle: string;
 		/** Optional usage counter */
 		counter?: number;
@@ -247,9 +251,9 @@ export interface DeriveOptions extends KeyOptions {
 	curve?: "secp256k1" | "secp256r1" | "ed25519";
 	/** Derivation mode */
 	mode?: "standard" | "peikert" | "slip10";
-	/** For P256 domain-specific derivation (WebAuthn/passkeys) */
+	/** For P256 domain-specific derivation (WebAuthn/domain-keys) */
 	origin?: string;
-	/** For P256 domain-specific derivation (WebAuthn/passkeys) */
+	/** For P256 domain-specific derivation (WebAuthn/domain-keys) */
 	userHandle?: string;
 	/** Counter for multiple keys per domain (default: 0) */
 	counter?: number;

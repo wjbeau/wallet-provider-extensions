@@ -1,158 +1,130 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { signWithKeyData, signXHDEd25519, signXHDPasskey } from "./sign.ts";
+import { describe, expect, it } from "vitest";
+import {
+	generateKey,
+	generateSeedData,
+	generateXHDFromParent,
+	generateXHDRootKeyFromSeed,
+} from "./generate.ts";
+import {
+	signWithKeyData,
+	signXHDDomainP256KeyData,
+	signXHDEd25519,
+} from "./sign.ts";
 import type {
+	SeedData,
 	XHDDerivedKeyData,
-	XHDPasskey,
+	XHDDomainP256KeyData,
 	XHDRootKey,
 } from "./types/index.ts";
 
-// Mock libs.ts providers used by sign paths
-vi.mock("./libs.ts", () => {
-	return {
-		xhd: {
-			signData: vi.fn(
-				async (
-					_root: Uint8Array,
-					_ctx: number,
-					_acct: number,
-					_idx: number,
-					_data: Uint8Array,
-				) => new Uint8Array([9, 9]),
-			),
-		},
-		dp256: {
-			genDomainSpecificKeyPair: vi.fn(
-				async (
-					_root: Uint8Array,
-					_origin: string,
-					_user: string,
-					_counter?: number,
-				) => ({ kp: "generated" }) as any,
-			),
-			signWithDomainSpecificKeyPair: vi.fn(
-				async (_kp: any, _data: Uint8Array) => new Uint8Array([7]),
-			),
-		},
-	};
-});
-
 describe("sign.ts", () => {
-	afterEach(() => {
-		vi.clearAllMocks();
-	});
-
 	const makeUint8 = (arr: number[]) => new Uint8Array(arr);
 
-	it("signXHDEd25519 signs using xhd.signData and clears root privateKey", async () => {
-		const root: XHDRootKey = {
-			id: "root-1",
-			type: "hd-root-key",
-			algorithm: "raw",
-			extractable: false,
-			privateKey: makeUint8([1, 1, 1]),
-		};
-		const key: XHDDerivedKeyData = {
-			id: "d1",
-			type: "hd-derived-ed25519",
-			algorithm: "EdDSA",
-			extractable: false,
-			metadata: {
-				path: "",
-				account: 0,
-				context: 1,
-				index: 2,
-				derivation: 3,
-				parentKeyId: "root-1",
-			},
-		} as any;
+	async function setupKeys() {
+		const seedData = (await generateSeedData({
+			strength: 128,
+		})) as SeedData;
 
+		// Deep clone to prevent original from being cleared
+		const rootKey = await generateXHDRootKeyFromSeed({
+			...seedData,
+			privateKey: new Uint8Array(seedData.privateKey as Uint8Array),
+		});
+
+		const edKey = (await generateKey({
+			keyData: {
+				type: "hd-derived-ed25519",
+				algorithm: "EdDSA",
+				metadata: {
+					account: 0,
+					index: 0,
+					context: 0,
+					parentKeyId: rootKey.id,
+				},
+			},
+			parentKey: {
+				...rootKey,
+				privateKey: new Uint8Array(rootKey.privateKey as Uint8Array),
+			},
+		})) as XHDDerivedKeyData;
+
+		const p256Key = (await generateKey({
+			keyData: {
+				type: "hd-derived-p256",
+				algorithm: "P256",
+				metadata: {
+					origin: "https://example.com",
+					userHandle: "user",
+					parentKeyId: rootKey.id,
+				},
+			},
+			parentKey: {
+				...rootKey,
+				privateKey: new Uint8Array(rootKey.privateKey as Uint8Array),
+			},
+		})) as XHDDomainP256KeyData;
+
+		return { rootKey, edKey, p256Key, seedData };
+	}
+
+	it("signXHDEd25519 signs using real xhd and clears root privateKey", async () => {
+		const { rootKey, edKey } = await setupKeys();
+
+		const data = makeUint8([1, 2, 3]);
 		const sig = await signXHDEd25519({
-			key,
-			root,
-			data: makeUint8([4, 5, 6]),
+			key: edKey,
+			root: rootKey,
+			data,
 		});
-		expect(Array.from(sig as Uint8Array)).toEqual([9, 9]);
+
+		expect(sig).toBeDefined();
+		expect(sig?.length).toBe(64);
 		// root privateKey must be cleared by finally
-		expect(root.privateKey).toBeUndefined();
+		expect(rootKey.privateKey).toBeUndefined();
 	});
 
-	it("signXHDPasskey uses dp256 and clears root privateKey", async () => {
-		const root: XHDRootKey = {
-			id: "root-2",
-			type: "hd-root-key",
-			algorithm: "raw",
-			extractable: false,
-			privateKey: makeUint8([2, 2, 2]),
-		};
-		const key: XHDPasskey = {
-			id: "p1",
-			type: "hd-derived-passkey",
-			algorithm: "P-256",
-			extractable: false,
-			metadata: {
-				origin: "https://example.com",
-				userHandle: "user",
-				counter: 1,
-				parentKeyId: "root-2",
-			},
-		} as any;
+	it("signXHDDomainP256KeyData uses real dp256 and clears root privateKey", async () => {
+		const { rootKey, p256Key } = await setupKeys();
 
-		const sig = await signXHDPasskey({
-			key,
-			root,
-			data: makeUint8([7, 7]),
+		const data = makeUint8([7, 7]);
+		const sig = await signXHDDomainP256KeyData({
+			key: p256Key,
+			root: rootKey,
+			data,
 		});
-		expect(Array.from(sig as Uint8Array)).toEqual([7]);
-		expect(root.privateKey).toBeUndefined();
+
+		expect(sig).toBeDefined();
+		// ECDSA P-256 signature length can vary but is usually around 70-72 bytes in DER or 64 in raw
+		// The library likely returns raw 64 bytes
+		expect(sig?.length).toBe(64);
+		expect(rootKey.privateKey).toBeUndefined();
 	});
 
-	it("signWithKeyData routes to correct signer for ed25519 and passkey", async () => {
-		const root: XHDRootKey = {
-			id: "root-3",
-			type: "hd-root-key",
-			algorithm: "raw",
-			extractable: false,
-			privateKey: makeUint8([3, 3, 3]),
-		};
-		const edKey: XHDDerivedKeyData = {
-			id: "ed1",
-			type: "hd-derived-ed25519",
-			algorithm: "EdDSA",
-			extractable: false,
-			metadata: {
-				path: "",
-				account: 0,
-				context: 1,
-				index: 2,
-				derivation: 3,
-				parentKeyId: "root-3",
-			},
-		} as any;
-
-		const passKey: XHDPasskey = {
-			id: "pk1",
-			type: "hd-derived-passkey",
-			algorithm: "P-256",
-			extractable: false,
-			metadata: { origin: "o", userHandle: "u", parentKeyId: "root-3" },
-		} as any;
+	it("signWithKeyData routes to correct signer for ed25519 and P256", async () => {
+		const { rootKey, edKey, p256Key, seedData } = await setupKeys();
 
 		const sig1 = await signWithKeyData({
-			key: { ...edKey },
-			parentKey: { ...root },
+			key: edKey,
+			parentKey: rootKey,
 			data: makeUint8([1]),
 		});
-		expect(Array.from(sig1 as Uint8Array)).toEqual([9, 9]);
+		expect(sig1?.length).toBe(64);
 
-		// reset root private key for next call
-		root.privateKey = makeUint8([3, 3, 3]);
+		// Re-setup keys because rootKey.privateKey was cleared
+		const rootKey2 = await generateXHDRootKeyFromSeed({
+			...seedData,
+			privateKey: new Uint8Array(seedData.privateKey as Uint8Array),
+		});
+		// Since generateXHDRootKeyFromSeed generates a random ID, we need to update the key's metadata
+		// or manually set the ID.
+		(rootKey2 as any).id = p256Key.metadata.parentKeyId;
 
 		const sig2 = await signWithKeyData({
-			key: { ...passKey },
-			parentKey: { ...root },
+			key: p256Key,
+			parentKey: rootKey2,
 			data: makeUint8([2]),
 		});
-		expect(Array.from(sig2 as Uint8Array)).toEqual([7]);
+		expect(sig2?.length).toBe(64);
 	});
 
 	it("signWithKeyData throws for unknown key type", async () => {
@@ -170,24 +142,19 @@ describe("sign.ts", () => {
 	});
 
 	it("signXHDEd25519 throws if rootKeyId mismatch", async () => {
-		const root: XHDRootKey = {
-			id: "root-1",
-			type: "hd-root-key",
-			algorithm: "raw",
-			privateKey: makeUint8([1]),
-		} as any;
-		const key: XHDDerivedKeyData = {
-			id: "d1",
-			type: "hd-derived-ed25519",
+		const { rootKey, edKey } = await setupKeys();
+		const malformedKey = {
+			...edKey,
 			metadata: {
+				...edKey.metadata,
 				parentKeyId: "mismatch",
 			},
-		} as any;
+		};
 
 		await expect(
 			signXHDEd25519({
-				key,
-				root,
+				key: malformedKey,
+				root: rootKey,
 				data: makeUint8([1]),
 			}),
 		).rejects.toThrow("Root key does not match key ID");
