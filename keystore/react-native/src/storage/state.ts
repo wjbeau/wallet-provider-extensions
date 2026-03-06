@@ -99,9 +99,7 @@ export function encode(key: KeyData): string {
 			JSON.stringify(key, (_key, value) => {
 				if (
 					value instanceof Uint8Array ||
-					(value &&
-						value.constructor &&
-						value.constructor.name === "Uint8Array")
+					(value?.constructor && value.constructor.name === "Uint8Array")
 				) {
 					return Array.from(value);
 				}

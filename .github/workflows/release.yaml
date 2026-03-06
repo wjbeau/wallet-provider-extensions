@@ -23,6 +23,7 @@ jobs:
       - run: npm run build && npm ci
       - run: ls ./node_modules/.bin
       - name: Release
+        if: ${{ false }} # Skip the release step for now
         run: npm run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
