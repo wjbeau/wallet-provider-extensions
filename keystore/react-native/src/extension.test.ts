@@ -7,7 +7,6 @@ import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 import { describe, expect, it, vi } from "vitest";
 import { WithKeyStore } from "./extension.ts";
-import { fetchSecret } from "./storage/state.ts";
 
 describe("WithKeyStore Extension", () => {
 	const createTestSetup = () => {
@@ -36,7 +35,7 @@ describe("WithKeyStore Extension", () => {
 	};
 
 	it("should initialize with correct properties", () => {
-		const { extension, store } = createTestSetup();
+		const { extension } = createTestSetup();
 		expect(extension.keys).toEqual([]);
 		expect(extension.status).toBe("idle");
 		expect(extension.key.store).toBeDefined();
