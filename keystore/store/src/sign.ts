@@ -1,5 +1,4 @@
-import { Encoding } from "@algorandfoundation/xhd-wallet-api";
-import { clearKeyData } from "./crypto.ts";
+import { clearKeyData, getBIP44PathFromContext } from "./crypto.ts";
 import { InvalidKeyDataError } from "./errors.ts";
 import { dp256, xhd } from "./libs.ts";
 import type {
@@ -83,14 +82,16 @@ export async function signXHDEd25519({
 	}
 
 	try {
-		//@ts-expect-error, we are accessing a private field to reduce complexity
-		return await xhd.rawSign(
-			root.privateKey,
+		const bip44Path: number[] = getBIP44PathFromContext(
 			key.metadata.context,
 			key.metadata.account,
 			key.metadata.index,
+		);
+		//@ts-expect-error, we are accessing a private field to reduce complexity
+		return await xhd.rawSign(
+			root.privateKey,
+			bip44Path,
 			data,
-			{ encoding: Encoding.NONE, schema: {} },
 			key.metadata.derivation,
 		);
 	} finally {
