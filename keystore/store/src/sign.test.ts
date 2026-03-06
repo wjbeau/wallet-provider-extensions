@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
 	generateKey,
 	generateSeedData,
-	generateXHDFromParent,
 	generateXHDRootKeyFromSeed,
 } from "./generate.ts";
 import {
@@ -14,7 +13,6 @@ import type {
 	SeedData,
 	XHDDerivedKeyData,
 	XHDDomainP256KeyData,
-	XHDRootKey,
 } from "./types/index.ts";
 
 describe("sign.ts", () => {
