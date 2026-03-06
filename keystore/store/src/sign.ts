@@ -83,7 +83,8 @@ export async function signXHDEd25519({
 	}
 
 	try {
-		return await xhd.signData(
+		//@ts-expect-error, we are accessing a private field to reduce complexity
+		return await xhd.rawSign(
 			root.privateKey,
 			key.metadata.context,
 			key.metadata.account,
