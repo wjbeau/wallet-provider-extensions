@@ -19,6 +19,7 @@
     "clean": "pnpm run -r --if-present clean && rm -rf coverage node_modules docs",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "lint:github": "oxlint --format=github",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "docs": "typedoc",
