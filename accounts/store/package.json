@@ -1,6 +1,6 @@
 {
   "name": "@algorandfoundation/accounts-store",
-  "version": "0.0.1",
+  "version": "1.0.0-canary.1",
   "description": "Basic Accounts Store.",
   "license": "Apache-2.0",
   "author": "Algorand Foundation",
@@ -34,17 +34,17 @@
     "release:dry-run": "package-releaser --dry-run"
   },
   "dependencies": {
-    "@algorandfoundation/wallet-provider": "catalog:",
+    "@algorandfoundation/wallet-provider": "1.0.0-canary.3",
     "@noble/hashes": "^2.0.1",
     "@scure/base": "^2.0.0"
   },
   "devDependencies": {
-    "@algorandfoundation/log-store": "workspace:*",
-    "@algorandfoundation/package-releaser": "workspace:^",
-    "vitest": "catalog:"
+    "@algorandfoundation/log-store": "1.0.0-canary.2",
+    "@algorandfoundation/package-releaser": "workspace:*",
+    "vitest": "4.1.2"
   },
   "peerDependencies": {
-    "@algorandfoundation/log-store": "workspace:*",
+    "@algorandfoundation/log-store": "1.0.0-canary.2",
     "@tanstack/store": "catalog:",
     "before-after-hook": "catalog:"
   },
