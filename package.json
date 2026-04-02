@@ -25,7 +25,8 @@
     "docs": "typedoc",
     "test": "pnpm run -r --if-present test",
     "release": "pnpm run -r --if-present release",
-    "release:dry-run": "pnpm run -r --if-present release:dry-run"
+    "release:dry-run": "pnpm run -r --if-present release:dry-run",
+    "prepare": "husky"
   },
   "dependencies": {
     "@babel/parser": "^7.28.6"
@@ -39,6 +40,8 @@
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^25.2.2",
     "@vitest/coverage-v8": "catalog:",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "oxfmt": "^0.43.0",
     "oxlint": "^1.58.0",
     "semantic-release": "catalog:",
@@ -49,6 +52,10 @@
   },
   "overrides": {
     "@babel/parser": "$@babel/parser"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "oxlint",
+    "*": "oxfmt --no-error-on-unmatched-pattern"
   },
   "release": {
     "plugins": [
