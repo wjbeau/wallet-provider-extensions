@@ -1,3 +1,27 @@
+# [keystore@1.0.0-canary.12](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.11...keystore@1.0.0-canary.12) (2026-03-06)
+
+### Bug Fixes
+
+- update signature for rawSign ([a2a2297](https://github.com/algorandfoundation/wallet-provider-extensions/commit/a2a229792039f993f458e0a3909795f70a7d57be))
+
+# [keystore@1.0.0-canary.11](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.10...keystore@1.0.0-canary.11) (2026-03-06)
+
+### Bug Fixes
+
+- use rawSign for keystore signing ([756d787](https://github.com/algorandfoundation/wallet-provider-extensions/commit/756d7876a388f8d9f187058a2d1f4b8a4f9a0c7e))
+
+# [keystore@1.0.0-canary.10](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.7...keystore@1.0.0-canary.10) (2026-03-04)
+
+### Refactoring
+
+- XHDPasskey to XHDDomainP256KeyData, include publicKey in Key ([c00274d](https://github.com/algorandfoundation/wallet-provider-extensions/commit/c00274d306b29758509e567f814674d812975949))
+
+# [keystore@1.0.0-canary.7](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.6...keystore@1.0.0-canary.7) (2026-02-23)
+
+### Chores
+
+- lock packages to published release ([1566bb0](https://github.com/algorandfoundation/wallet-provider-extensions/commit/1566bb0b925f3851b4317f2ca24d6739f0ae79572))
+
 # [keystore@1.0.0-canary.6](https://github.com/algorandfoundation/wallet-provider-extensions/compare/keystore@1.0.0-canary.5...keystore@1.0.0-canary.6) (2026-02-23)
 
 ### Bug Fixes

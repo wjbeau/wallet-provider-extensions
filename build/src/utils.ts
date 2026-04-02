@@ -216,7 +216,7 @@ export function synchronizeWorkspaceDependencies(workingDirectory: string): void
 export function updateLockfile(): void {
   try {
     const rootDir = execSync("git rev-parse --show-toplevel").toString().trim();
-    console.log(`[@algofam/package-releaser]: Updating lockfile in ${rootDir}`);
+    console.log(`[@algorandfoundation/package-releaser]: Updating lockfile in ${rootDir}`);
     execSync("pnpm install --lockfile-only --ignore-scripts --no-frozen-lockfile", {
       cwd: rootDir,
     });
