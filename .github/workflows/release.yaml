@@ -30,7 +30,7 @@ jobs:
       - run: pnpm install # fix broken workspace for binaries
       - name: Release
         id: release
-        run: pnpm run release
+        run: pnpm run release:dry-run
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Rebase main onto release

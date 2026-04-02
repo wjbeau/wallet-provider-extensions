@@ -16,7 +16,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": false
+    "provenance": true
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
