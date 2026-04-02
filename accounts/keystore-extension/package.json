@@ -1,6 +1,6 @@
 {
   "name": "@algorandfoundation/accounts-keystore-extension",
-  "version": "0.0.1",
+  "version": "1.0.0-canary.1",
   "description": "Accounts Keystore bridge for wallet extensions.",
   "license": "Apache-2.0",
   "author": "Algorand Foundation",
@@ -35,13 +35,13 @@
     "release:dry-run": "package-releaser --dry-run"
   },
   "dependencies": {
-    "@algorandfoundation/accounts-store": "workspace:*",
-    "@algorandfoundation/keystore": "workspace:*",
-    "@algorandfoundation/wallet-provider": "catalog:"
+    "@algorandfoundation/accounts-store": "1.0.0-canary.1",
+    "@algorandfoundation/keystore": "1.0.0-canary.12",
+    "@algorandfoundation/wallet-provider": "1.0.0-canary.3"
   },
   "devDependencies": {
-    "@algorandfoundation/package-releaser": "workspace:^",
-    "vitest": "catalog:"
+    "@algorandfoundation/package-releaser": "workspace:*",
+    "vitest": "4.1.2"
   },
   "peerDependencies": {
     "@tanstack/store": "catalog:",
