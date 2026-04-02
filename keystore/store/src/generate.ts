@@ -5,7 +5,7 @@ import {
 	KeyContext,
 } from "@algorandfoundation/xhd-wallet-api";
 import * as bip39 from "@scure/bip39";
-import { wordlist as englishWordList } from "@scure/bip39/wordlists/english.js";
+import { wordlist as englishWordList } from "@scure/bip39/wordlists/english";
 import { clearKeyData, getBIP44PathFromContext } from "./crypto.ts";
 import { encodeAddress } from "./encoding.ts";
 import { InvalidKeyDataError } from "./errors.ts";

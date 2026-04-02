@@ -25,7 +25,8 @@
 		"test": "vitest run",
 		"test:cov": "vitest run --coverage",
 		"bench": "vitest bench",
-		"release": "package-releaser --dry-run"
+		"release": "package-releaser",
+		"release:dry-run": "package-releaser --dry-run"
 	},
 	"author": "Algorand Foundation",
 	"license": "Apache-2.0",
@@ -35,14 +36,17 @@
 		"directory": "keystore/store"
 	},
 	"dependencies": {
-		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3",
+		"@algorandfoundation/wallet-provider": "catalog:",
+		"@algorandfoundation/xhd-wallet-api": "catalog:",
+		"@algorandfoundation/dp256": "catalog:",
 		"@noble/hashes": "^2.0.1",
-		"@scure/base": "^2.0.0"
+		"@scure/base": "^2.0.0",
+		"@scure/bip39": "^1.5.0"
 	},
 	"peerDependencies": {
-		"@algorandfoundation/log-store": "1.0.0-canary.2",
-		"@tanstack/store": "^0.8.0",
-		"before-after-hook": "^4.0.0"
+		"@algorandfoundation/log-store": "workspace:*",
+		"@tanstack/store": "catalog:",
+		"before-after-hook": "catalog:"
 	},
 	"peerDependenciesMeta": {
 		"@algorandfoundation/log-store": {
@@ -50,8 +54,9 @@
 		}
 	},
 	"devDependencies": {
-		"@algorandfoundation/log-store": "1.0.0-canary.2",
-		"@algorandfoundation/package-releaser": "0.0.1",
-		"vitest": "^1.0.0"
+		"@algorandfoundation/log-store": "workspace:*",
+		"@algorandfoundation/package-releaser": "workspace:^",
+		"typedoc": "catalog:",
+		"vitest": "catalog:"
 	}
 }

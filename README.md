@@ -21,6 +21,7 @@ The following extension packages are available in this workspace:
 
 - **[Keystore Core](./keystore/store)**: Core types and interfaces for secret management.
 - **[React Native Keystore](./keystore/react-native)**: Secure implementation for React Native using Keychain/MMKV.
+  - [**Integration Guide**](./keystore/react-native/BOOTSTRAPPING.md): Detailed guide on how to adopt the keystore in React Native.
 - **[Log Store](./log)**: Generalized logging extension for tracking wallet activity.
 
 ## Creating a New Extension

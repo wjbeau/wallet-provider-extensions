@@ -25,7 +25,9 @@
 		"docs": "typedoc",
 		"test": "vitest run",
 		"test:cov": "vitest run --coverage",
-		"bench": "vitest bench"
+		"bench": "vitest bench",
+		"release": "package-releaser",
+		"release:dry-run": "package-releaser --dry-run"
 	},
 	"author": "Algorand Foundation",
 	"license": "Apache-2.0",
@@ -35,16 +37,16 @@
 		"directory": "accounts/keystore-extension"
 	},
 	"dependencies": {
-		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3",
-		"@algorandfoundation/accounts-store": "0.0.1",
-		"@algorandfoundation/keystore": "1.0.0-canary.7"
+		"@algorandfoundation/wallet-provider": "catalog:",
+		"@algorandfoundation/accounts-store": "workspace:*",
+		"@algorandfoundation/keystore": "workspace:*"
 	},
 	"peerDependencies": {
-		"@tanstack/store": "^0.8.0",
-		"before-after-hook": "^4.0.0"
+		"@tanstack/store": "catalog:",
+		"before-after-hook": "catalog:"
 	},
 	"devDependencies": {
-		"@algorandfoundation/package-releaser": "0.0.1",
-		"vitest": "^1.0.0"
+		"@algorandfoundation/package-releaser": "workspace:^",
+		"vitest": "catalog:"
 	}
 }

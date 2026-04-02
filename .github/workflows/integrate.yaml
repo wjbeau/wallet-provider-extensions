@@ -8,11 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build && npm install
-      - run: npm run lint
-      - run: npm test
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run build
+      - run: pnpm install # fix broken workspace for binaries
+      - run: pnpm run lint
+      - run: pnpm test
