@@ -14,50 +14,48 @@ import type { KeyData } from "./types/index.ts";
  * @returns A promise that resolves to true if the signature is valid, false otherwise.
  */
 export async function verifyWithKeyData({
-	key,
-	data,
-	signature,
+  key,
+  data,
+  signature,
 }: {
-	key: KeyData;
-	data: Uint8Array<ArrayBufferLike>;
-	signature: Uint8Array<ArrayBufferLike>;
-	algorithm?: string;
+  key: KeyData;
+  data: Uint8Array<ArrayBufferLike>;
+  signature: Uint8Array<ArrayBufferLike>;
+  algorithm?: string;
 }): Promise<boolean> {
-	try {
-		if (typeof key.publicKey === "undefined") {
-			throw new Error("Key does not have a public key");
-		}
+  try {
+    if (typeof key.publicKey === "undefined") {
+      throw new Error("Key does not have a public key");
+    }
 
-		// TODO: Switch case with bespoke handlers
-		if (key.algorithm === "P256" || key.algorithm === "P-256") {
-			const fullPublicKey = new Uint8Array(65);
-			fullPublicKey[0] = 0x04;
-			fullPublicKey.set(key.publicKey, 1);
+    // TODO: Switch case with bespoke handlers
+    if (key.algorithm === "P256" || key.algorithm === "P-256") {
+      const fullPublicKey = new Uint8Array(65);
+      fullPublicKey[0] = 0x04;
+      fullPublicKey.set(key.publicKey, 1);
 
-			const cryptoKey = await subtle.importKey(
-				"raw",
-				fullPublicKey,
-				{ name: "ECDSA", namedCurve: "P-256" },
-				false,
-				["verify"],
-			);
+      const cryptoKey = await subtle.importKey(
+        "raw",
+        fullPublicKey,
+        { name: "ECDSA", namedCurve: "P-256" },
+        false,
+        ["verify"],
+      );
 
-			return await subtle.verify(
-				{ name: "ECDSA", hash: "SHA-256" },
-				cryptoKey,
-				new Uint8Array(signature),
-				new Uint8Array(data),
-			);
-		}
+      return await subtle.verify(
+        { name: "ECDSA", hash: "SHA-256" },
+        cryptoKey,
+        new Uint8Array(signature),
+        new Uint8Array(data),
+      );
+    }
 
-		if (key.algorithm === "EdDSA") {
-			return await xhd.verifyWithPublicKey(signature, data, key.publicKey);
-		}
+    if (key.algorithm === "EdDSA") {
+      return await xhd.verifyWithPublicKey(signature, data, key.publicKey);
+    }
 
-		throw new Error(
-			`Algorithm ${key.algorithm} is not supported for verification`,
-		);
-	} finally {
-		clearKeyData(key);
-	}
+    throw new Error(`Algorithm ${key.algorithm} is not supported for verification`);
+  } finally {
+    clearKeyData(key);
+  }
 }

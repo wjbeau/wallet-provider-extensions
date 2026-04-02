@@ -1,56 +1,56 @@
 {
-	"name": "@algorandfoundation/accounts-store",
-	"version": "0.0.1",
-	"description": "Basic Accounts Store.",
-	"type": "module",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"sideEffects": false,
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		}
-	},
-	"publishConfig": {
-		"access": "public",
-		"provenance": true
-	},
-	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
-		"clean": "rm -rf dist coverage node_modules docs",
-		"lint": "biome check",
-		"lint:fix": "biome check --fix",
-		"docs": "typedoc",
-		"test": "vitest run",
-		"test:cov": "vitest run --coverage",
-		"bench": "vitest bench"
-	},
-	"author": "Algorand Foundation",
-	"license": "Apache-2.0",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git",
-		"directory": "accounts/store"
-	},
-	"dependencies": {
-		"@algorandfoundation/wallet-provider": "^1.0.0-canary.3",
-		"@noble/hashes": "^2.0.1",
-		"@scure/base": "^2.0.0"
-	},
-	"peerDependencies": {
-		"@algorandfoundation/log-store": "1.0.0-canary.2",
-		"@tanstack/store": "^0.8.0",
-		"before-after-hook": "^4.0.0"
-	},
-	"peerDependenciesMeta": {
-		"@algorandfoundation/log-store": {
-			"optional": true
-		}
-	},
-	"devDependencies": {
-		"@algorandfoundation/log-store": "1.0.0-canary.2",
-		"@algorandfoundation/package-releaser": "0.0.1",
-		"vitest": "^1.0.0"
-	}
+  "name": "@algorandfoundation/accounts-store",
+  "version": "0.0.1",
+  "description": "Basic Accounts Store.",
+  "license": "Apache-2.0",
+  "author": "Algorand Foundation",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git",
+    "directory": "accounts/store"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist coverage node_modules docs",
+    "docs": "typedoc",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "bench": "vitest bench",
+    "release": "package-releaser",
+    "release:dry-run": "package-releaser --dry-run"
+  },
+  "dependencies": {
+    "@algorandfoundation/wallet-provider": "catalog:",
+    "@noble/hashes": "^2.0.1",
+    "@scure/base": "^2.0.0"
+  },
+  "devDependencies": {
+    "@algorandfoundation/log-store": "workspace:*",
+    "@algorandfoundation/package-releaser": "workspace:^",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@algorandfoundation/log-store": "workspace:*",
+    "@tanstack/store": "catalog:",
+    "before-after-hook": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@algorandfoundation/log-store": {
+      "optional": true
+    }
+  }
 }

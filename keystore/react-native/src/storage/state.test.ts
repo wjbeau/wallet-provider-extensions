@@ -4,47 +4,47 @@ import { describe, expect, it } from "vitest";
 import { commit, fetchSecret, storage } from "./state.js";
 
 describe("state storage", () => {
-	it("should commit and fetch a secret", async () => {
-		const store = new Store<KeyStoreState>({
-			keys: [],
-			status: "idle",
-			version: "1.0.0",
-		});
+  it("should commit and fetch a secret", async () => {
+    const store = new Store<KeyStoreState>({
+      keys: [],
+      status: "idle",
+      version: "1.0.0",
+    });
 
-		const keyData: KeyData = {
-			id: "test-key",
-			name: "Test Key",
-			// Example of "real" seed data: 32-byte Ed25519 seed
-			publicKey: new Uint8Array([
-				184, 137, 168, 145, 12, 185, 41, 4, 184, 137, 168, 145, 12, 185, 41, 4,
-				184, 137, 168, 145, 12, 185, 41, 4, 184, 137, 168, 145, 12, 185, 41, 4,
-			]),
-			privateKey: new Uint8Array([
-				42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-				42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-			]),
-			type: "ed25519",
-		} as any;
+    const keyData: KeyData = {
+      id: "test-key",
+      name: "Test Key",
+      // Example of "real" seed data: 32-byte Ed25519 seed
+      publicKey: new Uint8Array([
+        184, 137, 168, 145, 12, 185, 41, 4, 184, 137, 168, 145, 12, 185, 41, 4, 184, 137, 168, 145,
+        12, 185, 41, 4, 184, 137, 168, 145, 12, 185, 41, 4,
+      ]),
+      privateKey: new Uint8Array([
+        42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+        42, 42, 42, 42, 42, 42, 42, 42, 42,
+      ]),
+      type: "ed25519",
+    } as any;
 
-		await commit({ store, keyData });
+    await commit({ store, keyData });
 
-		// Check store update
-		expect(store.state.keys.length).toBe(1);
-		expect(store.state.keys[0].id).toBe("test-key");
+    // Check store update
+    expect(store.state.keys.length).toBe(1);
+    expect(store.state.keys[0].id).toBe("test-key");
 
-		// Check persistent storage
-		const stored = storage.getString("test-key");
-		expect(stored).toBeDefined();
+    // Check persistent storage
+    const stored = storage.getString("test-key");
+    expect(stored).toBeDefined();
 
-		// Fetch back
-		const fetched = await fetchSecret<KeyData>({ keyId: "test-key" });
-		expect(fetched).toBeDefined();
-		expect(fetched?.id).toBe("test-key");
-		expect(fetched?.privateKey).toEqual(
-			new Uint8Array([
-				42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-				42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
-			]),
-		);
-	});
+    // Fetch back
+    const fetched = await fetchSecret<KeyData>({ keyId: "test-key" });
+    expect(fetched).toBeDefined();
+    expect(fetched?.id).toBe("test-key");
+    expect(fetched?.privateKey).toEqual(
+      new Uint8Array([
+        42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+        42, 42, 42, 42, 42, 42, 42, 42, 42,
+      ]),
+    );
+  });
 });

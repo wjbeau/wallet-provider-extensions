@@ -88,6 +88,7 @@ The tool supports several `semantic-release` CLI flags:
 - `--dry-run`: Run in dry-run mode to see what would happen without actually releasing.
 
 Example:
+
 ```bash
 npm run release -- --dry-run
 ```
@@ -95,5 +96,6 @@ npm run release -- --dry-run
 ## Technical Implementation Details
 
 The tool implements a `semantic-release` inline plugin that:
+
 1. Filters commits based on the files they change, ensuring only relevant changes trigger a release for the specific package.
 2. Intercepts the `@semantic-release/git` plugin configuration to inject a package-specific commit message: `chore(release): [skip ci] package-name \n\n${nextRelease.notes}`. (Where `package-name` is the package name without the `@algorandfoundation/` scope).

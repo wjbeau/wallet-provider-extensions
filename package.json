@@ -2,55 +2,60 @@
   "name": "wallet-provider-extensions",
   "version": "0.0.0",
   "description": "Collection of extensions for the Wallet Provider.",
-  "workspaces": [
-    "build/**",
-    "log/**",
-    "accounts/**",
-    "keystore/**",
-    "examples/**"
-  ],
-  "scripts": {
-    "build": "npm run build:first && npm run build:accounts",
-    "build:first": "npm run build -w log --if-present && npm run build -w keystore/store --if-present && npm run build -w keystore/react-native --if-present",
-    "build:accounts": "npm run build -w accounts/store --if-present",
-    "clean": "npm run clean --workspaces --if-present && rm -rf coverage node_modules docs",
-    "lint": "npm run lint --workspaces --if-present",
-    "lint:fix": "npm run lint:fix --workspaces --if-present",
-    "docs": "typedoc",
-    "test": "npm run test --workspaces --if-present",
-    "release": "npm run release --workspaces --if-present"
+  "homepage": "https://github.com/algorandfoundation/wallet-provider-extensions#readme",
+  "bugs": {
+    "url": "https://github.com/algorandfoundation/wallet-provider-extensions/issues"
   },
+  "license": "Apache-2.0",
+  "author": "Algorand Foundation",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git"
   },
-  "author": "Algorand Foundation",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/algorandfoundation/wallet-provider-extensions/issues"
+  "scripts": {
+    "build": "pnpm run build:first && pnpm run build:accounts",
+    "build:first": "pnpm run --filter @algorandfoundation/log-store build && pnpm run --filter @algorandfoundation/keystore build && pnpm run --filter @algorandfoundation/react-native-keystore build",
+    "build:accounts": "pnpm run --filter @algorandfoundation/accounts-store build",
+    "clean": "pnpm run -r --if-present clean && rm -rf coverage node_modules docs",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "lint:github": "oxlint --format=github",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "docs": "typedoc",
+    "test": "pnpm run -r --if-present test",
+    "release": "pnpm run -r --if-present release",
+    "release:dry-run": "pnpm run -r --if-present release:dry-run",
+    "prepare": "husky"
   },
-  "homepage": "https://github.com/algorandfoundation/wallet-provider-extensions#readme",
+  "dependencies": {
+    "@babel/parser": "^7.28.6"
+  },
   "devDependencies": {
-    "@babel/parser": "7.28.6",
-    "@biomejs/biome": "2.3.14",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.6",
-    "@semantic-release/npm": "^13.1.4",
+    "@semantic-release/npm": "13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^25.2.2",
-    "@vitest/coverage-v8": "^4.0.18",
-    "cosmiconfig": "^9.0.0",
-    "memize": "^2.1.1",
-    "read-pkg": "^10.1.0",
-    "semantic-release": "^25.0.3",
-    "typedoc": "^0.28.16",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "@vitest/coverage-v8": "catalog:",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
+    "semantic-release": "catalog:",
+    "typedoc": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "overrides": {
     "@babel/parser": "$@babel/parser"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "oxlint",
+    "*": "oxfmt --no-error-on-unmatched-pattern"
   },
   "release": {
     "plugins": [
@@ -78,11 +83,10 @@
       "release",
       {
         "name": "main",
-        "prerelease": "canary"
+        "prerelease": "canary",
+        "channel": "next"
       }
     ]
   },
-  "dependencies": {
-    "@babel/parser": "^7.28.6"
-  }
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }

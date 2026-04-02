@@ -1,9 +1,5 @@
 import type { Store } from "@tanstack/store";
-import {
-	clearKeyData,
-	decryptWithKeyData,
-	encryptWithKeyData,
-} from "./crypto.ts";
+import { clearKeyData, decryptWithKeyData, encryptWithKeyData } from "./crypto.ts";
 import { signWithKeyData } from "./sign.ts";
 import type { Key, KeyData, KeyId, KeyStoreState } from "./types/index.ts";
 import { verifyWithKeyData } from "./verify.ts";
@@ -15,7 +11,7 @@ import { verifyWithKeyData } from "./verify.ts";
  * @param key - The {@link Key} metadata to add.
  */
 export function addKey(store: Store<KeyStoreState>, key: Key): void {
-	store.setState((s) => ({ ...s, keys: [...s.keys, key] }));
+  store.setState((s) => ({ ...s, keys: [...s.keys, key] }));
 }
 
 /**
@@ -25,14 +21,8 @@ export function addKey(store: Store<KeyStoreState>, key: Key): void {
  * @param params.store - The TanStack store instance for {@link KeyStoreState}.
  * @param params.keyId - The {@link KeyId} of the key to remove.
  */
-export function removeKey({
-	store,
-	keyId,
-}: {
-	store: Store<KeyStoreState>;
-	keyId: KeyId;
-}): void {
-	store.setState((s) => ({ ...s, keys: s.keys.filter((k) => k.id !== keyId) }));
+export function removeKey({ store, keyId }: { store: Store<KeyStoreState>; keyId: KeyId }): void {
+  store.setState((s) => ({ ...s, keys: s.keys.filter((k) => k.id !== keyId) }));
 }
 
 /**
@@ -43,13 +33,13 @@ export function removeKey({
  * @param params.status - A string representing the current operation (e.g., "signing", "generating", "idle").
  */
 export function setStatus({
-	store,
-	status,
+  store,
+  status,
 }: {
-	store: Store<KeyStoreState>;
-	status: string;
+  store: Store<KeyStoreState>;
+  status: string;
 }): void {
-	store.setState((s) => ({ ...s, status }));
+  store.setState((s) => ({ ...s, status }));
 }
 
 /**
@@ -58,12 +48,8 @@ export function setStatus({
  * @param params - The store parameters.
  * @param params.store - The TanStack store instance for {@link KeyStoreState}.
  */
-export function clearKeyStore({
-	store,
-}: {
-	store: Store<KeyStoreState>;
-}): void {
-	store.setState({ keys: [], status: "idle" });
+export function clearKeyStore({ store }: { store: Store<KeyStoreState> }): void {
+  store.setState({ keys: [], status: "idle" });
 }
 
 /**
@@ -74,14 +60,8 @@ export function clearKeyStore({
  * @param params.id - The {@link KeyId} of the key to retrieve.
  * @returns The {@link Key} metadata if found, otherwise undefined.
  */
-export function getKey({
-	store,
-	id,
-}: {
-	store: Store<KeyStoreState>;
-	id: KeyId;
-}): Key | undefined {
-	return store.state.keys.find((k) => k.id === id);
+export function getKey({ store, id }: { store: Store<KeyStoreState>; id: KeyId }): Key | undefined {
+  return store.state.keys.find((k) => k.id === id);
 }
 
 /**
@@ -92,13 +72,13 @@ export function getKey({
  * @param params.keys - The array of {@link Key} metadata to initialize with.
  */
 export function initializeKeyStore({
-	store,
-	keys,
+  store,
+  keys,
 }: {
-	store: Store<KeyStoreState, any>;
-	keys: Key[];
+  store: Store<KeyStoreState, any>;
+  keys: Key[];
 }): void {
-	store.setState({ keys, status: "idle" });
+  store.setState({ keys, status: "idle" });
 }
 
 /**
@@ -112,23 +92,23 @@ export function initializeKeyStore({
  * @returns A promise that resolves to the encrypted data.
  */
 export async function encrypt({
-	store,
-	key,
-	data,
-	algorithm,
+  store,
+  key,
+  data,
+  algorithm,
 }: {
-	store: Store<KeyStoreState>;
-	key: KeyData;
-	data: Uint8Array;
-	algorithm?: string;
+  store: Store<KeyStoreState>;
+  key: KeyData;
+  data: Uint8Array;
+  algorithm?: string;
 }): Promise<Uint8Array> {
-	setStatus({ store, status: "encrypting" });
-	try {
-		return encryptWithKeyData({ key, data, algorithm });
-	} finally {
-		clearKeyData(key);
-		setStatus({ store, status: "idle" });
-	}
+  setStatus({ store, status: "encrypting" });
+  try {
+    return encryptWithKeyData({ key, data, algorithm });
+  } finally {
+    clearKeyData(key);
+    setStatus({ store, status: "idle" });
+  }
 }
 
 /**
@@ -142,22 +122,22 @@ export async function encrypt({
  * @returns A promise that resolves to the decrypted data.
  */
 export async function decrypt({
-	store,
-	key,
-	data,
+  store,
+  key,
+  data,
 }: {
-	store: Store<KeyStoreState>;
-	key: KeyData;
-	data: Uint8Array<ArrayBufferLike>;
-	algorithm?: string;
+  store: Store<KeyStoreState>;
+  key: KeyData;
+  data: Uint8Array<ArrayBufferLike>;
+  algorithm?: string;
 }): Promise<Uint8Array<ArrayBufferLike>> {
-	setStatus({ store, status: "decrypting" });
-	try {
-		return decryptWithKeyData({ key, data });
-	} finally {
-		clearKeyData(key);
-		setStatus({ store, status: "idle" });
-	}
+  setStatus({ store, status: "decrypting" });
+  try {
+    return decryptWithKeyData({ key, data });
+  } finally {
+    clearKeyData(key);
+    setStatus({ store, status: "idle" });
+  }
 }
 
 /**
@@ -172,24 +152,24 @@ export async function decrypt({
  * @returns A promise that resolves to true if the signature is valid, false otherwise.
  */
 export async function verify({
-	store,
-	key,
-	data,
-	signature,
+  store,
+  key,
+  data,
+  signature,
 }: {
-	store: Store<KeyStoreState>;
-	key: KeyData;
-	data: Uint8Array<ArrayBufferLike>;
-	signature: Uint8Array<ArrayBufferLike>;
-	algorithm?: string;
+  store: Store<KeyStoreState>;
+  key: KeyData;
+  data: Uint8Array<ArrayBufferLike>;
+  signature: Uint8Array<ArrayBufferLike>;
+  algorithm?: string;
 }): Promise<boolean> {
-	setStatus({ store, status: "verifying" });
-	try {
-		return verifyWithKeyData({ key, data, signature });
-	} finally {
-		clearKeyData(key);
-		setStatus({ store, status: "idle" });
-	}
+  setStatus({ store, status: "verifying" });
+  try {
+    return verifyWithKeyData({ key, data, signature });
+  } finally {
+    clearKeyData(key);
+    setStatus({ store, status: "idle" });
+  }
 }
 
 /**
@@ -204,23 +184,23 @@ export async function verify({
  * @returns A promise that resolves to the signature.
  */
 export async function sign({
-	store,
-	key,
-	parentKey,
-	data,
+  store,
+  key,
+  parentKey,
+  data,
 }: {
-	store: Store<KeyStoreState>;
-	key: KeyData;
-	parentKey?: KeyData;
-	data: Uint8Array;
-	algorithm?: string;
+  store: Store<KeyStoreState>;
+  key: KeyData;
+  parentKey?: KeyData;
+  data: Uint8Array;
+  algorithm?: string;
 }): Promise<Uint8Array> {
-	setStatus({ store, status: "signing" });
-	try {
-		return signWithKeyData({ key, data, parentKey });
-	} finally {
-		clearKeyData(key);
-		clearKeyData(parentKey);
-		setStatus({ store, status: "idle" });
-	}
+  setStatus({ store, status: "signing" });
+  try {
+    return signWithKeyData({ key, data, parentKey });
+  } finally {
+    clearKeyData(key);
+    clearKeyData(parentKey);
+    setStatus({ store, status: "idle" });
+  }
 }

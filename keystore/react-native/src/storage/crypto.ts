@@ -1,9 +1,5 @@
 import * as Keychain from "react-native-keychain";
-import {
-	createCipheriv,
-	createDecipheriv,
-	randomBytes,
-} from "react-native-quick-crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "react-native-quick-crypto";
 
 const ALGORITHM = "aes-256-gcm";
 
@@ -12,21 +8,21 @@ const ALGORITHM = "aes-256-gcm";
  * @returns The master key as a Buffer
  */
 export async function getMasterKey(): Promise<Buffer> {
-	const credentials = await Keychain.getGenericPassword({
-		service: "app-secret",
-	});
-	if (credentials) {
-		return Buffer.from(credentials.password, "hex");
-	}
+  const credentials = await Keychain.getGenericPassword({
+    service: "app-secret",
+  });
+  if (credentials) {
+    return Buffer.from(credentials.password, "hex");
+  }
 
-	// Create new random key
-	const newKey = randomBytes(32);
-	await Keychain.setGenericPassword("master", newKey.toString("hex"), {
-		service: "app-secret",
-	});
+  // Create new random key
+  const newKey = randomBytes(32);
+  await Keychain.setGenericPassword("master", newKey.toString("hex"), {
+    service: "app-secret",
+  });
 
-	//@ts-expect-error, this should be fine
-	return newKey;
+  //@ts-expect-error, this should be fine
+  return newKey;
 }
 
 /**
@@ -36,19 +32,19 @@ export async function getMasterKey(): Promise<Buffer> {
  * @returns A JSON string containing IV, Auth Tag, and encrypted content
  */
 export const encryptData = (key: Buffer, data: string): string => {
-	const iv = randomBytes(12); // 96-bit IV for GCM
-	const cipher = createCipheriv(ALGORITHM, key, iv);
+  const iv = randomBytes(12); // 96-bit IV for GCM
+  const cipher = createCipheriv(ALGORITHM, key, iv);
 
-	let encrypted = cipher.update(data, "utf8", "base64");
-	encrypted += cipher.final("base64");
-	const authTag = cipher.getAuthTag();
+  let encrypted = cipher.update(data, "utf8", "base64");
+  encrypted += cipher.final("base64");
+  const authTag = cipher.getAuthTag();
 
-	// Return a combined payload
-	return JSON.stringify({
-		iv: iv.toString("base64"),
-		tag: authTag.toString("base64"),
-		content: encrypted,
-	});
+  // Return a combined payload
+  return JSON.stringify({
+    iv: iv.toString("base64"),
+    tag: authTag.toString("base64"),
+    content: encrypted,
+  });
 };
 
 /**
@@ -58,13 +54,13 @@ export const encryptData = (key: Buffer, data: string): string => {
  * @returns The decrypted string
  */
 export const decryptData = (key: Buffer, payloadStr: string): string => {
-	const { iv, tag, content } = JSON.parse(payloadStr);
+  const { iv, tag, content } = JSON.parse(payloadStr);
 
-	const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(iv, "base64"));
-	decipher.setAuthTag(Buffer.from(tag, "base64") as any);
+  const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(iv, "base64"));
+  decipher.setAuthTag(Buffer.from(tag, "base64") as any);
 
-	let decrypted = decipher.update(content, "base64", "utf8");
-	decrypted += decipher.final("utf8");
+  let decrypted = decipher.update(content, "base64", "utf8");
+  decrypted += decipher.final("utf8");
 
-	return decrypted;
+  return decrypted;
 };

@@ -1,10 +1,10 @@
 import {
-	clearKeyData,
-	InvalidKeyDataError,
-	type KeyData,
-	type KeyId,
-	type KeyStoreState,
-	setStatus,
+  clearKeyData,
+  InvalidKeyDataError,
+  type KeyData,
+  type KeyId,
+  type KeyStoreState,
+  setStatus,
 } from "@algorandfoundation/keystore";
 import { clearBuffer } from "@algorandfoundation/wallet-provider";
 import { base64url } from "@scure/base";
@@ -13,7 +13,7 @@ import { createMMKV, type MMKV } from "react-native-mmkv";
 import { decryptData, encryptData, getMasterKey } from "./crypto.ts";
 
 export const storage: MMKV = createMMKV({
-	id: "keystore",
+  id: "keystore",
 });
 
 /**
@@ -24,21 +24,19 @@ export const storage: MMKV = createMMKV({
  * @returns The decrypted secret data or null if not found
  */
 export async function fetchSecret<T>({
-	keyId,
-	masterKey,
+  keyId,
+  masterKey,
 }: {
-	keyId: KeyId;
-	masterKey?: Buffer;
+  keyId: KeyId;
+  masterKey?: Buffer;
 }): Promise<T | null> {
-	try {
-		const encryptedSeed = storage.getString(keyId);
-		if (!encryptedSeed) return null;
-		return decode(
-			decryptData(masterKey ? masterKey : await getMasterKey(), encryptedSeed),
-		) as T;
-	} finally {
-		clearBuffer(masterKey);
-	}
+  try {
+    const encryptedSeed = storage.getString(keyId);
+    if (!encryptedSeed) return null;
+    return decode(decryptData(masterKey ? masterKey : await getMasterKey(), encryptedSeed)) as T;
+  } finally {
+    clearBuffer(masterKey);
+  }
 }
 
 /**
@@ -47,7 +45,7 @@ export async function fetchSecret<T>({
  * @param params.keyId - The ID of the key to remove
  */
 export async function removeSecret({ keyId }: { keyId: KeyId }): Promise<void> {
-	storage.remove(keyId);
+  storage.remove(keyId);
 }
 
 /**
@@ -58,69 +56,69 @@ export async function removeSecret({ keyId }: { keyId: KeyId }): Promise<void> {
  * @param params.keyData - The key data to store
  */
 export async function commit({
-	store,
-	keyData,
+  store,
+  keyData,
 }: {
-	store: Store<KeyStoreState>;
-	keyData: KeyData;
+  store: Store<KeyStoreState>;
+  keyData: KeyData;
 }): Promise<void> {
-	if (typeof keyData.id === "undefined")
-		throw new InvalidKeyDataError(
-			"KeyData must have an ID before committing to storage. Please use generateKey() to generate a new key.",
-		);
-	setStatus({ store, status: "commiting" });
+  if (typeof keyData.id === "undefined")
+    throw new InvalidKeyDataError(
+      "KeyData must have an ID before committing to storage. Please use generateKey() to generate a new key.",
+    );
+  setStatus({ store, status: "commiting" });
 
-	try {
-		// Never allow the master key to touch memory.
-		storage.set(keyData.id, encryptData(await getMasterKey(), encode(keyData)));
-		// remove the private keys from keyData
-		const { privateKey, seed, ...keyState } = keyData as any;
-		// clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
-		clearBuffer(privateKey);
-		clearBuffer(seed);
-		delete (keyData as any).privateKey;
-		delete (keyData as any).seed;
+  try {
+    // Never allow the master key to touch memory.
+    storage.set(keyData.id, encryptData(await getMasterKey(), encode(keyData)));
+    // remove the private keys from keyData
+    const { privateKey, seed, ...keyState } = keyData as any;
+    // clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
+    clearBuffer(privateKey);
+    clearBuffer(seed);
+    delete (keyData as any).privateKey;
+    delete (keyData as any).seed;
 
-		// Reflect the change in the reactive store
-		store.setState((state) => ({
-			...state,
-			keys: [{ ...keyState }, ...state.keys],
-		}));
-	} finally {
-		clearKeyData(keyData);
-		setStatus({ store, status: "idle" });
-	}
+    // Reflect the change in the reactive store
+    store.setState((state) => ({
+      ...state,
+      keys: [{ ...keyState }, ...state.keys],
+    }));
+  } finally {
+    clearKeyData(keyData);
+    setStatus({ store, status: "idle" });
+  }
 }
 
 export function encode(key: KeyData): string {
-	const encoder = new TextEncoder();
-	return base64url.encode(
-		encoder.encode(
-			JSON.stringify(key, (_key, value) => {
-				if (
-					value instanceof Uint8Array ||
-					(value?.constructor && value.constructor.name === "Uint8Array")
-				) {
-					return Array.from(value);
-				}
-				return value;
-			}),
-		),
-	);
+  const encoder = new TextEncoder();
+  return base64url.encode(
+    encoder.encode(
+      JSON.stringify(key, (_key, value) => {
+        if (
+          value instanceof Uint8Array ||
+          (value?.constructor && value.constructor.name === "Uint8Array")
+        ) {
+          return Array.from(value);
+        }
+        return value;
+      }),
+    ),
+  );
 }
 export function decode(data: string): KeyData {
-	const decoder = new TextDecoder();
-	return JSON.parse(decoder.decode(base64url.decode(data)), (key, value) => {
-		if (
-			(key.endsWith("Key") ||
-				key === "privateKey" ||
-				key === "publicKey" ||
-				key === "seed" ||
-				key === "key") &&
-			Array.isArray(value)
-		) {
-			return new Uint8Array(value);
-		}
-		return value;
-	});
+  const decoder = new TextDecoder();
+  return JSON.parse(decoder.decode(base64url.decode(data)), (key, value) => {
+    if (
+      (key.endsWith("Key") ||
+        key === "privateKey" ||
+        key === "publicKey" ||
+        key === "seed" ||
+        key === "key") &&
+      Array.isArray(value)
+    ) {
+      return new Uint8Array(value);
+    }
+    return value;
+  });
 }

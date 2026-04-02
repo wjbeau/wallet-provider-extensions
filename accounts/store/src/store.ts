@@ -10,19 +10,19 @@ import type { Account, AccountStoreState } from "./types.ts";
  * @returns The added {@link Account}.
  */
 export function addAccount({
-	store,
-	account,
+  store,
+  account,
 }: {
-	store: Store<AccountStoreState>;
-	account: Account;
+  store: Store<AccountStoreState>;
+  account: Account;
 }): Account {
-	store.setState((state) => {
-		return {
-			...state,
-			accounts: [account, ...state.accounts],
-		};
-	});
-	return account;
+  store.setState((state) => {
+    return {
+      ...state,
+      accounts: [account, ...state.accounts],
+    };
+  });
+  return account;
 }
 
 /**
@@ -33,18 +33,18 @@ export function addAccount({
  * @param params.address - The address of the account to remove.
  */
 export function removeAccount({
-	store,
-	address,
+  store,
+  address,
 }: {
-	store: Store<AccountStoreState>;
-	address: string;
+  store: Store<AccountStoreState>;
+  address: string;
 }): void {
-	store.setState((state) => {
-		return {
-			...state,
-			accounts: state.accounts.filter((account) => account.address !== address),
-		};
-	});
+  store.setState((state) => {
+    return {
+      ...state,
+      accounts: state.accounts.filter((account) => account.address !== address),
+    };
+  });
 }
 
 /**
@@ -56,13 +56,13 @@ export function removeAccount({
  * @returns The {@link Account} if found, otherwise undefined.
  */
 export function getAccount({
-	store,
-	address,
+  store,
+  address,
 }: {
-	store: Store<AccountStoreState>;
-	address: string;
+  store: Store<AccountStoreState>;
+  address: string;
 }): Account | undefined {
-	return store.state.accounts.find((account) => account.address === address);
+  return store.state.accounts.find((account) => account.address === address);
 }
 
 /**
@@ -71,15 +71,11 @@ export function getAccount({
  * @param params - The store parameters.
  * @param params.store - The TanStack store instance for {@link AccountStoreState}.
  */
-export function clearAccounts({
-	store,
-}: {
-	store: Store<AccountStoreState>;
-}): void {
-	store.setState((state) => {
-		return {
-			...state,
-			accounts: [],
-		};
-	});
+export function clearAccounts({ store }: { store: Store<AccountStoreState> }): void {
+  store.setState((state) => {
+    return {
+      ...state,
+      accounts: [],
+    };
+  });
 }

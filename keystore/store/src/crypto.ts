@@ -2,21 +2,17 @@ import { randomBytes } from "node:crypto";
 import { clearBuffer } from "@algorandfoundation/wallet-provider";
 import { KeyContext } from "@algorandfoundation/xhd-wallet-api";
 import {
-	crypto_generichash,
-	crypto_secretbox_easy,
-	crypto_secretbox_open_easy,
+  crypto_generichash,
+  crypto_secretbox_easy,
+  crypto_secretbox_open_easy,
 } from "@algorandfoundation/xhd-wallet-api/dist/sumo.facade.js";
 import { InvalidKeyDataError } from "./errors.ts";
 import type { Key, KeyData } from "./types/index.ts";
 
-export const derivableTypes: string[] = [
-	"hd-root-key",
-	"hd-derived-ed25519",
-	"hd-derived-p256",
-];
+export const derivableTypes: string[] = ["hd-root-key", "hd-derived-ed25519", "hd-derived-p256"];
 
 export function requiresParentKey(key: Partial<Key>): boolean {
-	return typeof key.type !== "undefined" && derivableTypes.includes(key.type);
+  return typeof key.type !== "undefined" && derivableTypes.includes(key.type);
 }
 
 /**
@@ -25,15 +21,15 @@ export function requiresParentKey(key: Partial<Key>): boolean {
  * @param key - The {@link KeyData} to clear. If null or undefined, does nothing.
  */
 export function clearKeyData(key?: Partial<KeyData> | null): void {
-	if (
-		key &&
-		typeof key !== "undefined" &&
-		typeof key.privateKey !== "undefined" &&
-		key.privateKey instanceof Uint8Array
-	) {
-		clearBuffer(key.privateKey);
-		delete key.privateKey;
-	}
+  if (
+    key &&
+    typeof key !== "undefined" &&
+    typeof key.privateKey !== "undefined" &&
+    key.privateKey instanceof Uint8Array
+  ) {
+    clearBuffer(key.privateKey);
+    delete key.privateKey;
+  }
 }
 
 /**
@@ -52,18 +48,18 @@ export const harden = (num: number): number => 0x80_00_00_00 + num;
  * @throws Error if context is invalid
  */
 export function getBIP44PathFromContext(
-	context: KeyContext,
-	account: number,
-	key_index: number,
+  context: KeyContext,
+  account: number,
+  key_index: number,
 ): number[] {
-	switch (context) {
-		case KeyContext.Address:
-			return [harden(44), harden(283), harden(account), 0, key_index];
-		case KeyContext.Identity:
-			return [harden(44), harden(0), harden(account), 0, key_index];
-		default:
-			throw Error("Invalid context");
-	}
+  switch (context) {
+    case KeyContext.Address:
+      return [harden(44), harden(283), harden(account), 0, key_index];
+    case KeyContext.Identity:
+      return [harden(44), harden(0), harden(account), 0, key_index];
+    default:
+      throw Error("Invalid context");
+  }
 }
 
 /**
@@ -76,29 +72,29 @@ export function getBIP44PathFromContext(
  * @returns A promise that resolves to the encrypted data (ciphertext).
  */
 export async function encryptWithKeyData({
-	key,
-	data,
+  key,
+  data,
 }: {
-	key: KeyData;
-	data: Uint8Array;
-	algorithm?: string;
+  key: KeyData;
+  data: Uint8Array;
+  algorithm?: string;
 }): Promise<Uint8Array<ArrayBufferLike>> {
-	try {
-		if (typeof key.publicKey === "undefined") {
-			throw new InvalidKeyDataError("Key does not have a public key");
-		}
-		const symmetricKey = crypto_generichash(32, key.publicKey);
-		const nonce = randomBytes(24);
-		const ciphertext = crypto_secretbox_easy(data, nonce, symmetricKey);
+  try {
+    if (typeof key.publicKey === "undefined") {
+      throw new InvalidKeyDataError("Key does not have a public key");
+    }
+    const symmetricKey = crypto_generichash(32, key.publicKey);
+    const nonce = randomBytes(24);
+    const ciphertext = crypto_secretbox_easy(data, nonce, symmetricKey);
 
-		const result = new Uint8Array(24 + ciphertext.length);
-		result.set(nonce, 0);
-		result.set(ciphertext, 24);
+    const result = new Uint8Array(24 + ciphertext.length);
+    result.set(nonce, 0);
+    result.set(ciphertext, 24);
 
-		return result;
-	} finally {
-		clearKeyData(key);
-	}
+    return result;
+  } finally {
+    clearKeyData(key);
+  }
 }
 
 /**
@@ -111,30 +107,26 @@ export async function encryptWithKeyData({
  * @returns A promise that resolves to the decrypted data (plaintext).
  */
 export async function decryptWithKeyData({
-	key,
-	data,
+  key,
+  data,
 }: {
-	key: KeyData;
-	data: Uint8Array;
-	algorithm?: string;
+  key: KeyData;
+  data: Uint8Array;
+  algorithm?: string;
 }): Promise<Uint8Array<ArrayBufferLike>> {
-	try {
-		if (typeof key.publicKey === "undefined") {
-			throw new InvalidKeyDataError("Key does not have a public key");
-		}
-		const symmetricKey = crypto_generichash(32, key.publicKey);
-		const nonce = data.slice(0, 24);
-		const ciphertext = data.slice(24);
+  try {
+    if (typeof key.publicKey === "undefined") {
+      throw new InvalidKeyDataError("Key does not have a public key");
+    }
+    const symmetricKey = crypto_generichash(32, key.publicKey);
+    const nonce = data.slice(0, 24);
+    const ciphertext = data.slice(24);
 
-		const decrypted = crypto_secretbox_open_easy(
-			ciphertext,
-			nonce,
-			symmetricKey,
-		);
-		if (!decrypted) throw new Error("Decryption failed");
+    const decrypted = crypto_secretbox_open_easy(ciphertext, nonce, symmetricKey);
+    if (!decrypted) throw new Error("Decryption failed");
 
-		return decrypted;
-	} finally {
-		clearKeyData(key);
-	}
+    return decrypted;
+  } finally {
+    clearKeyData(key);
+  }
 }

@@ -1,52 +1,84 @@
 import type {
-    AnalyzeCommitsContext,
-    Config,
-    GenerateNotesContext,
-    PrepareContext,
-    PublishContext,
-} from 'semantic-release'
-import type { SemanticConfigType } from 'semantic-release/lib/get-config.js'
+  AnalyzeCommitsContext,
+  Config,
+  GenerateNotesContext,
+  PrepareContext,
+  PublishContext,
+  VerifyConditionsContext,
+} from "semantic-release";
+import type { SemanticConfigType } from "semantic-release/lib/get-config.js";
 
-import { modifyContextCommits, modifyContextReleaseVersion } from './utils.js'
+import {
+  modifyContextCommits,
+  modifyContextReleaseVersion,
+  synchronizeWorkspaceDependencies,
+  updateLockfile,
+} from "./utils.js";
 
 export function createInlinePlugin(semanticConfig: SemanticConfigType) {
-    // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
-    const analyzeCommits = async (_: Config, context: AnalyzeCommitsContext) => {
-        return semanticConfig.plugins.analyzeCommits(modifyContextCommits(context, semanticConfig))
+  // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
+  const verifyConditions = async (_: Config, context: VerifyConditionsContext) => {
+    context.logger.log(
+      `[@algorandfoundation/package-releaser]: Starting verifyConditions for ${context.cwd}`,
+    );
+    return semanticConfig.plugins.verifyConditions(
+      modifyContextCommits(context as any, semanticConfig),
+    );
+  };
+
+  // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
+  const analyzeCommits = async (_: Config, context: AnalyzeCommitsContext) => {
+    return semanticConfig.plugins.analyzeCommits(modifyContextCommits(context, semanticConfig));
+  };
+
+  // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
+  const generateNotes = async (_: Config, context: GenerateNotesContext) => {
+    return semanticConfig.plugins.generateNotes(
+      modifyContextCommits(modifyContextReleaseVersion(context), semanticConfig),
+    );
+  };
+
+  // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
+  const prepare = async (_: Config, context: PrepareContext) => {
+    context.logger.log(
+      `[@algorandfoundation/package-releaser]: Starting prepare for ${context.cwd}`,
+    );
+    if (context.cwd) {
+      synchronizeWorkspaceDependencies(context.cwd);
     }
+    const result = await semanticConfig.plugins.prepare(
+      modifyContextCommits(context, semanticConfig),
+    );
+    updateLockfile();
+    return result;
+  };
 
-    // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
-    const generateNotes = async (_: Config, context: GenerateNotesContext) => {
-        return semanticConfig.plugins.generateNotes(
-            modifyContextCommits(modifyContextReleaseVersion(context), semanticConfig),
-        )
-    }
+  const publish = async (_: Config, context: PublishContext) => {
+    context.logger.log(
+      `[@algorandfoundation/package-releaser]: Starting publish for ${context.cwd}`,
+    );
+    const [response] = await semanticConfig.plugins.publish(
+      modifyContextCommits(context, semanticConfig),
+    );
 
-    // biome-ignore lint/suspicious/useAwait: semantic-release expect steps to return Promise
-    const prepare = async (_: Config, context: PrepareContext) => {
-        return semanticConfig.plugins.prepare(modifyContextCommits(context, semanticConfig))
-    }
+    return response ?? {};
+  };
 
-    const publish = async (_: Config, context: PublishContext) => {
-        const [response] = await semanticConfig.plugins.publish(modifyContextCommits(context, semanticConfig))
+  const inlinePlugin = {
+    verifyConditions,
+    analyzeCommits,
+    generateNotes,
+    prepare,
+    publish,
+  };
 
-        return response ?? {}
-    }
+  for (const value of Object.values(inlinePlugin)) {
+    Reflect.defineProperty(value, "pluginName", {
+      enumerable: true,
+      value: "@algorandfoundation/package-releaser-inline-plugin",
+      writable: false,
+    });
+  }
 
-    const inlinePlugin = {
-        analyzeCommits,
-        generateNotes,
-        prepare,
-        publish,
-    }
-
-    for (const value of Object.values(inlinePlugin)) {
-        Reflect.defineProperty(value, 'pluginName', {
-            enumerable: true,
-            value: '@algorandfoundation/extension-releaser-inline-plugin',
-            writable: false,
-        })
-    }
-
-    return inlinePlugin
+  return inlinePlugin;
 }

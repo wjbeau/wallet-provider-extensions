@@ -1,18 +1,21 @@
 name: CI
 on:
   pull_request:
-    branches: ['main', 'release']
+    branches: ["main", "release"]
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build && npm install
-      - run: npm run lint
-      - run: npm test
+          node-version: "22.x"
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm run build
+      - run: pnpm install # fix broken workspace for binaries
+      - run: pnpm run lint:github
+      - run: pnpm run fmt:check
+      - run: pnpm test

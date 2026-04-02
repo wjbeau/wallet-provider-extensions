@@ -34,28 +34,31 @@ Providers can be used in two primary ways:
 ### Composed
 
 ```typescript
-const ItemProvider = Provider.withExtensions([WithItem])
+const ItemProvider = Provider.withExtensions([WithItem]);
 ```
 
 ### Concrete
 
 ```typescript
 class ItemProvider extends Provider {
-    static EXTENSIONS = [WithItem]
-    items!: string[]
-    api: {item: ItemApi}
+  static EXTENSIONS = [WithItem];
+  items!: string[];
+  api: { item: ItemApi };
 }
 ```
 
 When constructing the class, it accepts options for the provider and each extension:
 
 ```typescript
-const provider = new ItemProvider({
+const provider = new ItemProvider(
+  {
     id: "global-identity",
-    name: "Friendly Name"
-    }, {
-        items: { store: itemStore, hooks: itemHooks }
-})
+    name: "Friendly Name",
+  },
+  {
+    items: { store: itemStore, hooks: itemHooks },
+  },
+);
 ```
 
 ## Extension Dependencies
@@ -80,9 +83,9 @@ export interface ItemState {
 }
 
 export interface ItemApi {
-    auditLog?(): string[];
-    addItem(item: Item): Promise<Item>;
-    hooks: HookCollection<any>;
+  auditLog?(): string[];
+  addItem(item: Item): Promise<Item>;
+  hooks: HookCollection<any>;
 }
 
 export interface ItemExtension extends ItemState {
@@ -98,13 +101,13 @@ import type { Item, ItemState } from "./types.js";
 
 /**
  * Adds an item to the store.
- * 
+ *
  * @example
  * ```typescript
  * addItem({ store, item: { name: "new item" } });
  * ```
  */
-export function addItem({ store, item }: { store: Store<ItemState>, item: Item }) {
+export function addItem({ store, item }: { store: Store<ItemState>; item: Item }) {
   store.setState((state) => ({
     ...state,
     items: [...state.items, item],
@@ -128,7 +131,7 @@ export const WithItem: Extension<ItemExtension> = (provider, options) => {
     // Optional configuration via options
     const itemStore = options?.items?.store ?? new Store<ItemState>({items: []});
     const itemHooks = options?.items?.hooks ?? new HookCollection<any>();
-    
+
     // Incremental: Provide additional interfaces if dependencies (e.g., logger) are present
     let extended = provider.log ? {
         auditLog: itemHooks('audit', () => provider.logs.filter((m: string) => m.startsWith("algo"))
@@ -154,7 +157,7 @@ Hooks allow for introspection and extending behavior before or after an API call
 
 ```typescript
 // Registering a 'before' hook on the item extension
-provider.item.hooks.before('add', () => {
-    console.log('About to add item');
+provider.item.hooks.before("add", () => {
+  console.log("About to add item");
 });
 ```

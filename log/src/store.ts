@@ -10,18 +10,18 @@ import type { LogMessage, LogStoreState } from "./types.ts";
  * @returns The added {@link LogMessage}.
  */
 export function addLog({
-	store,
-	log,
+  store,
+  log,
 }: {
-	store: Store<LogStoreState>;
-	log: LogMessage;
+  store: Store<LogStoreState>;
+  log: LogMessage;
 }): LogMessage {
-	store.setState((state) => {
-		return {
-			logs: [log, ...state.logs],
-		};
-	});
-	return log;
+  store.setState((state) => {
+    return {
+      logs: [log, ...state.logs],
+    };
+  });
+  return log;
 }
 
 /**
@@ -31,18 +31,12 @@ export function addLog({
  * @param params.store - The TanStack store instance for {@link LogStoreState}.
  * @param params.logId - The unique identifier of the log message to remove.
  */
-export function removeLog({
-	store,
-	logId,
-}: {
-	store: Store<LogStoreState>;
-	logId: string;
-}): void {
-	store.setState((state) => {
-		return {
-			logs: state.logs.filter((log) => log.id !== logId),
-		};
-	});
+export function removeLog({ store, logId }: { store: Store<LogStoreState>; logId: string }): void {
+  store.setState((state) => {
+    return {
+      logs: state.logs.filter((log) => log.id !== logId),
+    };
+  });
 }
 
 /**
@@ -54,13 +48,13 @@ export function removeLog({
  * @returns The {@link LogMessage} if found, otherwise undefined.
  */
 export function getLog({
-	store,
-	logId,
+  store,
+  logId,
 }: {
-	store: Store<LogStoreState>;
-	logId: string;
+  store: Store<LogStoreState>;
+  logId: string;
 }): LogMessage | undefined {
-	return store.state.logs.find((log) => log.id === logId);
+  return store.state.logs.find((log) => log.id === logId);
 }
 
 /**
@@ -70,9 +64,9 @@ export function getLog({
  * @param params.store - The TanStack store instance for {@link LogStoreState}.
  */
 export function clearLogs({ store }: { store: Store<LogStoreState> }): void {
-	store.setState(() => {
-		return {
-			logs: [],
-		};
-	});
+  store.setState(() => {
+    return {
+      logs: [],
+    };
+  });
 }
