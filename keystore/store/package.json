@@ -19,8 +19,6 @@
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
 		"clean": "rm -rf dist coverage node_modules",
-		"lint": "biome check",
-		"lint:fix": "biome check --fix",
 		"docs": "typedoc",
 		"test": "vitest run",
 		"test:cov": "vitest run --coverage",

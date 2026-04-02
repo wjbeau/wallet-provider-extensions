@@ -19,3 +19,6 @@ catalog:
   '@vitest/coverage-v8': '^4.0.18'
   'typedoc': '^0.26.11'
   'typescript': '^5.6.0'
+
+patchedDependencies:
+  '@semantic-release/npm@13.1.5': patches/@semantic-release__npm@13.1.5.patch

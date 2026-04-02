@@ -17,4 +17,5 @@ jobs:
       - run: pnpm run build
       - run: pnpm install # fix broken workspace for binaries
       - run: pnpm run lint
+      - run: pnpm run fmt:check
       - run: pnpm test

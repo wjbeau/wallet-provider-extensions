@@ -16,8 +16,6 @@
 		"build": "tsc -p tsconfig.build.json",
 		"build:watch": "tsc -p tsconfig.build.json --watch",
 		"clean": "rm -rf dist coverage node_modules docs",
-		"lint": "biome check",
-		"lint:fix": "biome check --fix",
 		"docs": "typedoc",
 		"test": "vitest run",
 		"test:cov": "vitest run --coverage",
