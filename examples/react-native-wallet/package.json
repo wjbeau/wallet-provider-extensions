@@ -1,7 +1,8 @@
 {
   "name": "react-native-wallet",
-  "main": "expo-router/entry",
   "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo run:android --variant debugOptimized",
     "prod": "expo run:android  --variant release",
@@ -11,11 +12,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@algorandfoundation/wallet-provider": "catalog:",
-    "@algorandfoundation/react-native-keystore": "workspace:*",
-    "@algorandfoundation/accounts-store": "workspace:*",
     "@algorandfoundation/accounts-keystore-extension": "workspace:*",
+    "@algorandfoundation/accounts-store": "workspace:*",
     "@algorandfoundation/log-store": "workspace:*",
+    "@algorandfoundation/react-native-keystore": "workspace:*",
+    "@algorandfoundation/wallet-provider": "catalog:",
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
@@ -52,6 +53,5 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0"
-  },
-  "private": true
+  }
 }

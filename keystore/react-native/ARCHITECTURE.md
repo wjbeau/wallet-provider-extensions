@@ -55,6 +55,7 @@ flowchart TB
 ### Bootstrapping Flow
 
 When the application starts, it performs a **bootstrap** process to restore the keystore state:
+
 1.  Retrieve the master encryption key from **Keychain**.
 2.  Read all encrypted key data from **MMKV**.
 3.  Decrypt the data using the master key.
@@ -93,6 +94,7 @@ src/
 ```
 
 **Key Principles:**
+
 - **Encapsulated Storage**: Persistent storage details are hidden from the extension API.
 - **Reactive State**: The TanStack store provides a reactive view of the keystore (metadata only).
 - **Ephemeral Secrets**: Private keys are only decrypted into memory when needed and cleared immediately after.
@@ -114,27 +116,31 @@ This extension uses a **concrete storage mechanism** instead of an abstract wrap
 ### 3. Cryptographic Libraries (`libs.ts`)
 
 The extension leverages specialized libraries for Algorand-specific operations:
+
 - **XHD**: Implements BIP32-Ed25519 for Algorand.
 - **DP256**: Handles deterministic P-256 derivation for Passkeys.
 
 ## Security Properties
 
 ### Private Keys
+
 - ✅ **Never exported** from the keystore.
 - ✅ **Never exposed** to the wallet UI or React state.
 - ✅ **Always encrypted at rest** (Stored in MMKV, encrypted with Keychain-backed master key).
 - ✅ **Isolated** per derivation path (multi-account support).
 
 ### Seeds (BIP39)
+
 - ✅ **Never exported** after import.
 - ✅ **Never shared** with wallet UI.
 - ✅ **Derivation happens inside** the secure storage layer.
 - ✅ **Child keys are isolated** — deriving Account 0 doesn't expose the seed.
 
 ## Memory Management
+
 The extension includes automatic memory clearing for sensitive data:
+
 1. **Private keys are cleared after use**: When signing or deriving, private keys are cleared from memory immediately after the operation using `clearBuffer`.
 2. **Temporary buffers are zeroed**: All intermediate cryptographic buffers are cleared to prevent leakage in memory dumps.
-
 
 See [BOOTSTRAPPING.md](./BOOTSTRAPPING.md) for integration guides.

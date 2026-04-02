@@ -2,6 +2,16 @@
   "name": "wallet-provider-extensions",
   "version": "0.0.0",
   "description": "Collection of extensions for the Wallet Provider.",
+  "homepage": "https://github.com/algorandfoundation/wallet-provider-extensions#readme",
+  "bugs": {
+    "url": "https://github.com/algorandfoundation/wallet-provider-extensions/issues"
+  },
+  "license": "Apache-2.0",
+  "author": "Algorand Foundation",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git"
+  },
   "scripts": {
     "build": "pnpm run build:first && pnpm run build:accounts",
     "build:first": "pnpm run --filter @algorandfoundation/log-store build && pnpm run --filter @algorandfoundation/keystore build && pnpm run --filter @algorandfoundation/react-native-keystore build",
@@ -16,16 +26,9 @@
     "release": "pnpm run -r --if-present release",
     "release:dry-run": "pnpm run -r --if-present release:dry-run"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git"
+  "dependencies": {
+    "@babel/parser": "^7.28.6"
   },
-  "author": "Algorand Foundation",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/algorandfoundation/wallet-provider-extensions/issues"
-  },
-  "homepage": "https://github.com/algorandfoundation/wallet-provider-extensions#readme",
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
@@ -75,9 +78,6 @@
         "prerelease": "canary"
       }
     ]
-  },
-  "dependencies": {
-    "@babel/parser": "^7.28.6"
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
 }

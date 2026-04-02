@@ -1,36 +1,62 @@
 import { Stack } from "expo-router";
-import {AlgorandProvider, ReactNativeProvider} from "@/providers/ReactNativeProvider";
-import {install} from "react-native-quick-crypto";
-import {keyStore} from "@/stores/keystore";
-import {keyStoreHooks} from "@/stores/before-after";
-import {fetchSecret, getMasterKey, storage} from "@algorandfoundation/react-native-keystore";
-import {initializeKeyStore, Key, KeyData, KeyStoreState, setStatus} from "@algorandfoundation/keystore";
+import { AlgorandProvider, ReactNativeProvider } from "@/providers/ReactNativeProvider";
+import { install } from "react-native-quick-crypto";
+import { keyStore } from "@/stores/keystore";
+import { keyStoreHooks } from "@/stores/before-after";
+import { fetchSecret, getMasterKey, storage } from "@algorandfoundation/react-native-keystore";
+import {
+  initializeKeyStore,
+  Key,
+  KeyData,
+  KeyStoreState,
+  setStatus,
+} from "@algorandfoundation/keystore";
 import { Store } from "@tanstack/store";
-import {accountsStore} from "@/stores/accounts";
+import { accountsStore } from "@/stores/accounts";
 
 install();
 
-async function bootstrap(){
-  setStatus({store: keyStore as unknown as Store<KeyStoreState>, status: "loading"})
-  const secrets = await Promise.all(storage.getAllKeys().map(async keyId => fetchSecret<KeyData>({keyId, masterKey: await getMasterKey()})))
-  initializeKeyStore({store: keyStore as unknown as Store<KeyStoreState>, keys: secrets.filter((k)=>k!==null).map(({privateKey, ...rest}: KeyData)=>rest) as Key[]})
+async function bootstrap() {
+  setStatus({ store: keyStore as unknown as Store<KeyStoreState>, status: "loading" });
+  const secrets = await Promise.all(
+    storage
+      .getAllKeys()
+      .map(async (keyId) => fetchSecret<KeyData>({ keyId, masterKey: await getMasterKey() })),
+  );
+  initializeKeyStore({
+    store: keyStore as unknown as Store<KeyStoreState>,
+    keys: secrets
+      .filter((k) => k !== null)
+      .map(({ privateKey, ...rest }: KeyData) => rest) as Key[],
+  });
 }
-bootstrap()
+bootstrap();
 export default function RootLayout() {
-  return <AlgorandProvider provider={new ReactNativeProvider({
-    id: 'react-native-wallet',
-    name: 'React Native Wallet',
-  }, {
-    logs: true,
-    accounts: {
-      store: accountsStore,
-      keystore: {
-        autoPopulate: true,
+  return (
+    <AlgorandProvider
+      provider={
+        new ReactNativeProvider(
+          {
+            id: "react-native-wallet",
+            name: "React Native Wallet",
+          },
+          {
+            logs: true,
+            accounts: {
+              store: accountsStore,
+              keystore: {
+                autoPopulate: true,
+              },
+            },
+            keystore: {
+              store: keyStore,
+              hooks: keyStoreHooks,
+            },
+          },
+        )
       }
-    },
-    keystore: {
-      store: keyStore,
-      hooks: keyStoreHooks
-    }
-  })}><Stack /></AlgorandProvider>;
+    >
+      <Stack />
+    </AlgorandProvider>
+  );
 }

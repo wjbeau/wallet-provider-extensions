@@ -7,6 +7,7 @@ This package provides the base interfaces and reactive store for managing crypto
 ## Why This Exists
 
 By separating the store and types from the implementation, we enable:
+
 - **Environment Specific Implementations**: Use specialized extensions for different contexts (e.g., React Native, Browser Extension, Cloud KMS) that all fulfill the same contract.
 - **Type Safety**: Unified interfaces for all keystore-related operations, including arbitrary data signing and HD derivation.
 - **Reactive State**: Built-in state management using [@tanstack/store](https://tanstack.com/store) for UI-safe key metadata.
@@ -20,6 +21,7 @@ By separating the store and types from the implementation, we enable:
 ## Implementation Examples
 
 If you are looking for a concrete implementation, please refer to:
+
 - [`@algorandfoundation/keystore-react-native`](../react-native/README.md) - React Native implementation using secure hardware.
 
 ## Quick Start

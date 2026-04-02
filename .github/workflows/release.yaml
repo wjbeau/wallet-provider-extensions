@@ -1,7 +1,7 @@
 name: Release
 on:
   push:
-    branches: ['main', 'release']
+    branches: ["main", "release"]
 
 concurrency:
   group: Release
@@ -23,8 +23,8 @@ jobs:
       - uses: pnpm/action-setup@v5 # Honors the packageManager field
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'pnpm'
+          node-version: "22.x"
+          cache: "pnpm"
       - run: pnpm install
       - run: pnpm run --if-present build
       - run: pnpm install # fix broken workspace for binaries

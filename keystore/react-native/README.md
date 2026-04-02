@@ -13,6 +13,7 @@ Building a non-custodial wallet requires a **secure, isolated key vault**. The K
 - **Every operation is audited** for compliance and security forensics
 
 This architecture enables:
+
 - ✅ Non-custodial key management (users control keys)
 - ✅ Multi-account support from a single seed (Algorand's `m/44'/283'/account'/change/index`)
 - ✅ Ed25519 signing for Algorand
@@ -34,17 +35,20 @@ class MyProvider extends Provider<typeof MyProvider.EXTENSIONS> {
   static EXTENSIONS = [WithKeyStore] as const;
 }
 
-const provider = new MyProvider({
-  id: "my-app",
-  name: "My Application"
-}, {
-  keystore: {
-    extension: {
-      store: keyStore,
-      hooks: keyStoreHooks
-    }
-  }
-});
+const provider = new MyProvider(
+  {
+    id: "my-app",
+    name: "My Application",
+  },
+  {
+    keystore: {
+      extension: {
+        store: keyStore,
+        hooks: keyStoreHooks,
+      },
+    },
+  },
+);
 ```
 
 ### 2. Generate a Key
@@ -58,8 +62,8 @@ const keyId = await provider.keystore.generate({
   params: {
     parentKeyId: seedId,
     account: 0,
-    index: 0
-  }
+    index: 0,
+  },
 });
 
 console.log(keyId); // "abc-123..."
@@ -90,14 +94,11 @@ const seedId = await provider.keystore.importSeed(mnemonic);
 // Derive account 0
 const account0 = await provider.keystore.deriveFromSeed(
   seedId,
-  "m/44'/283'/0'/0/0"  // Algorand path
+  "m/44'/283'/0'/0/0", // Algorand path
 );
 
 // Derive account 1
-const account1 = await provider.keystore.deriveFromSeed(
-  seedId,
-  "m/44'/283'/0'/0/1"
-);
+const account1 = await provider.keystore.deriveFromSeed(seedId, "m/44'/283'/0'/0/1");
 
 // Sign with any account — keys are isolated
 const sig0 = await provider.keystore.sign(account0, data);
@@ -154,6 +155,7 @@ await provider.keystore.clear();
 ## Architecture & Bootstrapping
 
 For more detailed information, see:
+
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — Design details and storage flow.
 - [BOOTSTRAPPING.md](./BOOTSTRAPPING.md) — Complete integration and startup guide.
 

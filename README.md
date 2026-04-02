@@ -9,9 +9,10 @@ this project adds support for various extensions that allow for cryptographic op
 
 ## What are Extensions?
 
-Extensions are modular components that enhance the capabilities of a wallet or provider. They allow for the addition of specialized features—such as secret management, logging, or custom signing—without bloating the core provider implementation. 
+Extensions are modular components that enhance the capabilities of a wallet or provider. They allow for the addition of specialized features—such as secret management, logging, or custom signing—without bloating the core provider implementation.
 
 An extension typically consists of:
+
 1.  **State**: Data managed by the extension (e.g., a list of stored secrets).
 2.  **API**: A set of methods to interact with the extension and its state.
 
@@ -57,21 +58,24 @@ import type { Provider, ExtensionOptions } from "@algorandfoundation/wallet-prov
 
 const store = new Store<LoggerState>({ logs: [] });
 
-export const loggerExtension: (provider: Provider, options: ExtensionOptions) => LoggerExtension = () => ({
-    get logs() {
-        return store.state.logs;
+export const loggerExtension: (
+  provider: Provider,
+  options: ExtensionOptions,
+) => LoggerExtension = () => ({
+  get logs() {
+    return store.state.logs;
+  },
+  logger: {
+    log: (message: string) => {
+      store.setState((state) => ({
+        logs: [...state.logs, `${new Date().toISOString()}: ${message}`],
+      }));
     },
-    logger: {
-        log: (message: string) => {
-            store.setState((state) => ({
-                logs: [...state.logs, `${new Date().toISOString()}: ${message}`],
-            }));
-        },
-        clear: () => {
-            store.setState(() => ({ logs: [] }));
-        },
+    clear: () => {
+      store.setState(() => ({ logs: [] }));
     },
-})
+  },
+});
 
 export default loggerExtension;
 ```
@@ -89,34 +93,33 @@ import { logStore } from "./stores/logstore";
 
 // 1. Define your application's provider with extensions
 export class MyProvider extends Provider<typeof MyProvider.EXTENSIONS> {
-    static EXTENSIONS = [
-        WithLogStore,
-        WithKeyStore,
-    ] as const
+  static EXTENSIONS = [WithLogStore, WithKeyStore] as const;
 
-    // Add properties for type-safe access to extension state/APIs
-    logs!: string[]
-    keys!: any[]
-    status!: string
+  // Add properties for type-safe access to extension state/APIs
+  logs!: string[];
+  keys!: any[];
+  status!: string;
 }
 
 // 2. Initialize the provider with required options
-const provider = new MyProvider({
-  id: 'my-app',
-  name: 'My Application',
-}, {
-  logs: { store: logStore },
-  keystore: {
-    extension: { store: keyStore }
-  }
-});
+const provider = new MyProvider(
+  {
+    id: "my-app",
+    name: "My Application",
+  },
+  {
+    logs: { store: logStore },
+    keystore: {
+      extension: { store: keyStore },
+    },
+  },
+);
 
 // 3. Access extension APIs directly on the provider
 await provider.keystore.generate({ type: "hd-seed", algorithm: "raw" });
 provider.log("Generated a new seed");
 console.log(provider.keys); // Reactive list of keys
 ```
-
 
 ## Acknowledgments
 
@@ -128,9 +131,8 @@ We would like to acknowledge the following individuals and entities for their co
 - **use-wallet**: [TxnLab](https://github.com/TxnLab) and [Doug Richar](https://github.com/drichar) (@drichar), along with [Gabriel Kuettel](https://github.com/gabrielkuettel) (@gabrielkuettel) (currently at Algorand Foundation), for their role in building the `use-wallet` hook.
 - **Ecosystem Support**: The Engineering Teams at [Algorand Foundation](https://github.com/algorandfoundation) ranging from AlgoKit, Engineering, and Devrel for their role in providing ecosystem libraries and support.
 - **Wallets**:
-    - [Pera](https://github.com/perawallet) and [Will Beaumount](https://github.com/mjbeau) (@mjbeau) for their role in the ecosystem as a wallet and the large refactor to React Native.
-    - [Akita](https://akita.community/) for their role in ARC58 adoption. With special thanks to Algorand Foundation engineering to [Kyle](https://github.com/kylebeee)(@kylebee) and [Joe Polny](https://github.com/joe-p)(@joe-p) for their contributions to the ARC58 plugin standards.
-    - [Lute](https://lute.app) and [Andrew Funk](https://github.com/acfunk) (@acfunk) for their contributions to web wallets, readily adopting the latest features.
-    - [Kibis-is](https://kibis.is/) and [Kieran Roneill](https://github.com/kieranroneill) (@kieranroneill) for their work as an extension-based wallet and contributions to ARC standards such as ARC27.
-    - [Defly](https://defly.app/) and [Kevin Wellenzohn](https://github.com/k13n) (@k13n) for pioneering wallet features and deep engagement with the Algorand ecosystem and ARC standards.
-
+  - [Pera](https://github.com/perawallet) and [Will Beaumount](https://github.com/mjbeau) (@mjbeau) for their role in the ecosystem as a wallet and the large refactor to React Native.
+  - [Akita](https://akita.community/) for their role in ARC58 adoption. With special thanks to Algorand Foundation engineering to [Kyle](https://github.com/kylebeee)(@kylebee) and [Joe Polny](https://github.com/joe-p)(@joe-p) for their contributions to the ARC58 plugin standards.
+  - [Lute](https://lute.app) and [Andrew Funk](https://github.com/acfunk) (@acfunk) for their contributions to web wallets, readily adopting the latest features.
+  - [Kibis-is](https://kibis.is/) and [Kieran Roneill](https://github.com/kieranroneill) (@kieranroneill) for their work as an extension-based wallet and contributions to ARC standards such as ARC27.
+  - [Defly](https://defly.app/) and [Kevin Wellenzohn](https://github.com/k13n) (@k13n) for pioneering wallet features and deep engagement with the Algorand ecosystem and ARC standards.
