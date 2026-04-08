@@ -92,7 +92,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
           });
         },
         /** Imports an existing key into the keystore */
-        import: (data, _format): Promise<KeyId> => {
+        import: (data, _format = "raw"): Promise<KeyId> => {
           log.debug(
             "(extension.ts) Import Key",
             typeof data === "string" || data instanceof Uint8Array
@@ -218,6 +218,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
             store: keyStore,
             seed,
             name: options?.name,
+            id: options?.id,
           }),
         /** Derives a new key from a stored seed using a path */
         deriveFromSeed: (seedId, path, options): Promise<KeyId> =>

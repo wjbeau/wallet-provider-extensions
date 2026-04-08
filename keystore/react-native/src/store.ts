@@ -99,6 +99,7 @@ export async function generateKey(options: {
   params?: Record<string, any>;
 }): Promise<KeyId> {
   const { store, algorithm, type, params, extractable = false, keyUsages = ["sign"] } = options;
+  const id = params?.id;
   // Signal that we are generating a key
   setStatus({ store, status: "generating" });
 
@@ -154,7 +155,7 @@ export async function generateKey(options: {
 
       const derivedKeyData = await generateKeyStoreKey({
         keyData: {
-          id: generateId(),
+          id: id || generateId(),
           type: "hd-derived-p256",
           algorithm: "P256",
           extractable,
@@ -198,7 +199,7 @@ export async function generateKey(options: {
 
     keyData = await generateKeyStoreKey({
       keyData: {
-        id: generateId(),
+        id: id || generateId(),
         type: mappedType,
         algorithm,
         extractable,
@@ -323,7 +324,7 @@ export async function deriveFromSeed({
 
       derivedKey = (await generateKeyStoreKey({
         keyData: {
-          id: generateId(),
+          id: options?.id || generateId(),
           type: "hd-derived-p256",
           algorithm: options?.algorithm ?? "P256",
           format: "raw",

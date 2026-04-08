@@ -42,7 +42,7 @@ export async function generateSeedData(
   options: BIP39GenerationOptions = { strength: 256 },
 ): Promise<KeyData> {
   return {
-    id: generateId(),
+    id: options.id || generateId(),
     type: "hd-seed",
     name: options.name || "Secret Key",
     algorithm: "raw",
@@ -67,7 +67,10 @@ export async function generateSeedData(
  * @param seed - The seed data to use
  * @returns The generated root key
  */
-export async function generateXHDRootKeyFromSeed(seed: SeedData): Promise<XHDRootKey> {
+export async function generateXHDRootKeyFromSeed(
+  seed: SeedData,
+  options: { id?: string } = {},
+): Promise<XHDRootKey> {
   try {
     if (
       seed.type !== "hd-seed" ||
@@ -76,7 +79,7 @@ export async function generateXHDRootKeyFromSeed(seed: SeedData): Promise<XHDRoo
     ) {
       throw new InvalidKeyDataError("XHD root keys require a raw hd-seed");
     }
-    const id = generateId();
+    const id = options.id || generateId();
     return {
       id,
       type: "hd-root-key",
@@ -109,7 +112,7 @@ export async function generateXHDFromParent({
   key: Partial<XHDDerivedKeyData> | Partial<XHDDomainP256KeyData>;
   parentKey: XHDRootKey;
 }): Promise<XHDDerivedKeyData | XHDDomainP256KeyData> {
-  const id = generateId();
+  const id = key.id || generateId();
 
   let pk: Uint8Array<ArrayBufferLike> | undefined;
   try {
@@ -223,10 +226,10 @@ export async function generateKey({
   keyData,
   parentKey,
 }: {
-  keyData: Omit<Key, "id">;
+  keyData: Partial<Key>;
   parentKey?: XHDRootKey | SeedData | null;
 }): Promise<KeyData> {
-  const id = generateId();
+  const id = keyData.id || (keyData.metadata?.params as any)?.id || generateId();
 
   if (typeof keyData.metadata === "undefined") {
     throw new InvalidKeyDataError("Key metadata is required");
@@ -254,7 +257,7 @@ export async function generateKey({
               );
             return {
               ...keyData,
-              ...(await generateXHDRootKeyFromSeed(parentKey as SeedData)),
+              ...(await generateXHDRootKeyFromSeed(parentKey as SeedData, { id })),
               id,
             } as XHDRootKey;
           }
@@ -301,10 +304,11 @@ export async function generateKey({
         return {
           ...keyData,
           ...(await generateXHDFromParent({
-            key: keyData as XHDDomainP256KeyData,
+            key: { ...keyData, id } as XHDDomainP256KeyData,
             parentKey: parentKey as XHDRootKey,
           })),
-        };
+          id,
+        } as XHDDomainP256KeyData;
       }
       default: {
         throw new InvalidKeyDataError(`Unknown algorithm: ${keyData.algorithm}`);
