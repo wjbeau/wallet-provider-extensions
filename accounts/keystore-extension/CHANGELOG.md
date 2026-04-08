@@ -1,3 +1,9 @@
+# [accounts-keystore-extension@1.0.0-canary.2](https://github.com/algorandfoundation/wallet-provider-extensions/compare/accounts-keystore-extension@1.0.0-canary.1...accounts-keystore-extension@1.0.0-canary.2) (2026-04-08)
+
+### Bug Fixes
+
+- id parameters being ignored ([4a0af8a](https://github.com/algorandfoundation/wallet-provider-extensions/commit/4a0af8a292088c903776b52777288baa662ab584))
+
 # accounts-keystore-extension@1.0.0-canary.1 (2026-04-02)
 
 ### Bug Fixes
