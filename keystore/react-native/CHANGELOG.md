@@ -1,3 +1,9 @@
+# [react-native-keystore@1.0.0-canary.8](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.7...react-native-keystore@1.0.0-canary.8) (2026-04-08)
+
+### Bug Fixes
+
+- add repository information to package ([258d932](https://github.com/algorandfoundation/wallet-provider-extensions/commit/258d932295af627c7af2c748e8dec2f9270c5b63))
+
 # [react-native-keystore@1.0.0-canary.7](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.6...react-native-keystore@1.0.0-canary.7) (2026-04-08)
 
 ### Bug Fixes
