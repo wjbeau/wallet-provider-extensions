@@ -4,6 +4,11 @@
   "description": "React Native Keystore for Algorand Providers. Supports Ed25519, XHD, and P-256 derived keys.",
   "license": "Apache-2.0",
   "author": "Algorand Foundation",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algorandfoundation/wallet-provider-extensions.git",
+    "directory": "keystore/react-native"
+  },
   "type": "module",
   "sideEffects": false,
   "main": "dist/index.js",
