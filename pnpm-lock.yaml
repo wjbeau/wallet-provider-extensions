@@ -10,8 +10,8 @@ catalogs:
       specifier: ^1.1.0
       version: 1.1.0
     '@algorandfoundation/wallet-provider':
-      specifier: ^1.0.0-canary.3
-      version: 1.0.0-canary.3
+      specifier: ^1.0.0-canary.5
+      version: 1.0.0-canary.5
     '@algorandfoundation/xhd-wallet-api':
       specifier: ^2.0.0-canary.1
       version: 2.0.0-canary.1
@@ -198,7 +198,7 @@ importers:
         version: link:../../keystore/react-native
       '@algorandfoundation/wallet-provider':
         specifier: 'catalog:'
-        version: 1.0.0-canary.3
+        version: 1.0.0-canary.5
       '@expo/vector-icons':
         specifier: ^15.0.3
         version: 15.1.1(expo-font@14.0.11(expo@54.0.33)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -316,7 +316,7 @@ importers:
         version: link:../../log
       '@algorandfoundation/wallet-provider':
         specifier: 'catalog:'
-        version: 1.0.0-canary.3
+        version: 1.0.0-canary.5
       '@algorandfoundation/xhd-wallet-api':
         specifier: 'catalog:'
         version: 2.0.0-canary.1
@@ -365,7 +365,7 @@ importers:
         version: 1.1.0
       '@algorandfoundation/wallet-provider':
         specifier: 'catalog:'
-        version: 1.0.0-canary.3
+        version: 1.0.0-canary.5
       '@algorandfoundation/xhd-wallet-api':
         specifier: 'catalog:'
         version: 2.0.0-canary.1
@@ -402,7 +402,7 @@ importers:
     dependencies:
       '@algorandfoundation/wallet-provider':
         specifier: 'catalog:'
-        version: 1.0.0-canary.3
+        version: 1.0.0-canary.5
     devDependencies:
       '@algorandfoundation/package-releaser':
         specifier: workspace:^
@@ -467,6 +467,9 @@ packages:
 
   '@algorandfoundation/wallet-provider@1.0.0-canary.3':
     resolution: {integrity: sha512-rw978gF+n2stEhy9ysppr9uUVo6YgmeoWtRo2/sXj4/7Qn5risTdsihBuqKJ2ecG1pxQ+14BmOHzwrxsOXIcRA==}
+
+  '@algorandfoundation/wallet-provider@1.0.0-canary.5':
+    resolution: {integrity: sha512-yXak4ze3uOdkSSyCkv4Qz4mm4FiqCKh3pDErZNBaIhkGCgWcboelgkEMQneBd0I/o9DwU2EfkHfRSZYxaJ11Rg==}
 
   '@algorandfoundation/xhd-wallet-api@2.0.0-canary.1':
     resolution: {integrity: sha512-U6rSWMO6FKDLvMxWtfKyW5ctqSy2NrONWTU/jOA+BX0SGru0GPXsxwzFdcPa5w+X055V/xVVsr8eA3xA+m/5jA==}
@@ -7209,6 +7212,8 @@ snapshots:
       before-after-hook: 4.0.0
 
   '@algorandfoundation/wallet-provider@1.0.0-canary.3': {}
+
+  '@algorandfoundation/wallet-provider@1.0.0-canary.5': {}
 
   '@algorandfoundation/xhd-wallet-api@2.0.0-canary.1':
     dependencies:

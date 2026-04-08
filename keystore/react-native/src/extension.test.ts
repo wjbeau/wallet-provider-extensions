@@ -78,6 +78,32 @@ describe("WithKeyStore Extension", () => {
       expect(extension.keys).toHaveLength(2); // seed + root
     });
 
+    it("should honor the id parameter from params during generation", async () => {
+      const { extension } = createTestSetup();
+      const customId = "my-custom-id";
+
+      const seed = new Uint8Array(32).fill(1);
+      const seedId = await extension.key.store.import({
+        id: "root-seed",
+        type: "hd-seed",
+        algorithm: "raw",
+        format: "raw",
+        extractable: true,
+        privateKey: seed,
+      } as any);
+
+      const keyId = await extension.key.store.generate({
+        type: "hd-root-key",
+        algorithm: "raw",
+        extractable: true,
+        keyUsages: ["deriveKey"],
+        params: { parentKeyId: seedId, id: customId },
+      });
+
+      expect(keyId).toBe(customId);
+      expect(extension.keys.find((k) => k.id === customId)).toBeDefined();
+    });
+
     it("should import a key", async () => {
       const { extension } = createTestSetup();
       const keyData: KeyData = {

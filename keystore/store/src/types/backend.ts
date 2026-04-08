@@ -40,7 +40,7 @@ export interface KeyStoreAPI {
    * @throws {InvalidKeyFormatError} If the format is invalid.
    * @throws {InvalidKeyDataError} If the key data is malformed.
    */
-  import(data: Omit<KeyData, "id"> | Uint8Array | string, format: KeyFormat): Promise<KeyId>;
+  import(data: Omit<KeyData, "id"> | Uint8Array | string, format?: KeyFormat): Promise<KeyId>;
 
   /**
    * Exports a key from the keystore (usually public key only, for security).
