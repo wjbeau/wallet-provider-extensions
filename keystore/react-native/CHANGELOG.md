@@ -1,3 +1,9 @@
+# [react-native-keystore@1.0.0-canary.7](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.6...react-native-keystore@1.0.0-canary.7) (2026-04-08)
+
+### Bug Fixes
+
+- id parameters being ignored ([4a0af8a](https://github.com/algorandfoundation/wallet-provider-extensions/commit/4a0af8a292088c903776b52777288baa662ab584))
+
 # [react-native-keystore@1.0.0-canary.6](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.5...react-native-keystore@1.0.0-canary.6) (2026-03-06)
 
 ### Chores
