@@ -52,7 +52,7 @@ try {
     new URL("../../", import.meta.url).pathname,
   );
 
-  const packageName = monoPackage?.name?.replace("@algorandfoundation/", "");
+  const packageName = monoPackage?.name?.split("/").pop();
   console.log(`[${pkg.name}]: Processing package ${monoPackage?.name}`);
   console.log(`[${pkg.name}]: Current working directory: ${process.cwd()}`);
   console.log(`[${pkg.name}]: NPM_CONFIG_PROVENANCE before: ${process.env.NPM_CONFIG_PROVENANCE}`);

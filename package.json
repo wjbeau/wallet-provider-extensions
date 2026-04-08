@@ -70,7 +70,8 @@
         {
           "assets": [
             "CHANGELOG.md",
-            "package.json"
+            "package.json",
+            "pnpm-lock.yaml"
           ]
         }
       ],

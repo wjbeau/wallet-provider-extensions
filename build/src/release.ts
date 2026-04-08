@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import type {
   AnalyzeCommitsContext,
   Config,
@@ -43,9 +45,6 @@ export function createInlinePlugin(semanticConfig: SemanticConfigType) {
     context.logger.log(
       `[@algorandfoundation/package-releaser]: Starting prepare for ${context.cwd}`,
     );
-    if (context.cwd) {
-      synchronizeWorkspaceDependencies(context.cwd);
-    }
     const result = await semanticConfig.plugins.prepare(
       modifyContextCommits(context, semanticConfig),
     );
@@ -54,14 +53,26 @@ export function createInlinePlugin(semanticConfig: SemanticConfigType) {
   };
 
   const publish = async (_: Config, context: PublishContext) => {
+    const workingDirectory = context.cwd ?? process.cwd();
     context.logger.log(
-      `[@algorandfoundation/package-releaser]: Starting publish for ${context.cwd}`,
+      `[@algorandfoundation/package-releaser]: Starting publish for ${workingDirectory}`,
     );
-    const [response] = await semanticConfig.plugins.publish(
-      modifyContextCommits(context, semanticConfig),
-    );
+    const pkgPath = path.join(workingDirectory, "package.json");
+    const originalPkgContent = fs.readFileSync(pkgPath, "utf-8");
 
-    return response ?? {};
+    try {
+      synchronizeWorkspaceDependencies(workingDirectory);
+      const [response] = await semanticConfig.plugins.publish(
+        modifyContextCommits(context, semanticConfig),
+      );
+      return response ?? {};
+    } finally {
+      const newPkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+      const restoredPkg = JSON.parse(originalPkgContent);
+      restoredPkg.version = newPkg.version;
+      fs.writeFileSync(pkgPath, `${JSON.stringify(restoredPkg, null, 2)}\n`);
+      updateLockfile();
+    }
   };
 
   const inlinePlugin = {

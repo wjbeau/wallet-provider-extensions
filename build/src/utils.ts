@@ -197,7 +197,21 @@ export function synchronizeWorkspaceDependencies(workingDirectory: string): void
           version.startsWith("catalog:") &&
           currentWorkspaceInfo
         ) {
-          const resolvedDep = currentWorkspaceInfo[depType]?.[name];
+          const resolvedDep =
+            currentWorkspaceInfo[depType]?.[name] ||
+            currentWorkspaceInfo.dependencies?.[name] ||
+            currentWorkspaceInfo.devDependencies?.[name] ||
+            currentWorkspaceInfo.optionalDependencies?.[name] ||
+            workspaces
+              .map(
+                (w) =>
+                  w.dependencies?.[name] ||
+                  w.devDependencies?.[name] ||
+                  w.optionalDependencies?.[name] ||
+                  w.peerDependencies?.[name],
+              )
+              .find((dep) => dep && dep.version);
+
           if (resolvedDep && resolvedDep.version) {
             pkg[depType][name] = resolvedDep.version;
             changed = true;
