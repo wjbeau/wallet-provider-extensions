@@ -1,3 +1,10 @@
+# [accounts-keystore-extension@1.0.0-canary.3](https://github.com/algorandfoundation/wallet-provider-extensions/compare/accounts-keystore-extension@1.0.0-canary.2...accounts-keystore-extension@1.0.0-canary.3) (2026-04-09)
+
+### Bug Fixes
+
+- create new Uint8Array for cloning private key ([813cc5d](https://github.com/algorandfoundation/wallet-provider-extensions/commit/813cc5d656257adb4d3b4cfbf1cbde01615cb9ce))
+- normalize the user handle for domain-specific key ([1f37c04](https://github.com/algorandfoundation/wallet-provider-extensions/commit/1f37c04050d60c0bb6e1a6e5d55a8a9a6bd14400))
+
 # [accounts-keystore-extension@1.0.0-canary.2](https://github.com/algorandfoundation/wallet-provider-extensions/compare/accounts-keystore-extension@1.0.0-canary.1...accounts-keystore-extension@1.0.0-canary.2) (2026-04-08)
 
 ### Bug Fixes
