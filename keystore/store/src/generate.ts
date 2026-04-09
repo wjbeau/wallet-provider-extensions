@@ -205,7 +205,7 @@ export async function generateXHDFromParent({
           format: "bytes",
           extractable: true,
           publicKey: dp256.getPurePKBytes(pk),
-          privateKey: { ...pk },
+          privateKey: new Uint8Array(pk),
           metadata: {
             ...metadata,
             parentKeyId: parentKey.id,
