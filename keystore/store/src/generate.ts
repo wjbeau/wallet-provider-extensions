@@ -192,10 +192,12 @@ export async function generateXHDFromParent({
               userHandle: "default",
               counter: 0,
             };
+
         pk = await dp256.genDomainSpecificKeyPair(
           parentKey.privateKey,
           metadata.origin,
-          metadata.userHandle,
+          // Normalize the userHandle
+          metadata.userHandle.toLowerCase(),
           metadata.counter,
         );
         return {
@@ -205,7 +207,7 @@ export async function generateXHDFromParent({
           format: "bytes",
           extractable: true,
           publicKey: dp256.getPurePKBytes(pk),
-          privateKey: { ...pk },
+          privateKey: new Uint8Array(pk),
           metadata: {
             ...metadata,
             parentKeyId: parentKey.id,
