@@ -192,10 +192,12 @@ export async function generateXHDFromParent({
               userHandle: "default",
               counter: 0,
             };
+
         pk = await dp256.genDomainSpecificKeyPair(
           parentKey.privateKey,
           metadata.origin,
-          metadata.userHandle,
+          // Normalize the userHandle
+          metadata.userHandle.toLowerCase(),
           metadata.counter,
         );
         return {
