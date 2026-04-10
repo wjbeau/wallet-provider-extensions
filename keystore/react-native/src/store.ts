@@ -37,6 +37,7 @@ import type {
 import { DecodingError } from "./errors.ts";
 import { dp256, xhd } from "./libs.ts";
 import { commit, fetchSecret, storage } from "./storage/state.ts";
+import type { AuthenticationOptions } from "./types.ts";
 
 /**
  * Type guard for SeedData
@@ -97,8 +98,17 @@ export async function generateKey(options: {
   extractable: boolean;
   keyUsages: KeyUsage[];
   params?: Record<string, any>;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyId> {
-  const { store, algorithm, type, params, extractable = false, keyUsages = ["sign"] } = options;
+  const {
+    store,
+    algorithm,
+    type,
+    params,
+    extractable = false,
+    keyUsages = ["sign"],
+    authenticationOptions,
+  } = options;
   const id = params?.id;
   // Signal that we are generating a key
   setStatus({ store, status: "generating" });
@@ -112,7 +122,9 @@ export async function generateKey(options: {
         `XHD derived keys require a rootKeyId, please upload it first using importSeed()`,
       );
     }
-    parentKey = parentRequired ? await fetchSecret<SeedData>({ keyId: params?.parentKeyId }) : null;
+    parentKey = parentRequired
+      ? await fetchSecret<SeedData>({ keyId: params?.parentKeyId, options: authenticationOptions })
+      : null;
     if (parentRequired && !parentKey) {
       throw new KeyNotFoundError(params?.parentKeyId);
     }
@@ -172,7 +184,7 @@ export async function generateKey(options: {
           privateKey: rootKey.privateKey,
         } as any,
       });
-      await commit({ store, keyData: derivedKeyData });
+      await commit({ store, keyData: derivedKeyData, options: authenticationOptions });
       if (parentKey && isSeedData(parentKey)) clearKeyData(rootKey);
       return derivedKeyData.id;
     }
@@ -213,7 +225,7 @@ export async function generateKey(options: {
     });
 
     // Persist the key to storage
-    await commit({ store, keyData });
+    await commit({ store, keyData, options: authenticationOptions });
 
     // Return the generated key ID
     return keyData.id;
@@ -229,11 +241,13 @@ export async function importSeed({
   seed,
   name,
   id,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   seed: Uint8Array | string;
   name?: string;
   id?: KeyId;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyId> {
   setStatus({ store, status: "importing" });
   const keyId = id || generateId();
@@ -260,6 +274,7 @@ export async function importSeed({
         privateKey,
         metadata,
       } as SeedData,
+      options: authenticationOptions,
     });
   } finally {
     setStatus({ store, status: "idle" });
@@ -294,18 +309,20 @@ export async function deriveFromSeed({
   seedId,
   path,
   options,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   seedId: KeyId;
   path: string;
   options?: DeriveOptions;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyId> {
   setStatus({ store, status: "deriving" });
 
   let rootKey: XHDRootKey | SeedData | null = null;
   let derivedKey: KeyData | XHDDerivedKeyData | XHDDomainP256KeyData | null = null;
   try {
-    const secret = await fetchSecret<KeyData>({ keyId: seedId });
+    const secret = await fetchSecret<KeyData>({ keyId: seedId, options: authenticationOptions });
     if (!secret) throw new KeyNotFoundError(seedId);
     if (!isXHDRootKey(secret) && !isSeedData(secret))
       throw new InvalidKeyDataError("Not a root key");
@@ -320,7 +337,12 @@ export async function deriveFromSeed({
     if (isP256) {
       const seedId = isSeedData(rootKey) ? rootKey.id : (rootKey as any).metadata?.parentKeyId;
       const seedKey =
-        seedId === rootKey.id ? rootKey : await fetchSecret<SeedData>({ keyId: seedId as string });
+        seedId === rootKey.id
+          ? rootKey
+          : await fetchSecret<SeedData>({
+              keyId: seedId as string,
+              options: authenticationOptions,
+            });
 
       derivedKey = (await generateKeyStoreKey({
         keyData: {
@@ -344,7 +366,7 @@ export async function deriveFromSeed({
         } as any,
       })) as XHDDomainP256KeyData;
 
-      await commit({ store, keyData: derivedKey });
+      await commit({ store, keyData: derivedKey, options: authenticationOptions });
       if (seedKey && seedKey !== rootKey) clearKeyData(seedKey);
 
       return derivedKey.id;
@@ -390,7 +412,7 @@ export async function deriveFromSeed({
         },
       } as any;
 
-      await commit({ store, keyData });
+      await commit({ store, keyData, options: authenticationOptions });
       return id;
     }
   } finally {
@@ -404,10 +426,12 @@ export async function importEd25519Key({
   store,
   keyData,
   seed,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   keyData: KeyData;
   seed?: SeedData;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyId> {
   setStatus({ store, status: "importing" });
 
@@ -452,6 +476,7 @@ export async function importEd25519Key({
             }
           : keyData.metadata,
       },
+      options: authenticationOptions,
     });
     return keyData.id;
   } finally {
@@ -463,9 +488,11 @@ export async function importEd25519Key({
 export async function importXHDDomainP256Key({
   store,
   keyData,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   keyData: Omit<XHDDomainP256KeyData, "id">;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyId> {
   if (keyData.algorithm !== "P256") {
     throw new InvalidKeyDataError("Only P-256 derived keys are currently supported");
@@ -494,6 +521,7 @@ export async function importXHDDomainP256Key({
     // Get the secret from the root key ID
     const secret = await fetchSecret<KeyData>({
       keyId: keyData.metadata.parentKeyId,
+      options: authenticationOptions,
     });
     if (!secret) throw new KeyNotFoundError(keyData.metadata.parentKeyId);
 
@@ -528,6 +556,7 @@ export async function importXHDDomainP256Key({
         ...key,
         privateKey: keyPair,
       } as KeyData,
+      options: authenticationOptions,
     });
 
     // Cleanup the buffers
@@ -549,6 +578,7 @@ export async function importXHDDomainP256Key({
 export async function importKey({
   store,
   keyData,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   keyData: Omit<KeyData, "id"> | Uint8Array | string;
@@ -556,6 +586,7 @@ export async function importKey({
   //algorithm?: Algorithm, // TODO: align with SubtleAlgorithm in the future?
   //extractable?: boolean, // TODO: align with SubtleExtractable in the future?
   //keyUsages: KeyUsage[] // TODO: leverage for keyData
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyId> {
   try {
     if (keyData instanceof Uint8Array || typeof keyData === "string") {
@@ -595,6 +626,7 @@ export async function importKey({
               name: (keyData as any).name || "Imported Seed",
             },
           },
+          options: authenticationOptions,
         });
         return keyId;
       }
@@ -606,7 +638,6 @@ export async function importKey({
           typeof keyData.privateKey === "undefined" ||
           !(keyData.privateKey instanceof Uint8Array)
         ) {
-          console.log(keyData.privateKey);
           throw new InvalidKeyDataError("Seed is required and must be a Uint8Array");
         }
         setStatus({ store, status: "importing" });
@@ -626,18 +657,20 @@ export async function importKey({
               name: (keyData as any).name || "Imported Root Key",
             },
           },
+          options: authenticationOptions,
         });
         return keyId;
       }
       case "hd-derived-ed25519": {
         if (keyData.algorithm !== "EdDSA" && keyData.format !== "") {
         }
-        return importEd25519Key({ store, keyData: keyData as SeedData });
+        return importEd25519Key({ store, keyData: keyData as SeedData, authenticationOptions });
       }
       case "hd-derived-p256": {
         return importXHDDomainP256Key({
           store,
           keyData: keyData as XHDDomainP256KeyData,
+          authenticationOptions,
         });
       }
       default: {
@@ -652,14 +685,16 @@ export async function importKey({
 export async function exportKey({
   store,
   id,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   id: string;
   options?: any;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<KeyData> {
   setStatus({ store, status: "exporting" });
   try {
-    const key = await fetchSecret<KeyData>({ keyId: id });
+    const key = await fetchSecret<KeyData>({ keyId: id, options: authenticationOptions });
     if (!key) throw new KeyNotFoundError(id);
     if (!key.extractable) {
       throw new InvalidKeyDataError("Cannot export an non-extractable key");
@@ -674,17 +709,19 @@ export async function decryptWithKey({
   store,
   id,
   data,
+  authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
   id: KeyId;
   data: Uint8Array;
   algorithm?: string;
+  authenticationOptions?: AuthenticationOptions;
 }): Promise<Uint8Array> {
   store.setState((s) => ({ ...s, status: "decrypting" }));
   let key: KeyData | null = null;
 
   try {
-    key = await fetchSecret<KeyData>({ keyId: id });
+    key = await fetchSecret<KeyData>({ keyId: id, options: authenticationOptions });
     if (!key) throw new KeyNotFoundError(id);
 
     if (typeof key.publicKey === "undefined")

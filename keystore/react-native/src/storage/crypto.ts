@@ -1,5 +1,6 @@
 import * as Keychain from "react-native-keychain";
 import { createCipheriv, createDecipheriv, randomBytes } from "react-native-quick-crypto";
+import type { AuthenticationOptions } from "../types.ts";
 
 const ALGORITHM = "aes-256-gcm";
 
@@ -7,22 +8,36 @@ const ALGORITHM = "aes-256-gcm";
  * Retrieves the master key from the Keychain, or generates a new one if it doesn't exist.
  * @returns The master key as a Buffer
  */
-export async function getMasterKey(): Promise<Buffer> {
+export async function getMasterKey(options?: AuthenticationOptions): Promise<Buffer> {
+  const prompt = options?.prompt ?? "Authenticate to secure your wallet";
+  const authenticationPrompt =
+    typeof prompt === "string"
+      ? { title: prompt }
+      : (prompt ?? { title: "Authenticate to secure your wallet" });
+  const biometricOptions = options?.biometrics
+    ? {
+        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+        authenticationPrompt,
+      }
+    : {};
+
   const credentials = await Keychain.getGenericPassword({
     service: "app-secret",
+    authenticationPrompt,
   });
   if (credentials) {
     return Buffer.from(credentials.password, "hex");
   }
 
   // Create new random key
-  const newKey = randomBytes(32);
+  const newKey = randomBytes(32); // TODO: harden entropy
   await Keychain.setGenericPassword("master", newKey.toString("hex"), {
     service: "app-secret",
+    ...biometricOptions,
   });
 
-  //@ts-expect-error, this should be fine
-  return newKey;
+  return Buffer.from(newKey);
 }
 
 /**

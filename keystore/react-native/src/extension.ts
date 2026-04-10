@@ -6,7 +6,6 @@ import {
   type KeyData,
   type KeyId,
   KeyNotFoundError,
-  type KeyStoreAPI,
   type KeyStoreExtension,
   type KeyStoreOptions,
   requiresParentKey,
@@ -22,6 +21,7 @@ import type { Extension, Provider } from "@algorandfoundation/wallet-provider";
 import { context } from "./constants.ts";
 import { fetchSecret } from "./storage/state.ts";
 import * as store from "./store.ts";
+import type { ReactKeystoreOptions } from "./types.ts";
 
 /**
  * Wallet Provider Extension that adds Keystore functionality.
@@ -51,11 +51,13 @@ import * as store from "./store.ts";
  */
 export const WithKeyStore: Extension<KeyStoreExtension> = (
   provider: Provider<any> & LogStoreExtension,
-  options: KeyStoreOptions,
+  options: KeyStoreOptions & ReactKeystoreOptions,
 ) => {
   const keyStore = options.keystore.store;
   const keyStoreHooks = options.keystore.hooks;
   const log = provider?.log || console;
+
+  const authenticationOptions = options?.keystore?.authentication;
 
   // Implement the extension surface with hooks
   return {
@@ -89,6 +91,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
             extractable: options.extractable,
             algorithm: options.algorithm,
             keyUsages: options.keyUsages,
+            authenticationOptions,
           });
         },
         /** Imports an existing key into the keystore */
@@ -107,17 +110,18 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
           if (
             typeof data !== "string" &&
             !(data instanceof Uint8Array) &&
-            (!(data.privateKey instanceof Uint8Array) || data.privateKey instanceof Buffer)
+            !(data.privateKey instanceof Uint8Array) &&
+            !((data.privateKey as any) instanceof Buffer)
           ) {
             throw new InvalidKeyDataError(
               "Invalid key data format, must be string, Uint8Array, or have Uint8Array privateKey property",
             );
           }
-          return store.importKey({ store: keyStore, keyData: data });
+          return store.importKey({ store: keyStore, keyData: data, authenticationOptions });
         },
         /** Exports public key data for a given key ID */
         export: (id, options): Promise<KeyData> =>
-          store.exportKey({ store: keyStore, id, options }),
+          store.exportKey({ store: keyStore, id, options, authenticationOptions }),
         /** Removes a key from the keystore */
         remove: (id) =>
           keyStoreHooks(
@@ -150,7 +154,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
               let key: KeyData | null = null;
               let parentKey: KeyData | null = null;
               try {
-                key = await fetchSecret<KeyData>({ keyId: id });
+                key = await fetchSecret<KeyData>({ keyId: id, options: authenticationOptions });
                 if (!key) {
                   throw new KeyNotFoundError(id);
                 }
@@ -161,6 +165,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
                 ) {
                   parentKey = await fetchSecret<KeyData>({
                     keyId: (key as XHDDerivedKeyData | XHDDomainP256KeyData).metadata.parentKeyId,
+                    options: authenticationOptions,
                   });
                   if (!parentKey)
                     throw new KeyNotFoundError(
@@ -198,7 +203,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
             let key: KeyData | null = null;
             try {
               // Fetch the key from storage
-              key = await fetchSecret<KeyData>({ keyId: id });
+              key = await fetchSecret<KeyData>({ keyId: id, options: authenticationOptions });
               if (!key) throw new KeyNotFoundError(id);
               // Verify the signature
               return verify({
@@ -219,6 +224,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
             seed,
             name: options?.name,
             id: options?.id,
+            authenticationOptions,
           }),
         /** Derives a new key from a stored seed using a path */
         deriveFromSeed: (seedId, path, options): Promise<KeyId> =>
@@ -227,13 +233,14 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
             seedId,
             path,
             options,
+            authenticationOptions,
           }),
         /** Encrypts data using the key associated with the ID */
         encryptWithKey: (id, data, algorithm): Promise<Uint8Array<ArrayBufferLike>> =>
           keyStoreHooks("encryptWithKey", async () => {
             let key: KeyData | null = null;
             try {
-              key = await fetchSecret<KeyData>({ keyId: id });
+              key = await fetchSecret<KeyData>({ keyId: id, options: authenticationOptions });
               if (!key) throw new KeyNotFoundError(id);
               return encrypt({
                 store: keyStore,
@@ -252,7 +259,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
             async () => {
               let key: KeyData | null = null;
               try {
-                key = await fetchSecret<KeyData>({ keyId: id });
+                key = await fetchSecret<KeyData>({ keyId: id, options: authenticationOptions });
                 if (!key) throw new KeyNotFoundError(id);
                 return decrypt({ store: keyStore, key, data, algorithm });
               } finally {
@@ -274,7 +281,11 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
               let keys: (KeyData | null)[] = [];
               let parentKeys: (KeyData | null)[] = [];
               try {
-                keys = await Promise.all(ids.map((id) => fetchSecret<KeyData>({ keyId: id })));
+                keys = await Promise.all(
+                  ids.map((id) =>
+                    fetchSecret<KeyData>({ keyId: id, options: authenticationOptions }),
+                  ),
+                );
                 parentKeys = await Promise.all(
                   keys.map(async (key) => {
                     if (!key) return null;
@@ -282,6 +293,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
                     if (key.metadata?.parentKeyId) {
                       pKey = await fetchSecret<KeyData>({
                         keyId: key.metadata.parentKeyId as string,
+                        options: authenticationOptions,
                       });
                     } else if (key.metadata?.rootKey) {
                       pKey = key.metadata.rootKey as KeyData;

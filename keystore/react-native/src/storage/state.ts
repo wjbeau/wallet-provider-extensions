@@ -11,31 +11,41 @@ import { base64url } from "@scure/base";
 import type { Store } from "@tanstack/store";
 import { createMMKV, type MMKV } from "react-native-mmkv";
 import { decryptData, encryptData, getMasterKey } from "./crypto.ts";
+import type { AuthenticationOptions } from "../types.ts";
 
 export const storage: MMKV = createMMKV({
   id: "keystore",
+  mode: "multi-process",
 });
 
 /**
  * Fetches a secret from persistent storage and decrypts it using the master key.
  * @param params - The fetch parameters.
  * @param params.keyId - The ID of the key to fetch
- * @param params.masterKey - Optional master key override
+ * @param params.options - Options to override the biometrics and masterkey
  * @returns The decrypted secret data or null if not found
  */
 export async function fetchSecret<T>({
   keyId,
-  masterKey,
+  options,
 }: {
   keyId: KeyId;
-  masterKey?: Buffer;
+  options?: AuthenticationOptions & { masterKey?: Buffer };
 }): Promise<T | null> {
+  let key = options?.masterKey;
+  let isInternalKey = false;
   try {
-    const encryptedSeed = storage.getString(keyId);
-    if (!encryptedSeed) return null;
-    return decode(decryptData(masterKey ? masterKey : await getMasterKey(), encryptedSeed)) as T;
+    const encryptedData = storage.getString(keyId);
+    if (!encryptedData) return null;
+    if (!key) {
+      key = await getMasterKey(options);
+      isInternalKey = true;
+    }
+    return decode(decryptData(key, encryptedData)) as T;
   } finally {
-    clearBuffer(masterKey);
+    if (isInternalKey && key) {
+      clearBuffer(key);
+    }
   }
 }
 
@@ -58,9 +68,11 @@ export async function removeSecret({ keyId }: { keyId: KeyId }): Promise<void> {
 export async function commit({
   store,
   keyData,
+  options,
 }: {
   store: Store<KeyStoreState>;
   keyData: KeyData;
+  options?: AuthenticationOptions;
 }): Promise<void> {
   if (typeof keyData.id === "undefined")
     throw new InvalidKeyDataError(
@@ -70,7 +82,7 @@ export async function commit({
 
   try {
     // Never allow the master key to touch memory.
-    storage.set(keyData.id, encryptData(await getMasterKey(), encode(keyData)));
+    storage.set(keyData.id, encryptData(await getMasterKey(options), encode(keyData)));
     // remove the private keys from keyData
     const { privateKey, seed, ...keyState } = keyData as any;
     // clear then delete the keys from the keyData object to remove it from memory, even from the caller 😈
