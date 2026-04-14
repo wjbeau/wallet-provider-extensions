@@ -2,8 +2,8 @@ import { Stack } from "expo-router";
 import { AlgorandProvider, ReactNativeProvider } from "@/providers/ReactNativeProvider";
 import { install } from "react-native-quick-crypto";
 import { keyStore } from "@/stores/keystore";
-import { keyStoreHooks } from "@/stores/before-after";
-import { fetchSecret, getMasterKey, storage } from "@algorandfoundation/react-native-keystore";
+import { keyStoreHooks, accountHooks } from "@/stores/before-after";
+import { fetchSecret, storage } from "@algorandfoundation/react-native-keystore";
 import {
   initializeKeyStore,
   Key,
@@ -13,15 +13,20 @@ import {
 } from "@algorandfoundation/keystore";
 import { Store } from "@tanstack/store";
 import { accountsStore } from "@/stores/accounts";
+import type { ReactKeystoreOptions } from "@algorandfoundation/react-native-keystore";
 
 install();
 
+const biometricOptions: ReactKeystoreOptions["keystore"]["authentication"] = {
+  biometrics: true,
+  prompt: "Authenticate to access your wallet",
+};
 async function bootstrap() {
   setStatus({ store: keyStore as unknown as Store<KeyStoreState>, status: "loading" });
   const secrets = await Promise.all(
     storage
       .getAllKeys()
-      .map(async (keyId) => fetchSecret<KeyData>({ keyId, masterKey: await getMasterKey() })),
+      .map(async (keyId) => fetchSecret<KeyData>({ keyId, options: biometricOptions })),
   );
   initializeKeyStore({
     store: keyStore as unknown as Store<KeyStoreState>,
@@ -41,9 +46,10 @@ export default function RootLayout() {
             name: "React Native Wallet",
           },
           {
-            logs: true,
+            logs: {},
             accounts: {
               store: accountsStore,
+              hooks: accountHooks,
               keystore: {
                 autoPopulate: true,
               },
@@ -51,6 +57,7 @@ export default function RootLayout() {
             keystore: {
               store: keyStore,
               hooks: keyStoreHooks,
+              authentication: biometricOptions,
             },
           },
         )
