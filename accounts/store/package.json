@@ -34,17 +34,17 @@
     "release:dry-run": "package-releaser --dry-run"
   },
   "dependencies": {
-    "@algorandfoundation/wallet-provider": "1.0.0-canary.3",
-    "@noble/hashes": "^2.0.1",
-    "@scure/base": "^2.0.0"
+    "@algorandfoundation/wallet-provider": "catalog:",
+    "@noble/hashes": "catalog:",
+    "@scure/base": "catalog:"
   },
   "devDependencies": {
-    "@algorandfoundation/log-store": "1.0.0-canary.2",
+    "@algorandfoundation/log-store": "workspace:*",
     "@algorandfoundation/package-releaser": "workspace:*",
-    "vitest": "4.1.2"
+    "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@algorandfoundation/log-store": "1.0.0-canary.2",
+    "@algorandfoundation/log-store": "workspace:*",
     "@tanstack/store": "catalog:",
     "before-after-hook": "catalog:"
   },

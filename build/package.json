@@ -21,6 +21,6 @@
     "memize": "^2.1.1",
     "meow": "^14.0.0",
     "read-pkg": "^10.1.0",
-    "semantic-release": "^25.0.3"
+    "semantic-release": "catalog:"
   }
 }
