@@ -9,7 +9,7 @@ import { addLog, clearLogs } from "./store.ts";
 import type { LogStoreExtension, LogStoreOptions, LogStoreState } from "./types.ts";
 
 export const WithLogStore: Extension<LogStoreExtension> = (_, options: LogStoreOptions) => {
-  const logsStore = options.log.store || new Store<LogStoreState>({ logs: [] });
+  const logsStore = options.log?.store || new Store<LogStoreState>({ logs: [] });
   return {
     get logs() {
       return logsStore.state.logs;
