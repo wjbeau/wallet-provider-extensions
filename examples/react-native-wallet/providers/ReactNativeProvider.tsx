@@ -5,33 +5,64 @@ import { WithKeyStore } from "@algorandfoundation/react-native-keystore";
 import { Account, AccountStoreApi, WithAccountStore } from "@algorandfoundation/accounts-store";
 import type { KeyStoreAPI, Key } from "@algorandfoundation/keystore";
 import { type LogMessage, WithLogStore, type LogStoreApi } from "@algorandfoundation/log-store";
-import type { keyStoreHooks } from "@/stores/before-after";
+import { keyStoreHooks } from "@/stores/before-after";
 import { WithAccountsKeystore } from "@algorandfoundation/accounts-keystore-extension";
 
+/**
+ * The React Native Provider for the wallet application.
+ * Composes multiple extensions to provide a unified API and reactive state.
+ *
+ * @example
+ * ```typescript
+ * const provider = new ReactNativeProvider({ id: "my-wallet", name: "My Wallet" }, options);
+ * ```
+ */
 export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXTENSIONS> {
   static EXTENSIONS = [WithLogStore, WithKeyStore, WithAccountStore, WithAccountsKeystore] as const;
 
+  /** Reactive array of keys in the keystore */
   keys!: Key[];
+  /** Reactive array of accounts in the account store */
   accounts!: Account[];
+  /** Reactive array of log messages */
   logs!: LogMessage[];
+  /** Current status of the keystore (e.g., 'idle', 'generating') */
   status!: string;
 
+  /** API for account operations */
   account!: {
     store: AccountStoreApi;
   };
-  // The generic Keystore Interface
+  /**
+   * API for cryptographic key operations.
+   * Extends the base {@link KeyStoreAPI} with clearing and hooks.
+   */
   key!: {
     store: KeyStoreAPI & { clear: () => Promise<void>; hooks: typeof keyStoreHooks };
   };
+  /** API for logging operations */
   log!: LogStoreApi;
 }
 
 export const AlgorandContext = createContext<null | ReactNativeProvider>(null);
 
+/** Props for the {@link AlgorandProvider} component */
 export interface AlgorandProviderProps {
+  /** React children to render within the provider */
   children: ReactNode;
+  /** The concrete provider instance to use */
   provider: ReactNativeProvider;
 }
+/**
+ * Context provider component that makes the {@link ReactNativeProvider} available to hooks.
+ *
+ * @example
+ * ```tsx
+ * <AlgorandProvider provider={new ReactNativeProvider(...)}>
+ *   <App />
+ * </AlgorandProvider>
+ * ```
+ */
 export function AlgorandProvider({ children, provider }: AlgorandProviderProps) {
   return <AlgorandContext.Provider value={provider}>{children}</AlgorandContext.Provider>;
 }

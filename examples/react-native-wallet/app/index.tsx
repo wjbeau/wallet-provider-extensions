@@ -12,7 +12,8 @@ import {
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useProvider } from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { randomBytes } from "react-native-quick-crypto";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
+import { generateMnemonic, mnemonicToSeed } from "@scure/bip39";
 import { useState, useEffect } from "react";
 import { Link } from "expo-router";
 
@@ -115,28 +116,58 @@ export default function Index() {
   };
 
   const handleImportSeed = async () => {
-    const keyId = await key.store.import(
-      {
-        type: "hd-seed",
+    try {
+      // Generate a new 24-word mnemonic
+      const mnemonic = generateMnemonic(wordlist, 256);
+      const seed = await mnemonicToSeed(mnemonic);
+
+      const keyId = await key.store.import(
+        {
+          type: "hd-seed",
+          algorithm: "raw",
+          extractable: true,
+          keyUsages: ["deriveKey", "deriveBits"],
+          privateKey: seed,
+        },
+        "bytes",
+      );
+
+      const rootKeyId = await key.store.generate({
+        type: "hd-root-key",
         algorithm: "raw",
         extractable: true,
         keyUsages: ["deriveKey", "deriveBits"],
-        privateKey: new Uint8Array(randomBytes(64)),
-      },
-      "bytes",
-    );
+        params: {
+          parentKeyId: keyId,
+        },
+      });
 
-    const rootKeyId = await key.store.generate({
-      type: "hd-root-key",
-      algorithm: "raw",
-      extractable: true,
-      keyUsages: ["deriveKey", "deriveBits"],
-      params: {
-        parentKeyId: keyId,
-      },
-    });
+      // Generate initial Account Key (index 0)
+      const initialKeyId = await key.store.generate({
+        type: "hd-derived-ed25519",
+        algorithm: "EdDSA",
+        extractable: true,
+        keyUsages: ["sign", "verify"],
+        params: {
+          parentKeyId: rootKeyId,
+          context: 0,
+          account: 0,
+          index: 0,
+          derivation: 9,
+        },
+      });
 
-    setActiveSeed(rootKeyId);
+      setActiveSeed(rootKeyId);
+      setActiveKey(initialKeyId);
+
+      Alert.alert(
+        "Wallet Created",
+        `Your 24-word recovery phrase:\n\n${mnemonic}\n\nKeep this phrase safe!`,
+        [{ text: "OK" }],
+      );
+    } catch (error: any) {
+      Alert.alert("Import Failed", error.message);
+    }
   };
 
   const handleExportKey = async (id: string) => {

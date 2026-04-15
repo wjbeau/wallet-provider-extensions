@@ -41,7 +41,7 @@
     "@semantic-release/npm": "13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^25.2.2",
-    "@vitest/coverage-v8": "catalog:",
+    "@vitest/coverage-v8": "^4.1.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.43.0",
@@ -49,7 +49,7 @@
     "semantic-release": "catalog:",
     "typedoc": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
+    "vite": "^6.0.0",
     "vitest": "catalog:"
   },
   "overrides": {

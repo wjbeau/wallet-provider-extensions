@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import * as crypto from "node:crypto";
 import { vi } from "vitest";
 
 // Polyfill global.crypto for @algorandfoundation/wallet-provider generateId()
@@ -14,6 +14,12 @@ vi.mock("react-native-keychain", () => {
     setGenericPassword: vi.fn(async (username, password) => {
       mockPassword = { username, password };
     }),
+    ACCESS_CONTROL: {
+      BIOMETRY_ANY: "BIOMETRY_ANY",
+    },
+    ACCESSIBLE: {
+      WHEN_UNLOCKED_THIS_DEVICE_ONLY: "WHEN_UNLOCKED_THIS_DEVICE_ONLY",
+    },
   };
 });
 vi.mock("react-native-quick-crypto", () => ({

@@ -38,13 +38,13 @@
     "@algorandfoundation/keystore": "workspace:*",
     "@algorandfoundation/wallet-provider": "catalog:",
     "@algorandfoundation/xhd-wallet-api": "catalog:",
-    "@scure/base": "^2.0.0",
-    "@scure/bip39": "^2.0.1",
+    "@scure/base": "catalog:",
+    "@scure/bip39": "catalog:",
     "@tanstack/store": "catalog:",
     "before-after-hook": "catalog:",
     "react-native-keychain": "^10.0.0",
-    "react-native-mmkv": "^4.1.2",
-    "react-native-quick-crypto": "^1.0.12"
+    "react-native-mmkv": "catalog:",
+    "react-native-quick-crypto": "catalog:"
   },
   "devDependencies": {
     "@algorandfoundation/package-releaser": "workspace:^",
