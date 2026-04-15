@@ -1,3 +1,9 @@
+# [react-native-keystore@1.0.0-canary.10](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.9...react-native-keystore@1.0.0-canary.10) (2026-04-15)
+
+### Features
+
+- biometric authentication prompt for master key with configurable options ([3029fc6](https://github.com/algorandfoundation/wallet-provider-extensions/commit/3029fc630d8ce7bd3304dc430ce9ac4be39fb055))
+
 # [react-native-keystore@1.0.0-canary.9](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.8...react-native-keystore@1.0.0-canary.9) (2026-04-09)
 
 ### Bug Fixes
