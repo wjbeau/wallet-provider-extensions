@@ -6,7 +6,13 @@ import { Account, AccountStoreApi, WithAccountStore } from "@algorandfoundation/
 import type { KeyStoreAPI, Key } from "@algorandfoundation/keystore";
 import { type LogMessage, WithLogStore, type LogStoreApi } from "@algorandfoundation/log-store";
 import { keyStoreHooks } from "@/stores/before-after";
-import { WithAccountsKeystore } from "@algorandfoundation/accounts-keystore-extension";
+import {
+  KeystoreAccount,
+  WithAccountsKeystore,
+} from "@algorandfoundation/accounts-keystore-extension";
+import { WithWatchedAccount, WatchedAccount } from "@/extensions/example";
+
+export type AppAccount = WatchedAccount | KeystoreAccount | Account;
 
 /**
  * The React Native Provider for the wallet application.
@@ -18,12 +24,18 @@ import { WithAccountsKeystore } from "@algorandfoundation/accounts-keystore-exte
  * ```
  */
 export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXTENSIONS> {
-  static EXTENSIONS = [WithLogStore, WithKeyStore, WithAccountStore, WithAccountsKeystore] as const;
+  static EXTENSIONS = [
+    WithLogStore,
+    WithKeyStore,
+    WithAccountStore<AppAccount>,
+    WithAccountsKeystore,
+    WithWatchedAccount,
+  ] as const;
 
   /** Reactive array of keys in the keystore */
   keys!: Key[];
   /** Reactive array of accounts in the account store */
-  accounts!: Account[];
+  accounts!: AppAccount[];
   /** Reactive array of log messages */
   logs!: LogMessage[];
   /** Current status of the keystore (e.g., 'idle', 'generating') */
@@ -31,7 +43,7 @@ export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXT
 
   /** API for account operations */
   account!: {
-    store: AccountStoreApi;
+    store: AccountStoreApi<AppAccount>;
   };
   /**
    * API for cryptographic key operations.

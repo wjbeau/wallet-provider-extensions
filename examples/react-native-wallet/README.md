@@ -1,17 +1,68 @@
-# Welcome to your Expo app 👋
+# React Native Wallet (Extension Playground)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is a comprehensive React Native wallet example that serves as the **playground for the [Wallet Provider Extensions](../../)** repository.
 
-## Get started
+It demonstrates how to compose multiple extensions into a single, unified `Provider` instance and how to handle reactive state and type narrowing in a real-world application.
 
-1. Install dependencies
+## 🧱 Composed Extensions
+
+The `ReactNativeProvider` in this application integrates several foundational extensions from this repository, along with local ones:
+
+- **`WithLogStore`**: Unified logging for all operations.
+- **`WithKeyStore`**: Secure storage and management of cryptographic keys (using `react-native-quick-crypto`).
+- **`WithAccountStore`**: Centralized state management for Algorand accounts.
+- **`WithAccountsKeystore`**: A bridge that links accounts to keys in the keystore, enabling signing capabilities.
+- **[`WithWatchedAccount`](./extensions/README.md)**: A local extension example for tracking accounts by public address (read-only).
+
+## 🔀 Handling Multiple Account Types
+
+A core pattern in this repository is using a single store to manage various types of accounts (e.g., keystore-backed, watched, multisig, etc.). We use **union types** and **type guards** to differentiate between them while maintaining a clean, unified API.
+
+### `switch(true)` Pattern
+
+In `app/accounts.tsx`, we use a `switch(true)` statement with type guards for type-safe rendering of different account types. This is the recommended way to handle multiple types in the same store:
+
+```tsx
+import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extension";
+import { isWatchedAccount } from "@/extensions/example";
+
+// ... inside the accounts map function
+switch (true) {
+  case isKeystoreAccount(item):
+    // item is narrowed to KeystoreAccount (has .sign method, etc.)
+    content = (
+      <View>
+        <MaterialCommunityIcons name="shield-key" size={24} />
+        <Text>Keystore Account</Text>
+      </View>
+    );
+    break;
+
+  case isWatchedAccount(item):
+    // item is narrowed to WatchedAccount (has .name, etc.)
+    content = (
+      <View>
+        <MaterialCommunityIcons name="eye-outline" size={24} />
+        <Text>Watched Account ({item.name})</Text>
+      </View>
+    );
+    break;
+
+  default:
+    // Fallback for generic accounts
+    content = <Text>{item.address}</Text>;
+}
+```
+
+## 🚀 Getting Started
+
+1. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Start the app**
    ```bash
    npx expo start
    ```
@@ -25,26 +76,9 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## 💡 Key Files
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `providers/ReactNativeProvider.tsx`: The core provider definition composing all extensions.
+- `app/_layout.tsx`: Provider initialization and app bootstrapping.
+- `extensions/example.ts`: Implementation of the local `WithWatchedAccount` extension.
+- `app/accounts.tsx`: UI for managing accounts, demonstrating the `switch(true)` pattern.
