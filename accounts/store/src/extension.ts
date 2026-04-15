@@ -1,16 +1,13 @@
-import type { Extension } from "@algorandfoundation/wallet-provider";
+import type { ExtensionOptions, Provider } from "@algorandfoundation/wallet-provider";
 import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 import { addAccount, clearAccounts, getAccount, removeAccount } from "./store.ts";
-import type { Account, AccountStoreExtension, AccountStoreState } from "./types.ts";
-
-/**
- * Default global instance of the account store.
- */
-export const accountsStore: Store<AccountStoreState, (cb: AccountStoreState) => AccountStoreState> =
-  new Store<AccountStoreState>({
-    accounts: [],
-  });
+import type {
+  Account,
+  AccountStoreExtension,
+  AccountStoreOptions,
+  AccountStoreState,
+} from "./types.ts";
 
 /**
  * Extension that adds account management capabilities to a Provider.
@@ -19,8 +16,11 @@ export const accountsStore: Store<AccountStoreState, (cb: AccountStoreState) => 
  * @param options - Configuration options for the extension.
  * @returns The account store extension.
  */
-export const WithAccountStore: Extension<AccountStoreExtension> = (provider, options) => {
-  const store = options?.accounts?.store ?? accountsStore;
+export const WithAccountStore = <T extends Account>(
+  provider: Provider<any> & AccountStoreExtension<T>,
+  options: ExtensionOptions & AccountStoreOptions<T>,
+): AccountStoreExtension<T> => {
+  const store = options?.accounts?.store ?? new Store<AccountStoreState<T>>({ accounts: [] });
   const hooks = options?.accounts?.hooks ?? new Hook.Collection<any>();
 
   return {
@@ -29,20 +29,20 @@ export const WithAccountStore: Extension<AccountStoreExtension> = (provider, opt
     },
     account: {
       store: provider.account?.store || {
-        async addAccount(account: Account) {
-          return hooks("add", addAccount, { store, account });
+        async addAccount(account: T): Promise<T> {
+          return hooks("add", addAccount<T>, { store, account });
         },
-        async removeAccount(address: string) {
-          return hooks("remove", removeAccount, { store, address });
+        async removeAccount(address: string): Promise<void> {
+          return hooks("remove", removeAccount<T>, { store, address });
         },
-        async getAccount(address: string) {
-          return hooks("get", getAccount, { store, address });
+        async getAccount(address: string): Promise<T | undefined> {
+          return hooks("get", getAccount<T>, { store, address });
         },
-        async clear() {
-          return hooks("clear", clearAccounts, { store });
+        async clear(): Promise<void> {
+          return hooks("clear", clearAccounts<T>, { store });
         },
         hooks,
       },
     },
-  } as AccountStoreExtension;
+  } as AccountStoreExtension<T>;
 };
