@@ -1,3 +1,14 @@
+# [react-native-keystore@1.0.0-canary.11](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.10...react-native-keystore@1.0.0-canary.11) (2026-04-16)
+
+### Bug Fixes
+
+- update to latest tanstack store ([173b193](https://github.com/algorandfoundation/wallet-provider-extensions/commit/173b193fc0c2ee4331de7da4dfd26ce0334be50d))
+- use optional chaining for log store ([17f5b85](https://github.com/algorandfoundation/wallet-provider-extensions/commit/17f5b8508f8364cf946eee5c1c7c4ebe9a1993e5))
+
+### Features
+
+- allow passing in of log store in options ([8bd40f6](https://github.com/algorandfoundation/wallet-provider-extensions/commit/8bd40f607f9b8ee0f9893e467a99ebd2f2c3a5f5))
+
 # [react-native-keystore@1.0.0-canary.10](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.9...react-native-keystore@1.0.0-canary.10) (2026-04-15)
 
 ### Features
