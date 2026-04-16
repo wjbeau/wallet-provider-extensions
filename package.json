@@ -26,8 +26,8 @@
     "fmt:check": "oxfmt --check",
     "docs": "typedoc",
     "test": "pnpm run -r --if-present test",
-    "release": "pnpm run -r --if-present release",
-    "release:dry-run": "pnpm run -r --if-present release:dry-run",
+    "release": "pnpm run -r --workspace-concurrency 1 --if-present release",
+    "release:dry-run": "pnpm run -r --workspace-concurrency 1 --if-present release:dry-run",
     "prepare": "husky"
   },
   "dependencies": {
