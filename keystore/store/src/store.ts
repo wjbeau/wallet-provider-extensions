@@ -49,7 +49,7 @@ export function setStatus({
  * @param params.store - The TanStack store instance for {@link KeyStoreState}.
  */
 export function clearKeyStore({ store }: { store: Store<KeyStoreState> }): void {
-  store.setState({ keys: [], status: "idle" });
+  store.setState(() => ({ keys: [], status: "idle" }));
 }
 
 /**
@@ -75,10 +75,10 @@ export function initializeKeyStore({
   store,
   keys,
 }: {
-  store: Store<KeyStoreState, any>;
+  store: Store<KeyStoreState>;
   keys: Key[];
 }): void {
-  store.setState({ keys, status: "idle" });
+  store.setState(() => ({ keys, status: "idle" }));
 }
 
 /**

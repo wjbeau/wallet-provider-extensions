@@ -1,6 +1,6 @@
 # @algorandfoundation/keystore
 
-Core types and reactive state management for the Algorand Wallet Provider Keystore.
+Core types and reactive state management for the Wallet Provider Keystore.
 
 This package provides the base interfaces and reactive store for managing cryptographic keys. It does **not** contain a concrete implementation of key storage or cryptographic operations.
 

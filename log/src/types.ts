@@ -1,7 +1,12 @@
 import type { ExtensionOptions } from "@algorandfoundation/wallet-provider";
+import type { Store } from "@tanstack/store";
 
 // TODO: Find out how everyone is using or developing logger extensions, then form an opinion on options.
-export type LogStoreExtensionOptions = ExtensionOptions;
+export interface LogStoreOptions extends ExtensionOptions {
+  log: {
+    store: Store<LogStoreState>;
+  };
+}
 /**
  * The state of the log store.
  */

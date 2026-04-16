@@ -9,7 +9,7 @@ catalog:
   "@algorandfoundation/wallet-provider": "^1.0.0-canary.5"
   "@algorandfoundation/xhd-wallet-api": "^2.0.0-canary.1"
   "@algorandfoundation/dp256": "^1.1.0"
-  "@tanstack/store": "^0.8.0"
+  "@tanstack/store": "^0.9.0"
   "before-after-hook": "^4.0.0"
   "semantic-release": "^25.0.3"
   "react-native": "0.81.5"

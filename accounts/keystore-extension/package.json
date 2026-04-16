@@ -37,14 +37,22 @@
   "dependencies": {
     "@algorandfoundation/accounts-store": "workspace:*",
     "@algorandfoundation/keystore": "workspace:*",
-    "@algorandfoundation/wallet-provider": "catalog:"
+    "@algorandfoundation/wallet-provider": "catalog:",
+    "@scure/base": "catalog:"
   },
   "devDependencies": {
+    "@algorandfoundation/log-store": "workspace:*",
     "@algorandfoundation/package-releaser": "workspace:*",
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@algorandfoundation/log-store": "workspace:*",
     "@tanstack/store": "catalog:",
     "before-after-hook": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@algorandfoundation/log-store": {
+      "optional": true
+    }
   }
 }

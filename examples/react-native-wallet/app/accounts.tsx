@@ -11,6 +11,8 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanim
 import { useProvider } from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
+import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extension";
+import { isWatchedAccount } from "@/extensions/example";
 
 export default function Accounts() {
   const { accounts, status, account } = useProvider();
@@ -75,15 +77,44 @@ export default function Accounts() {
           </Animated.View>
         ) : (
           accounts.map((item, i) => {
-            return (
-              <Animated.View
-                key={item.address || i}
-                entering={FadeIn.duration(300)}
-                exiting={FadeOut.duration(300)}
-                layout={LinearTransition.springify()}
-              >
-                <View style={styles.accountCard}>
-                  <View style={styles.accountInfo}>
+            let content;
+            switch (true) {
+              case isKeystoreAccount(item):
+                content = (
+                  <>
+                    <View style={[styles.accountIconContainer, { backgroundColor: "#E3F2FD" }]}>
+                      <MaterialCommunityIcons name="shield-key" size={24} color="#1976D2" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.accountAddress} numberOfLines={1} ellipsizeMode="middle">
+                        {item.address}
+                      </Text>
+                      <Text style={styles.accountTypeLabel}>Keystore Account</Text>
+                    </View>
+                  </>
+                );
+                break;
+              case isWatchedAccount(item):
+                content = (
+                  <>
+                    <View style={[styles.accountIconContainer, { backgroundColor: "#F3E5F5" }]}>
+                      <MaterialCommunityIcons name="eye-outline" size={24} color="#7B1FA2" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.accountAddress} numberOfLines={1} ellipsizeMode="middle">
+                        {item.address}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text style={styles.accountTypeLabel}>Watched Account</Text>
+                        {item.name && <Text style={styles.accountMetadata}> • {item.name}</Text>}
+                      </View>
+                    </View>
+                  </>
+                );
+                break;
+              default:
+                content = (
+                  <>
                     <View style={styles.accountIconContainer}>
                       <MaterialCommunityIcons name="account" size={24} color="#007AFF" />
                     </View>
@@ -95,7 +126,19 @@ export default function Accounts() {
                         <Text style={styles.accountMetadata}>{item.metadata.name}</Text>
                       )}
                     </View>
-                  </View>
+                  </>
+                );
+            }
+
+            return (
+              <Animated.View
+                key={item.address || i}
+                entering={FadeIn.duration(300)}
+                exiting={FadeOut.duration(300)}
+                layout={LinearTransition.springify()}
+              >
+                <View style={styles.accountCard}>
+                  <View style={styles.accountInfo}>{content}</View>
                   <View style={styles.accountActions}>
                     <TouchableOpacity onPress={() => handleRemoveAccount(item.address)}>
                       <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
@@ -260,6 +303,12 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
     fontWeight: "600",
     fontFamily: "System",
+  },
+  accountTypeLabel: {
+    fontSize: 10,
+    color: "#999",
+    fontWeight: "bold",
+    textTransform: "uppercase",
   },
   accountMetadata: {
     fontSize: 12,
