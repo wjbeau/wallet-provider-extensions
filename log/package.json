@@ -1,6 +1,6 @@
 {
   "name": "@algorandfoundation/log-store",
-  "version": "1.0.0-canary.2",
+  "version": "1.0.0-canary.3",
   "description": "Generalized log for extensions",
   "license": "Apache-2.0",
   "author": "Algorand Foundation",
