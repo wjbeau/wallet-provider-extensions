@@ -15,7 +15,27 @@ import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extensi
 import { isWatchedAccount } from "@/extensions/example";
 
 export default function Accounts() {
-  const { accounts, status, account } = useProvider();
+  const { accounts, status, account, keys } = useProvider();
+
+  /**
+   * Builds a human-readable scheme label for a keystore account by combining
+   * the source key's type (looked up via `metadata.keyId`) with the seed's
+   * scheme persisted on the account's metadata.
+   *
+   * - `hd-derived-ed25519` + `bip39` → `xhd-bip39`
+   * - `ed25519` + `algo25`           → `algo25`
+   * - Falls back to the raw `seedScheme` (or `undefined`) when either input
+   *   is missing.
+   */
+  const getKeystoreSchemeLabel = (
+    keyId: string | undefined,
+    seedScheme: string | undefined,
+  ): string | undefined => {
+    if (!seedScheme) return undefined;
+    const key = keyId ? keys?.find((k) => k.id === keyId) : undefined;
+    if (key?.type === "hd-derived-ed25519") return `xhd-${seedScheme}`;
+    return seedScheme;
+  };
 
   const handleRemoveAccount = async (address: string) => {
     try {
@@ -79,7 +99,11 @@ export default function Accounts() {
           accounts.map((item, i) => {
             let content;
             switch (true) {
-              case isKeystoreAccount(item):
+              case isKeystoreAccount(item): {
+                const schemeLabel = getKeystoreSchemeLabel(
+                  item.metadata?.keyId,
+                  item.metadata?.seedScheme,
+                );
                 content = (
                   <>
                     <View style={[styles.accountIconContainer, { backgroundColor: "#E3F2FD" }]}>
@@ -89,11 +113,17 @@ export default function Accounts() {
                       <Text style={styles.accountAddress} numberOfLines={1} ellipsizeMode="middle">
                         {item.address}
                       </Text>
-                      <Text style={styles.accountTypeLabel}>Keystore Account</Text>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text style={styles.accountTypeLabel}>Keystore Account</Text>
+                        {schemeLabel && (
+                          <Text style={styles.accountMetadata}> • {schemeLabel}</Text>
+                        )}
+                      </View>
                     </View>
                   </>
                 );
                 break;
+              }
               case isWatchedAccount(item):
                 content = (
                   <>

@@ -8,6 +8,7 @@ import {
   type KeyStoreState,
   generateXHDRootKeyFromSeed,
   generateXHDFromParent,
+  generateEd25519FromSeed,
 } from "@algorandfoundation/keystore";
 import type { KeystoreAccount } from "./types.ts";
 
@@ -37,6 +38,19 @@ describe("WithAccountsKeystore", () => {
       key: keyData,
       parentKey: rootKey,
     }) as Promise<Key>;
+  }
+
+  async function getMockEd25519Key(id: string) {
+    return (await generateEd25519FromSeed(
+      {
+        id: "seed-1",
+        type: "hd-seed",
+        privateKey: FIXED_SEED,
+        algorithm: "raw",
+        extractable: true,
+      } as any,
+      { id },
+    )) as unknown as Key;
   }
 
   it("should populate accounts from keystore keys in provider", async () => {
@@ -261,6 +275,196 @@ describe("WithAccountsKeystore", () => {
     expect(isKeystoreAccount(addedAccount!)).toBe(true);
     if (isKeystoreAccount(addedAccount!)) {
       expect(addedAccount.metadata?.keyId).toBe(mockKey2.id);
+    }
+  });
+
+  it("should populate an account for a standalone ed25519 key", async () => {
+    const mockKey = await getMockEd25519Key("ed-1");
+
+    const accountStore = new Store<AccountStoreState<KeystoreAccount>>({
+      accounts: [],
+    });
+
+    const keyStore = new Store<KeyStoreState>({
+      keys: [mockKey],
+      status: "idle",
+    });
+
+    const provider = {
+      keys: [mockKey],
+      status: "idle",
+      account: { store: { addAccount: vi.fn() } },
+      key: { store: { hooks: { after: vi.fn() } } },
+    };
+
+    const options = {
+      accounts: { store: accountStore, keystore: { autoPopulate: true } },
+      keystore: { store: keyStore },
+    };
+
+    WithAccountsKeystore(provider as any, options as any);
+
+    expect(accountStore.state.accounts.length).toBe(1);
+    const addedAccount: Account = accountStore.state.accounts[0];
+    expect(isKeystoreAccount(addedAccount)).toBe(true);
+    if (isKeystoreAccount(addedAccount)) {
+      expect(addedAccount.address).toBe(base64.encode(mockKey.publicKey!));
+      expect(addedAccount.metadata?.keyId).toBe(mockKey.id);
+      expect(addedAccount.metadata?.parentKeyId).toBe("seed-1");
+    }
+  });
+
+  it("should remove the account when a standalone ed25519 key is removed", async () => {
+    const mockKey = await getMockEd25519Key("ed-1");
+    const address = base64.encode(mockKey.publicKey!);
+
+    const accountStore = new Store<AccountStoreState<KeystoreAccount>>({
+      accounts: [],
+    });
+
+    const keyStore = new Store<KeyStoreState>({
+      keys: [mockKey],
+      status: "idle",
+    });
+
+    const provider = {
+      keys: [mockKey],
+      status: "idle",
+      account: { store: { addAccount: vi.fn() } },
+      key: { store: { hooks: { after: vi.fn() } } },
+    };
+
+    const options = {
+      accounts: { store: accountStore, keystore: { autoPopulate: true } },
+      keystore: { store: keyStore },
+    };
+
+    WithAccountsKeystore(provider as any, options as any);
+    expect(accountStore.state.accounts.length).toBe(1);
+
+    keyStore.setState((s) => ({ ...s, status: "ready", keys: [] }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(accountStore.state.accounts.find((a) => a.address === address)).toBeUndefined();
+  });
+
+  it("should propagate the seed's scheme onto a standalone ed25519 account", async () => {
+    const seedKey = {
+      id: "seed-1",
+      type: "hd-seed",
+      privateKey: FIXED_SEED,
+      algorithm: "raw",
+      extractable: true,
+      metadata: { scheme: "bip39" },
+    } as unknown as Key;
+    const mockKey = await getMockEd25519Key("ed-1");
+
+    const accountStore = new Store<AccountStoreState<KeystoreAccount>>({
+      accounts: [],
+    });
+    const keyStore = new Store<KeyStoreState>({
+      keys: [seedKey, mockKey],
+      status: "idle",
+    });
+
+    const provider = {
+      keys: [seedKey, mockKey],
+      status: "idle",
+      account: { store: { addAccount: vi.fn() } },
+      key: { store: { hooks: { after: vi.fn() } } },
+    };
+    const options = {
+      accounts: { store: accountStore, keystore: { autoPopulate: true } },
+      keystore: { store: keyStore },
+    };
+
+    WithAccountsKeystore(provider as any, options as any);
+
+    const added = accountStore.state.accounts[0];
+    expect(isKeystoreAccount(added)).toBe(true);
+    if (isKeystoreAccount(added)) {
+      expect(added.metadata?.seedScheme).toBe("bip39");
+    }
+  });
+
+  it("should propagate the seed's scheme onto an XHD-derived ed25519 account", async () => {
+    const seedKey = {
+      id: "seed-1",
+      type: "hd-seed",
+      privateKey: FIXED_SEED,
+      algorithm: "raw",
+      extractable: true,
+      metadata: { scheme: "algo25" },
+    } as unknown as Key;
+    const rootKey = {
+      id: "root-1",
+      type: "hd-root-key",
+      metadata: { parentKeyId: "seed-1" },
+    } as unknown as Key;
+    // Build an XHD-derived child but rebind its parent to root-1 for the test.
+    const child = await getMockKey("key-1");
+    (child as any).metadata = {
+      ...(child as any).metadata,
+      parentKeyId: "root-1",
+    };
+
+    const accountStore = new Store<AccountStoreState<KeystoreAccount>>({
+      accounts: [],
+    });
+    const keyStore = new Store<KeyStoreState>({
+      keys: [seedKey, rootKey, child],
+      status: "idle",
+    });
+
+    const provider = {
+      keys: [seedKey, rootKey, child],
+      status: "idle",
+      account: { store: { addAccount: vi.fn() } },
+      key: { store: { hooks: { after: vi.fn() } } },
+    };
+    const options = {
+      accounts: { store: accountStore, keystore: { autoPopulate: true } },
+      keystore: { store: keyStore },
+    };
+
+    WithAccountsKeystore(provider as any, options as any);
+
+    const added = accountStore.state.accounts.find((a) => a.metadata?.keyId === "key-1");
+    expect(added).toBeDefined();
+    if (added && isKeystoreAccount(added)) {
+      expect(added.metadata?.seedScheme).toBe("algo25");
+    }
+  });
+
+  it("should omit seedScheme when the seed has no scheme metadata", async () => {
+    const mockKey = await getMockEd25519Key("ed-1");
+    // No seed key in the store → resolver returns undefined.
+
+    const accountStore = new Store<AccountStoreState<KeystoreAccount>>({
+      accounts: [],
+    });
+    const keyStore = new Store<KeyStoreState>({
+      keys: [mockKey],
+      status: "idle",
+    });
+
+    const provider = {
+      keys: [mockKey],
+      status: "idle",
+      account: { store: { addAccount: vi.fn() } },
+      key: { store: { hooks: { after: vi.fn() } } },
+    };
+    const options = {
+      accounts: { store: accountStore, keystore: { autoPopulate: true } },
+      keystore: { store: keyStore },
+    };
+
+    WithAccountsKeystore(provider as any, options as any);
+
+    const added = accountStore.state.accounts[0];
+    expect(isKeystoreAccount(added)).toBe(true);
+    if (isKeystoreAccount(added)) {
+      expect(added.metadata?.seedScheme).toBeUndefined();
     }
   });
 });

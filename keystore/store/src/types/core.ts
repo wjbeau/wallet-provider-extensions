@@ -9,16 +9,24 @@
 export type KeyId = string;
 
 /**
- * Type of key: RSA (asymmetric), ECC (elliptic curve), HD seed/derived
+ * Type of key: RSA (asymmetric), ECC (elliptic curve), seed/HD-derived,
+ * standalone Ed25519 keys, or arbitrary user-supplied secret keys.
+ *
+ * @remarks
+ * `hd-seed` is preserved for backward compatibility but is **deprecated**.
+ * New code should use `seed` instead.
  */
 export type KeyType =
   | "rsa"
   | "ecc"
   | "lattice"
-  | "hd-seed"
+  | "seed"
+  | /** @deprecated Use `seed` instead. */ "hd-seed"
   | "hd-root-key"
   | "hd-derived-ed25519"
   | "hd-derived-p256"
+  | "ed25519"
+  | "secret-key"
   | string;
 
 /**
@@ -129,11 +137,62 @@ export interface KeyData extends Key {
 }
 
 /**
+ * Represents a seed (BIP39-derived bytes) usable for deriving other keys
+ * (e.g. HD root keys, Ed25519 keys).
+ *
+ * @example
+ * ```typescript
+ * const seed: Seed = await generateSeedData({ strength: 256 });
+ * ```
+ */
+export interface Seed extends KeyData {
+  type: "seed";
+  algorithm: "raw";
+}
+
+/**
  * Represents a Hierarchical Deterministic (HD) seed.
+ *
+ * @deprecated Use {@link Seed} instead. The `hd-seed` shape is retained only
+ * for backward compatibility and will be removed in a future major version.
  */
 export interface SeedData extends KeyData {
-  type: "hd-seed";
+  type: "hd-seed" | "seed";
   algorithm: "raw";
+}
+
+/**
+ * Represents an arbitrary user-provided secret key. The contents have no
+ * intrinsic cryptographic purpose; they are stored as-is for the consumer
+ * application to leverage as it sees fit.
+ *
+ * @example
+ * ```typescript
+ * const key: SecretKeyData = await generateSecretKey({ value: "hunter2" });
+ * ```
+ */
+export interface SecretKeyData extends KeyData {
+  type: "secret-key";
+  algorithm: "raw";
+}
+
+/**
+ * Represents a standalone Ed25519 keypair (not part of an HD tree).
+ *
+ * @remarks
+ * `privateKey` holds the 32-byte Ed25519 seed; `publicKey` holds the
+ * 32-byte Ed25519 public key.
+ */
+export interface Ed25519KeyData extends KeyData {
+  type: "ed25519";
+  algorithm: "EdDSA";
+  metadata?: {
+    /** Optional ID of the seed used to derive this key, if any. */
+    parentKeyId?: string;
+    /** Whether the key was derived from a BIP39 mnemonic. */
+    fromMnemonic?: boolean;
+    [key: string]: unknown;
+  };
 }
 
 /**

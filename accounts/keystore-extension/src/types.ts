@@ -8,6 +8,22 @@ import type { KeyStoreOptions } from "@algorandfoundation/keystore";
 export interface KeystoreAccount extends Account {
   type: "keystore-account";
   /**
+   * Account metadata. Includes the originating key id, optional parent key id,
+   * and — when resolvable — the scheme of the parent seed (e.g. `"bip39"`,
+   * `"algo25"`) that this account's key chain was imported under.
+   */
+  metadata?: {
+    keyId: string;
+    parentKeyId?: string;
+    /**
+     * The `metadata.scheme` value of the seed that ultimately produced this
+     * account's signing key. Only present when the seed is reachable in the
+     * keystore and exposes a `scheme` in its metadata.
+     */
+    seedScheme?: string;
+    [key: string]: unknown;
+  };
+  /**
    * A method to sign a transaction or a set of transactions.
    *
    * @param txns - The transactions to sign.

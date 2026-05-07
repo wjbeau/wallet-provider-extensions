@@ -1,12 +1,21 @@
 import { BIP32DerivationType, KeyContext } from "@algorandfoundation/xhd-wallet-api";
+import * as bip39 from "@scure/bip39";
 import { describe, expect, it, vi } from "vitest";
 import {
+  generateEd25519FromSeed,
   generateKey,
+  generateSecretKey,
   generateSeedData,
   generateXHDFromParent,
   generateXHDRootKeyFromSeed,
 } from "./generate.ts";
-import type { SeedData, XHDDomainP256KeyData, XHDRootKey } from "./types/core.ts";
+import type {
+  Ed25519KeyData,
+  SecretKeyData,
+  SeedData,
+  XHDDomainP256KeyData,
+  XHDRootKey,
+} from "./types/core.ts";
 
 vi.mock("@algorandfoundation/wallet-provider", () => ({
   generateId: () => "mocked-id",
@@ -18,7 +27,7 @@ describe("generate.ts", () => {
     const seed = (await generateSeedData({
       strength: 128,
     })) as SeedData;
-    expect(seed.type).toBe("hd-seed");
+    expect(seed.type).toBe("seed");
     expect(seed.id).toBe("mocked-id");
     expect(seed.privateKey).toBeDefined();
     expect(seed.privateKey?.length).toBe(64);
@@ -77,7 +86,7 @@ describe("generate.ts", () => {
       metadata: {},
     };
     const seed = (await generateKey({ keyData: seedKeyData })) as SeedData;
-    expect(seed.type).toBe("hd-seed");
+    expect(seed.type).toBe("seed");
 
     const rootKeyData = {
       type: "hd-root-key" as const,
@@ -153,5 +162,144 @@ describe("generate.ts", () => {
     expect(key1.publicKey).toEqual(key2.publicKey);
     expect(key1.privateKey).toEqual(key2.privateKey);
     expect(key1.publicKey).toBeDefined();
+  });
+
+  it("generateEd25519FromSeed (from a BIP39-derived seed) produces deterministic 32-byte public/64-byte private keys", async () => {
+    const mnemonic =
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    const seedBytes = await bip39.mnemonicToSeed(mnemonic);
+    const seed: SeedData = {
+      id: "seed-mnemonic",
+      type: "seed",
+      algorithm: "raw",
+      extractable: true,
+      privateKey: new Uint8Array(seedBytes),
+    } as any;
+    const key = await generateEd25519FromSeed(seed);
+    expect(key.type).toBe("ed25519");
+    expect(key.algorithm).toBe("EdDSA");
+    expect(key.publicKey?.length).toBe(32);
+    expect(key.privateKey?.length).toBe(64);
+    expect(key.metadata?.parentKeyId).toBe("seed-mnemonic");
+
+    // Deterministic from the same mnemonic-derived seed
+    const seed2: SeedData = {
+      ...seed,
+      privateKey: new Uint8Array(seedBytes),
+    };
+    const key2 = await generateEd25519FromSeed(seed2);
+    expect(key.publicKey).toEqual(key2.publicKey);
+  });
+
+  it("generateEd25519FromSeed accepts both seed and hd-seed shapes", async () => {
+    const bytes = new Uint8Array(64).fill(0x07);
+    const seed: SeedData = {
+      id: "seed-1",
+      type: "seed",
+      algorithm: "raw",
+      extractable: true,
+      privateKey: new Uint8Array(bytes),
+    } as any;
+    const k = await generateEd25519FromSeed(seed);
+    expect(k.type).toBe("ed25519");
+    expect(k.publicKey?.length).toBe(32);
+    expect(k.metadata?.parentKeyId).toBe("seed-1");
+
+    const legacy: SeedData = {
+      id: "seed-2",
+      type: "hd-seed",
+      algorithm: "raw",
+      extractable: true,
+      privateKey: new Uint8Array(bytes),
+    } as any;
+    const k2 = await generateEd25519FromSeed(legacy);
+    expect(k2.publicKey).toEqual(k.publicKey);
+  });
+
+  it("generateSecretKey stores arbitrary text verbatim", async () => {
+    const key = (await generateSecretKey({ value: "hello world" })) as SecretKeyData;
+    expect(key.type).toBe("secret-key");
+    expect(key.algorithm).toBe("raw");
+    expect(new TextDecoder().decode(key.privateKey!)).toBe("hello world");
+
+    const random = await generateSecretKey();
+    expect(random.privateKey?.length).toBe(32);
+  });
+
+  it("generateKey routes seed alias and secret-key", async () => {
+    const seed = (await generateKey({
+      keyData: {
+        type: "seed",
+        algorithm: "raw",
+        extractable: true,
+        metadata: {},
+      },
+    })) as SeedData;
+    expect(seed.type).toBe("seed");
+
+    const secret = (await generateKey({
+      keyData: {
+        type: "secret-key",
+        algorithm: "raw",
+        extractable: true,
+        metadata: { params: { value: "abc" } },
+      },
+    })) as SecretKeyData;
+    expect(secret.type).toBe("secret-key");
+    expect(new TextDecoder().decode(secret.privateKey!)).toBe("abc");
+  });
+
+  it("generateKey routes ed25519 + seed parent to generateEd25519FromSeed", async () => {
+    const mnemonic =
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    const seedBytes = await bip39.mnemonicToSeed(mnemonic);
+    const seed: SeedData = {
+      id: "seed-route",
+      type: "seed",
+      algorithm: "raw",
+      extractable: true,
+      privateKey: new Uint8Array(seedBytes),
+    } as any;
+    const key = (await generateKey({
+      keyData: {
+        type: "ed25519",
+        algorithm: "EdDSA",
+        extractable: true,
+        metadata: {},
+      },
+      parentKey: seed,
+    })) as Ed25519KeyData;
+    expect(key.type).toBe("ed25519");
+    expect(key.publicKey?.length).toBe(32);
+    expect(key.metadata?.parentKeyId).toBe("seed-route");
+  });
+
+  it("generateKey rejects ed25519 without a seed parent", async () => {
+    await expect(
+      generateKey({
+        keyData: {
+          type: "ed25519",
+          algorithm: "EdDSA",
+          extractable: true,
+          metadata: {},
+        },
+      }),
+    ).rejects.toThrow(/seed parent/);
+  });
+
+  it("generateKey falls back to WebCrypto subtle for unknown algorithms", async () => {
+    const key = await generateKey({
+      keyData: {
+        type: "ecc",
+        algorithm: "ECDSA",
+        extractable: true,
+        keyUsages: ["sign", "verify"],
+        metadata: { params: { namedCurve: "P-256" } },
+      },
+    });
+    expect(key.algorithm).toBe("ECDSA");
+    expect(key.privateKey).toBeDefined();
+    expect(key.publicKey).toBeDefined();
+    expect(key.metadata?.subtle).toBe(true);
   });
 });
