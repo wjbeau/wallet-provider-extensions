@@ -13,9 +13,16 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanim
 import { useProvider } from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { generateMnemonic, mnemonicToSeed } from "@scure/bip39";
+import { generateMnemonic, mnemonicToEntropy, entropyToMnemonic } from "@scure/bip39";
 import { useState, useEffect } from "react";
 import { Link } from "expo-router";
+import { seedToAlgo25Mnemonic } from "@/lib/algo25";
+
+/**
+ * Helper: classify a key entry as a "seed-like" entry.
+ * Accepts both the canonical `seed` type and the deprecated `hd-seed` alias.
+ */
+const isSeedLike = (k: { type: string }) => k.type === "seed" || k.type === "hd-seed";
 
 // No LayoutAnimation needed anymore
 const ROOT_COLORS = [
@@ -33,11 +40,18 @@ export default function Index() {
   const { keys, key, status } = useProvider();
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  // Selection is split: a root key (XHD basis) and a seed (standalone Ed25519
+  // basis) can be selected independently — switching one must not clear the
+  // other.
+  const [activeRoot, setActiveRoot] = useState<string | null>(null);
   const [activeSeed, setActiveSeed] = useState<string | null>(null);
 
-  const seeds = keys.filter((k) => k.type === "hd-seed");
+  const seeds = keys.filter(isSeedLike);
   const rootKeys = keys.filter((k) => k.type === "hd-root-key");
-  const derivedKeys = keys.filter((k) => k.type !== "hd-seed" && k.type !== "hd-root-key");
+  const ed25519Keys = keys.filter((k) => k.type === "ed25519");
+  const derivedKeys = keys.filter(
+    (k) => !isSeedLike(k) && k.type !== "hd-root-key" && k.type !== "ed25519",
+  );
 
   // Stable color mapping based on root hierarchy
   const allRootKeys = [...seeds, ...rootKeys];
@@ -67,128 +81,331 @@ export default function Index() {
     {} as Record<string, string>,
   );
 
-  // Effect to set the first root key as active if the current active seed is removed
+  // Keep `activeRoot` in sync with `activeSeed`: prefer the root whose
+  // `metadata.parentKeyId === activeSeed`. If the current `activeRoot` already
+  // belongs to the active seed, leave it as-is (so the user can switch between
+  // multiple roots under the same seed). Otherwise, fall back to the first
+  // root for the active seed, then to any root, then to null.
   useEffect(() => {
-    if (rootKeys.length > 0) {
-      // Check if activeSeed is null or if it no longer exists in rootKeys
-      if (!activeSeed || !rootKeys.some((k) => k.id === activeSeed)) {
-        setActiveSeed(rootKeys[0].id);
-      }
-    } else if (seeds.length > 0) {
-      // Fallback to seeds if no root keys
-      if (!activeSeed || !seeds.some((k) => k.id === activeSeed)) {
-        setActiveSeed(seeds[0].id);
-      }
+    const currentRoot = rootKeys.find((k) => k.id === activeRoot);
+    if (currentRoot && (!activeSeed || currentRoot.metadata?.parentKeyId === activeSeed)) {
+      return;
+    }
+    const rootForSeed = activeSeed
+      ? rootKeys.find((k) => k.metadata?.parentKeyId === activeSeed)
+      : undefined;
+    if (rootForSeed) {
+      setActiveRoot(rootForSeed.id);
+    } else if (rootKeys.length > 0) {
+      setActiveRoot(rootKeys[0].id);
+    } else if (activeRoot !== null) {
+      setActiveRoot(null);
+    }
+  }, [rootKeys, activeRoot, activeSeed]);
+
+  // Keep `activeSeed` valid against the current `seeds` list. Falls back to
+  // the first available seed, or null when none exist. Independent of
+  // `activeRoot`.
+  useEffect(() => {
+    if (activeSeed && seeds.some((k) => k.id === activeSeed)) return;
+    if (seeds.length > 0) {
+      setActiveSeed(seeds[0].id);
     } else if (activeSeed !== null) {
       setActiveSeed(null);
     }
-  }, [rootKeys, seeds, activeSeed]);
+  }, [seeds, activeSeed]);
 
-  const handleAddKey = async () => {
+  /**
+   * Derive an XHD Ed25519 key under the currently selected seed's root.
+   *
+   * If the active seed does not yet have an associated `hd-root-key`
+   * (e.g. an Algo25 seed was just imported, or the user switched to a
+   * different seed without a root), one is generated on demand before
+   * deriving the Ed25519 child.
+   */
+  const generateXhdEd25519FromRoot = async () => {
     if (!activeSeed) {
-      Alert.alert("No Seed Selected", "Please import a seed");
+      Alert.alert("No Seed Selected", "Please import or select a seed first.");
       return;
+    }
+    // Prefer the currently selected root if it belongs to the active seed.
+    // Otherwise fall back to any existing root for that seed, and only as a
+    // last resort generate a new one. This avoids creating duplicate roots
+    // (which would deterministically produce duplicate derived public keys)
+    // when a valid root is already selected.
+    const selectedRoot = rootKeys.find(
+      (k) => k.id === activeRoot && k.metadata?.parentKeyId === activeSeed,
+    );
+    let rootId =
+      selectedRoot?.id ?? rootKeys.find((k) => k?.metadata?.parentKeyId === activeSeed)?.id ?? null;
+    if (!rootId) {
+      rootId = await key.store.generate({
+        type: "hd-root-key",
+        algorithm: "raw",
+        extractable: true,
+        keyUsages: ["deriveKey", "deriveBits"],
+        params: { parentKeyId: activeSeed },
+      });
+      setActiveRoot(rootId);
     }
     // Pick the next available index for the derived key
     const nextIndex = keys.filter(
-      (k) => k.type === "hd-derived-ed25519" && k?.metadata?.parentKeyId === activeSeed,
+      (k) => k.type === "hd-derived-ed25519" && k?.metadata?.parentKeyId === rootId,
     ).length;
-    console.log(
-      "Next index:",
-      nextIndex,
-      keys.filter((k) => k.type === "hd-derived-ed25519"),
-    );
     const keyId = await key.store.generate({
       type: "hd-derived-ed25519",
       algorithm: "EdDSA",
       extractable: true,
       keyUsages: ["sign", "verify"],
       params: {
-        parentKeyId: activeSeed,
+        parentKeyId: rootId,
         context: 0,
         account: 0,
         index: nextIndex,
         derivation: 9,
       },
     });
-
     setActiveKey(keyId);
   };
 
-  const handleImportSeed = async () => {
-    try {
-      // Generate a new 24-word mnemonic
-      const mnemonic = generateMnemonic(wordlist, 256);
-      const seed = await mnemonicToSeed(mnemonic);
+  /**
+   * Derive a standalone Ed25519 key from the currently selected seed. Uses
+   * the keystore's `ed25519` + seed-parent code path (see
+   * `generateEd25519FromSeed`) — the seed's first 32 bytes become the
+   * Ed25519 seed.
+   */
+  const generateEd25519FromActiveSeed = async () => {
+    if (!activeSeed) {
+      Alert.alert("No Seed Selected", "Please import or select a seed first.");
+      return;
+    }
+    const keyId = await key.store.generate({
+      type: "ed25519",
+      algorithm: "EdDSA",
+      extractable: true,
+      keyUsages: ["sign", "verify"],
+      params: { parentKeyId: activeSeed },
+    });
+    setActiveKey(keyId);
+  };
 
-      const keyId = await key.store.import(
-        {
-          type: "hd-seed",
-          algorithm: "raw",
-          extractable: true,
-          keyUsages: ["deriveKey", "deriveBits"],
-          privateKey: seed,
-        },
-        "bytes",
-      );
+  const handleAddKey = () => {
+    const buttons: Array<{ text: string; onPress?: () => void; style?: "cancel" }> = [];
+    if (activeSeed) {
+      buttons.push({
+        text: "XHD Ed25519 from root",
+        onPress: () =>
+          generateXhdEd25519FromRoot().catch((e: any) => Alert.alert("Generate Failed", e.message)),
+      });
+      buttons.push({
+        text: "Standard Ed25519 from seed",
+        onPress: () =>
+          generateEd25519FromActiveSeed().catch((e: any) =>
+            Alert.alert("Generate Failed", e.message),
+          ),
+      });
+    }
+    if (buttons.length === 0) {
+      Alert.alert("Nothing to Generate", "Select a seed to generate a key from.");
+      return;
+    }
+    buttons.push({ text: "Cancel", style: "cancel" });
+    Alert.alert("Generate Key", "Choose what to derive:", buttons);
+  };
 
-      const rootKeyId = await key.store.generate({
-        type: "hd-root-key",
+  /**
+   * Import a fresh seed using the BIP39 24-word scheme and bootstrap an XHD
+   * tree (`seed` -> `hd-root-key` -> `hd-derived-ed25519`).
+   */
+  const importBip39Seed = async () => {
+    // Generate a 24-word BIP39 mnemonic and persist *only* the 32-byte
+    // entropy as the seed's `privateKey`. The mnemonic (and therefore every
+    // derivable key) can be deterministically reconstructed from the entropy
+    // alone via `entropyToMnemonic` — and the PBKDF2-stretched seed, when
+    // needed, can be re-derived from the mnemonic. No secrets in metadata.
+    const mnemonic = generateMnemonic(wordlist, 256);
+    const entropy = mnemonicToEntropy(mnemonic, wordlist); // 32 bytes for 24 words
+
+    const keyId = await key.store.import(
+      {
+        type: "seed",
         algorithm: "raw",
         extractable: true,
         keyUsages: ["deriveKey", "deriveBits"],
-        params: {
-          parentKeyId: keyId,
-        },
-      });
+        privateKey: entropy,
+        // Only non-secret provenance lives in metadata.
+        metadata: { scheme: "bip39" },
+      },
+      "bytes",
+    );
 
-      // Generate initial Account Key (index 0)
-      const initialKeyId = await key.store.generate({
-        type: "hd-derived-ed25519",
-        algorithm: "EdDSA",
+    const rootKeyId = await key.store.generate({
+      type: "hd-root-key",
+      algorithm: "raw",
+      extractable: true,
+      keyUsages: ["deriveKey", "deriveBits"],
+      params: { parentKeyId: keyId },
+    });
+
+    const initialKeyId = await key.store.generate({
+      type: "hd-derived-ed25519",
+      algorithm: "EdDSA",
+      extractable: true,
+      keyUsages: ["sign", "verify"],
+      params: {
+        parentKeyId: rootKeyId,
+        context: 0,
+        account: 0,
+        index: 0,
+        derivation: 9,
+      },
+    });
+
+    setActiveSeed(keyId);
+    setActiveRoot(rootKeyId);
+    setActiveKey(initialKeyId);
+
+    Alert.alert(
+      "BIP39 Wallet Created",
+      `Your 24-word BIP39 recovery phrase:\n\n${mnemonic}\n\nKeep this phrase safe!`,
+      [{ text: "OK" }],
+    );
+  };
+
+  /**
+   * Import a fresh seed using Algorand's Algo25 (25-word) scheme. The seed
+   * is a raw 32-byte payload — directly recoverable from the phrase.
+   */
+  const importAlgo25Seed = async () => {
+    const seed = crypto.getRandomValues(new Uint8Array(32));
+    const mnemonic = seedToAlgo25Mnemonic(seed);
+
+    const keyId = await key.store.import(
+      {
+        type: "seed",
+        algorithm: "raw",
         extractable: true,
-        keyUsages: ["sign", "verify"],
-        params: {
-          parentKeyId: rootKeyId,
-          context: 0,
-          account: 0,
-          index: 0,
-          derivation: 9,
+        keyUsages: ["deriveKey", "deriveBits"],
+        privateKey: seed,
+        metadata: { scheme: "algo25" },
+      },
+      "bytes",
+    );
+
+    const initialKeyId = await key.store.generate({
+      type: "ed25519",
+      algorithm: "EdDSA",
+      extractable: true,
+      keyUsages: ["sign", "verify"],
+      params: { parentKeyId: keyId },
+    });
+
+    setActiveSeed(keyId);
+    setActiveKey(initialKeyId);
+    Alert.alert(
+      "Algo25 Seed Created",
+      `Your 25-word Algo25 recovery phrase:\n\n${mnemonic}\n\nKeep this phrase safe!`,
+      [{ text: "OK" }],
+    );
+  };
+
+  const handleImportSeed = () => {
+    Alert.alert("Import Seed", "How would you like to represent the metadata for this import?", [
+      {
+        text: "BIP39 (24 words, XHD)",
+        onPress: () => importBip39Seed().catch((e: any) => Alert.alert("Import Failed", e.message)),
+      },
+      {
+        text: "Algo25 (25 words)",
+        onPress: () =>
+          importAlgo25Seed().catch((e: any) => Alert.alert("Import Failed", e.message)),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  const showRawKeyMaterial = (keyData: unknown) => {
+    Alert.alert(
+      "Key Material",
+      JSON.stringify(
+        keyData,
+        (_key, value) => {
+          if (value instanceof Uint8Array) {
+            return Array.from(value)
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("");
+          }
+          return value;
         },
-      });
+        2,
+      ),
+      [{ text: "OK" }],
+    );
+  };
 
-      setActiveSeed(rootKeyId);
-      setActiveKey(initialKeyId);
-
-      Alert.alert(
-        "Wallet Created",
-        `Your 24-word recovery phrase:\n\n${mnemonic}\n\nKeep this phrase safe!`,
-        [{ text: "OK" }],
-      );
-    } catch (error: any) {
-      Alert.alert("Import Failed", error.message);
-    }
+  /**
+   * Resolve the 32-byte entropy/seed bytes for a stored entry, when possible:
+   *  - `ed25519` keys store the BIP39 entropy directly as `privateKey`.
+   *  - `seed` (Algo25) stores the 32 raw bytes directly.
+   *  - `seed` (BIP39) stores the 32-byte entropy directly — the mnemonic and
+   *    any stretched seed can be deterministically re-derived from it.
+   *  Anything else (e.g. legacy 64-byte stretched seeds) returns `null`.
+   */
+  const tryResolveSeedEntropy = (keyData: any, _keyEntry: any): Uint8Array | null => {
+    const pk: Uint8Array | undefined = keyData?.privateKey;
+    if (pk instanceof Uint8Array && pk.length === 32) return pk;
+    return null;
   };
 
   const handleExportKey = async (id: string) => {
     try {
       const keyData = await key.store.export(id);
-      Alert.alert(
-        "Key Material",
-        JSON.stringify(
-          keyData,
-          (_key, value) => {
-            if (value instanceof Uint8Array) {
-              return Array.from(value)
-                .map((b) => b.toString(16).padStart(2, "0"))
-                .join("");
+      const entry = keys.find((k) => k.id === id);
+      const isExportableAsPhrase = !!entry && (isSeedLike(entry) || entry.type === "ed25519");
+
+      if (!isExportableAsPhrase) {
+        showRawKeyMaterial(keyData);
+        return;
+      }
+
+      const buttons: Array<{ text: string; onPress?: () => void; style?: "cancel" }> = [];
+      const entropy = tryResolveSeedEntropy(keyData, entry);
+
+      if (entropy) {
+        buttons.push({
+          text: "Show as BIP39",
+          onPress: () => {
+            try {
+              const mnemonic = entropyToMnemonic(entropy, wordlist);
+              Alert.alert("BIP39 Phrase", mnemonic, [{ text: "OK" }]);
+            } catch (e: any) {
+              Alert.alert("Export Failed", e.message);
             }
-            return value;
           },
-          2,
-        ),
-        [{ text: "OK" }],
+        });
+        buttons.push({
+          text: "Show as Algo25",
+          onPress: () => {
+            try {
+              const mnemonic = seedToAlgo25Mnemonic(entropy);
+              Alert.alert("Algo25 Phrase", mnemonic, [{ text: "OK" }]);
+            } catch (e: any) {
+              Alert.alert("Export Failed", e.message);
+            }
+          },
+        });
+      }
+      buttons.push({ text: "Show Raw", onPress: () => showRawKeyMaterial(keyData) });
+      buttons.push({ text: "Cancel", style: "cancel" });
+
+      Alert.alert(
+        "Export As",
+        entropy
+          ? "Choose a recovery format for this seed."
+          : "This seed has no recoverable 32-byte entropy. Showing raw material.",
+        buttons,
       );
+      if (!entropy) showRawKeyMaterial(keyData);
     } catch (error: any) {
       Alert.alert("Export Failed", error.message);
     }
@@ -360,25 +577,31 @@ export default function Index() {
                 <TouchableOpacity
                   style={[
                     styles.keyCard,
-                    activeSeed === item.id && styles.activeKeyCard,
-                    activeSeed === item.id && { borderColor: rootColor },
+                    activeRoot === item.id && styles.activeKeyCard,
+                    activeRoot === item.id && { borderColor: rootColor },
                   ]}
-                  onPress={() => setActiveSeed(item.id)}
+                  onPress={() => {
+                    setActiveRoot(item.id);
+                    const parentSeedId = item.metadata?.parentKeyId as string | undefined;
+                    if (parentSeedId && seeds.some((s) => s.id === parentSeedId)) {
+                      setActiveSeed(parentSeedId);
+                    }
+                  }}
                 >
                   <View style={styles.keyInfo}>
                     <View style={[styles.keyIconContainer, { backgroundColor: `${rootColor}15` }]}>
                       <MaterialCommunityIcons
                         name="key-chain"
                         size={20}
-                        color={activeSeed === item.id ? rootColor : `${rootColor}80`}
+                        color={activeRoot === item.id ? rootColor : `${rootColor}80`}
                       />
                     </View>
                     <View>
                       <Text
                         style={[
                           styles.keyType,
-                          activeSeed === item.id && styles.activeKeyType,
-                          activeSeed === item.id && { color: rootColor },
+                          activeRoot === item.id && styles.activeKeyType,
+                          activeRoot === item.id && { color: rootColor },
                         ]}
                       >
                         {item.type}
@@ -390,6 +613,73 @@ export default function Index() {
                             style={styles.warningIcon}
                           />
                         )}
+                      </Text>
+                      <Text style={styles.keyAddress}>{item.algorithm}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.keyActions}>
+                    <TouchableOpacity
+                      onPress={() => handleExportKey(item.id)}
+                      style={styles.actionIcon}
+                    >
+                      <MaterialCommunityIcons name="export-variant" size={24} color="#007AFF" />
+                      {item.extractable && <View style={styles.exportBadgeSmall} />}
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => key.store.remove(item.id)}>
+                      <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })
+        )}
+
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Ed25519 Keys</Text>
+        {ed25519Keys.length === 0 ? (
+          <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No standalone Ed25519 keys yet.</Text>
+          </Animated.View>
+        ) : (
+          ed25519Keys.map((item, i) => {
+            const parentColor = rootKeyColors[item.metadata?.parentKeyId as string] || "#5856D6";
+            return (
+              <Animated.View
+                key={item.id || i}
+                entering={FadeIn.duration(300)}
+                exiting={FadeOut.duration(300)}
+                layout={LinearTransition.springify()}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.keyCard,
+                    activeKey === item.id && styles.activeKeyCard,
+                    activeKey === item.id && { borderColor: parentColor },
+                  ]}
+                  onPress={() => setActiveKey(item.id)}
+                >
+                  <View style={styles.keyInfo}>
+                    <View
+                      style={[styles.keyIconContainer, { backgroundColor: `${parentColor}15` }]}
+                    >
+                      <MaterialCommunityIcons
+                        name="key-variant"
+                        size={20}
+                        color={activeKey === item.id ? parentColor : `${parentColor}80`}
+                      />
+                    </View>
+                    <View>
+                      <Text
+                        style={[
+                          styles.keyType,
+                          activeKey === item.id && styles.activeKeyType,
+                          activeKey === item.id && { color: parentColor },
+                        ]}
+                      >
+                        {item.type}
+                        {item.metadata?.scheme ? (
+                          <Text style={styles.keyIndex}> ({item.metadata.scheme as string})</Text>
+                        ) : null}
                       </Text>
                       <Text style={styles.keyAddress}>{item.algorithm}</Text>
                     </View>
@@ -461,7 +751,12 @@ export default function Index() {
                           />
                         )}
                       </Text>
-                      <Text style={styles.keyAddress}>{item.algorithm}</Text>
+                      <Text style={styles.keyAddress}>
+                        {item.algorithm}
+                        {(item as any).metadata?.scheme
+                          ? ` \u2022 ${String((item as any).metadata.scheme).toUpperCase()}`
+                          : ""}
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.keyActions}>

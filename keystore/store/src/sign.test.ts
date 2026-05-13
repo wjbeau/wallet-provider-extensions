@@ -1,5 +1,12 @@
+import { subtle } from "node:crypto";
+import * as bip39 from "@scure/bip39";
 import { describe, expect, it } from "vitest";
-import { generateKey, generateSeedData, generateXHDRootKeyFromSeed } from "./generate.ts";
+import {
+  generateEd25519FromSeed,
+  generateKey,
+  generateSeedData,
+  generateXHDRootKeyFromSeed,
+} from "./generate.ts";
 import { signWithKeyData, signXHDDomainP256KeyData, signXHDEd25519 } from "./sign.ts";
 import type { SeedData, XHDDerivedKeyData, XHDDomainP256KeyData } from "./types/index.ts";
 
@@ -113,7 +120,8 @@ describe("sign.ts", () => {
     expect(sig2?.length).toBe(64);
   });
 
-  it("signWithKeyData throws for unknown key type", async () => {
+  it("signWithKeyData falls back to subtle for unknown key types", async () => {
+    // No privateKey -> the subtle fallback should reject with a clear error
     const key = {
       id: "k1",
       type: "unknown",
@@ -124,7 +132,50 @@ describe("sign.ts", () => {
         key,
         data: makeUint8([1]),
       }),
-    ).rejects.toThrow("Unknown key type: unknown");
+    ).rejects.toThrow(/private key|WebCrypto|Unsupported/);
+  });
+
+  it("signWithKeyData uses subtle fallback to sign with a standalone Ed25519 key", async () => {
+    const seedBytes = await bip39.mnemonicToSeed(
+      "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+    );
+    const key = await generateEd25519FromSeed({
+      id: "seed-sign",
+      type: "seed",
+      algorithm: "raw",
+      extractable: true,
+      privateKey: new Uint8Array(seedBytes),
+    } as any);
+    const data = makeUint8([10, 20, 30]);
+    // Re-clone privateKey because signWithKeyData clears it in the finally block
+    const sig = await signWithKeyData({
+      key: { ...key, privateKey: new Uint8Array(key.privateKey as Uint8Array) },
+      data,
+    });
+    expect(sig.length).toBe(64);
+
+    const cryptoKey = await subtle.importKey(
+      "raw",
+      new Uint8Array(key.publicKey as Uint8Array),
+      { name: "Ed25519" },
+      false,
+      ["verify"],
+    );
+    expect(await subtle.verify({ name: "Ed25519" }, cryptoKey, sig, new Uint8Array(data))).toBe(
+      true,
+    );
+  });
+
+  it("signWithKeyData refuses to sign with a secret-key entry", async () => {
+    const key = {
+      id: "k1",
+      type: "secret-key",
+      algorithm: "raw",
+      privateKey: new Uint8Array([1, 2, 3]),
+    } as any;
+    await expect(signWithKeyData({ key, data: makeUint8([1]) })).rejects.toThrow(
+      /cannot be used to sign/,
+    );
   });
 
   it("signXHDEd25519 throws if rootKeyId mismatch", async () => {

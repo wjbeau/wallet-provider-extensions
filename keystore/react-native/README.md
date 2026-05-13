@@ -17,6 +17,23 @@ This architecture enables:
 - ✅ Non-custodial key management (users control keys)
 - ✅ Multi-account support from a single seed (Algorand's `m/44'/283'/account'/change/index`)
 - ✅ Ed25519 signing for Algorand
+- ✅ Standalone Ed25519 keys derived directly from a seed
+- ✅ XHD-derived P-256 keys (e.g. for passkeys / WebAuthn)
+
+## Supported Algorithms & Key Types
+
+The React Native backend implements a subset of the [`KeyType`](../store/src/types/core.ts) / [`Algorithm`](../store/src/types/core.ts) unions defined by `@algorandfoundation/keystore`:
+
+| Type                 | Algorithm | Description                                                                         |
+| -------------------- | --------- | ----------------------------------------------------------------------------------- |
+| `seed`               | `raw`     | BIP39 (24‑word) or Algo25 (25‑word) seed material; root of HD derivation            |
+| `hd-seed`            | `raw`     | **Deprecated** alias of `seed`, kept for backward compatibility                     |
+| `hd-root-key`        | `EdDSA`   | XHD root key derived from a `seed` — required parent for `hd-derived-ed25519`       |
+| `hd-derived-ed25519` | `EdDSA`   | XHD-derived Ed25519 child key (Algorand path `m/44'/283'/account'/change/index`)    |
+| `hd-derived-p256`    | `P256`    | XHD-derived P-256 child key (passkey / WebAuthn flows)                              |
+| `ed25519`            | `EdDSA`   | Standalone Ed25519 key derived directly from a `seed` parent (no XHD root required) |
+
+> `ed25519` and `hd-derived-*` keys both require a seed parent supplied via `params.parentKeyId`. Convert any mnemonic to a seed (`importSeed`) before calling `generate`. `RS256` / generic `ecc` / `secret-key` types from the core union are not currently implemented in this backend.
 
 ## Quick Start
 
