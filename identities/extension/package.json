@@ -36,8 +36,7 @@
     "@algorandfoundation/identities-keystore-extension": "workspace:*",
     "@algorandfoundation/identities-store": "workspace:*",
     "@algorandfoundation/keystore": "workspace:*",
-    "@algorandfoundation/wallet-provider": "catalog:",
-    "before-after-hook": "catalog:"
+    "@algorandfoundation/wallet-provider": "catalog:"
   },
   "devDependencies": {
     "@algorandfoundation/package-releaser": "workspace:*",
