@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AlgorandProvider, ReactNativeProvider } from "@/providers/ReactNativeProvider";
 import { install } from "react-native-quick-crypto";
 import { keyStore } from "@/stores/keystore";
@@ -13,6 +14,7 @@ import {
 } from "@algorandfoundation/keystore";
 import { Store } from "@tanstack/store";
 import { accountsStore } from "@/stores/accounts";
+import { identitiesStore } from "@/stores/identities";
 import type { ReactKeystoreOptions } from "@algorandfoundation/react-native-keystore";
 
 install();
@@ -42,14 +44,20 @@ export default function RootLayout() {
       provider={
         new ReactNativeProvider(
           {
-            id: "react-native-wallet",
-            name: "React Native Wallet",
+            id: "wallet-provider",
+            name: "Wallet Provider",
           },
           {
             logs: {},
             accounts: {
               store: accountsStore,
               hooks: accountHooks,
+              keystore: {
+                autoPopulate: true,
+              },
+            },
+            identities: {
+              store: identitiesStore,
               keystore: {
                 autoPopulate: true,
               },
@@ -63,7 +71,36 @@ export default function RootLayout() {
         )
       }
     >
-      <Stack />
+      <Stack
+        screenOptions={{
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "#F8F9FA" },
+          headerTitleStyle: { fontWeight: "bold" },
+          animation: "slide_from_right",
+          animationDuration: 250,
+        }}
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            title: "Wallet Provider",
+            headerLeft: () => (
+              <MaterialCommunityIcons
+                name="shield-lock"
+                size={24}
+                color="#5856D6"
+                style={{ marginLeft: 16, marginRight: 12 }}
+              />
+            ),
+          }}
+        />
+        <Stack.Screen name="keys/index" options={{ title: "Keystore" }} />
+        <Stack.Screen name="keys/[id]" options={{ title: "Key Details" }} />
+        <Stack.Screen name="accounts/index" options={{ title: "Accounts" }} />
+        <Stack.Screen name="accounts/[address]" options={{ title: "Account Details" }} />
+        <Stack.Screen name="identities/index" options={{ title: "Identities" }} />
+        <Stack.Screen name="identities/[address]" options={{ title: "Identity Details" }} />
+      </Stack>
     </AlgorandProvider>
   );
 }

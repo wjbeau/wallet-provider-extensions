@@ -2,6 +2,7 @@ packages:
   - "log"
   - "accounts/**"
   - "keystore/**"
+  - "identities/**"
   - "examples/react-native-wallet"
   - "build"
 

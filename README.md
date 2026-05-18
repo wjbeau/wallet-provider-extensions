@@ -18,14 +18,59 @@ An extension typically consists of:
 
 ## Available Extensions
 
-The following extension packages are available in this workspace:
+Each domain is built around a **generic store** that holds the canonical state and exposes a small, pure API. Stores are intentionally source-agnostic: they don't require a keystore — records can just as easily come from an RPC service, an indexer, a remote wallet, or any other producer.
 
-- **[Account Store](./accounts/store)**: Reactive store for managing accounts.
-- **[Accounts Keystore Bridge](./accounts/keystore-extension)**: Reference extension for bridging between the account store and keystore.
-- **[Keystore Core](./keystore/store)**: Core types and interfaces for secret management.
-- **[React Native Keystore](./keystore/react-native)**: Secure implementation for React Native using Keychain/MMKV.
-  - [**Integration Guide**](./keystore/react-native/BOOTSTRAPPING.md): Detailed guide on how to adopt the keystore in React Native.
-- **[Log Store](./log)**: Generalized logging extension for tracking wallet activity.
+On top of each store, the project ships optional **bridge extensions** that wire the store to a specific source (e.g. the local keystore), and a **unified/meta extension** per domain that bundles the store plus any optional bridges, conditionally enabling them only when the underlying dependency is present.
+
+> 💡 **Recommended:** For most developers, the **unified extension** for each domain is the best entry point. It hides the wiring between stores and bridges, conditionally enables capabilities based on what the provider exposes, and lets you opt down to the generic store or individual bridges only when you need finer control.
+
+### Keystore
+
+Cryptographic key material management — generation, derivation, and secure storage.
+
+**Unified Extension** _(recommended)_: _TODO — a `@algorandfoundation/keystore-extension` meta-package that composes the store with the best available platform bridge (RN, web, node) via conditional loading._
+
+Building blocks:
+
+- **Generic Store**: **[Keystore Core](./keystore/store)** — core types, interfaces, and the reactive store for secret management.
+- **Source Bridges**:
+  - **[React Native Keystore](./keystore/react-native)** — secure implementation for React Native using Keychain/MMKV.
+    - [**Integration Guide**](./keystore/react-native/BOOTSTRAPPING.md): how to adopt the keystore in React Native.
+
+### Accounts
+
+On-chain account lifecycle. Accounts may be backed by keystore-managed keys, **or** sourced from third parties such as RPC services, indexers, or watch-only feeds.
+
+**Unified Extension** _(recommended)_: _TODO — a `@algorandfoundation/accounts-extension` meta-package that wraps the account store and conditionally enables the keystore bridge (and future RPC/indexer bridges) based on what the provider exposes._
+
+Building blocks:
+
+- **Generic Store**: **[Account Store](./accounts/store)** — reactive store for managing accounts, independent of any specific source.
+- **Source Bridges**:
+  - **[Accounts Keystore Bridge](./accounts/keystore-extension)** — optional bridge that populates the account store from keystore-derived keys when a keystore is available.
+
+### Identities
+
+Decentralized identity (DID) management. Identities can be derived from keystore-managed seeds, but the store itself is generic and can equally hold imported, resolved, or remotely-issued DIDs.
+
+**Unified Extension** _(recommended)_: **[Identities Extension](./identities/extension)** — meta-package that bundles the identity store with the keystore bridge, dynamically loading the bridge only when the provider exposes a keystore.
+
+Building blocks:
+
+- **Generic Store**: **[Identity Store](./identities/store)** — reactive store for managing identities and DIDs.
+- **Source Bridges**:
+  - **[Identities Keystore Bridge](./identities/keystore-extension)** — optional bridge that builds DID documents from keystore-managed seeds and their derived keys.
+
+### Observability
+
+Cross-cutting extensions for tracking wallet activity.
+
+**Unified Extension** _(recommended)_: _TODO — a `@algorandfoundation/log-extension` meta-package that composes the log store with conditional sinks._
+
+Building blocks:
+
+- **Generic Store**: **[Log Store](./log)** — generalized logging store for wallet activity.
+- **Source Bridges**: _TODO — adapters that forward log entries to external sinks (remote telemetry, file, console transport, etc.)._
 
 ## Creating a New Extension
 

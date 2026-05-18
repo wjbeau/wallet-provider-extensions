@@ -205,6 +205,12 @@ importers:
       '@algorandfoundation/accounts-store':
         specifier: workspace:*
         version: link:../../accounts/store
+      '@algorandfoundation/identities-extension':
+        specifier: workspace:*
+        version: link:../../identities/extension
+      '@algorandfoundation/identities-store':
+        specifier: workspace:*
+        version: link:../../identities/store
       '@algorandfoundation/keystore':
         specifier: workspace:*
         version: link:../../keystore/store
@@ -332,6 +338,84 @@ importers:
       eslint-config-expo:
         specifier: ~10.0.0
         version: 10.0.0(eslint@9.39.4)(typescript@5.9.3)
+
+  identities/extension:
+    dependencies:
+      '@algorandfoundation/identities-keystore-extension':
+        specifier: workspace:*
+        version: link:../keystore-extension
+      '@algorandfoundation/identities-store':
+        specifier: workspace:*
+        version: link:../store
+      '@algorandfoundation/keystore':
+        specifier: workspace:*
+        version: link:../../keystore/store
+      '@algorandfoundation/wallet-provider':
+        specifier: 'catalog:'
+        version: 1.0.0-canary.5
+      '@tanstack/store':
+        specifier: 'catalog:'
+        version: 0.9.3
+      before-after-hook:
+        specifier: 'catalog:'
+        version: 4.0.0
+    devDependencies:
+      '@algorandfoundation/package-releaser':
+        specifier: workspace:*
+        version: link:../../build
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@types/node@25.5.0)(jsdom@20.0.3(canvas@2.11.2))(vite@6.4.1(@types/node@25.5.0)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
+
+  identities/keystore-extension:
+    dependencies:
+      '@algorandfoundation/identities-store':
+        specifier: workspace:*
+        version: link:../store
+      '@algorandfoundation/keystore':
+        specifier: workspace:*
+        version: link:../../keystore/store
+      '@algorandfoundation/wallet-provider':
+        specifier: 'catalog:'
+        version: 1.0.0-canary.5
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.0.0
+      '@tanstack/store':
+        specifier: 'catalog:'
+        version: 0.9.3
+      before-after-hook:
+        specifier: 'catalog:'
+        version: 4.0.0
+    devDependencies:
+      '@algorandfoundation/package-releaser':
+        specifier: workspace:*
+        version: link:../../build
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@types/node@25.5.0)(jsdom@20.0.3(canvas@2.11.2))(vite@6.4.1(@types/node@25.5.0)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
+
+  identities/store:
+    dependencies:
+      '@algorandfoundation/wallet-provider':
+        specifier: 'catalog:'
+        version: 1.0.0-canary.5
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.0.0
+      '@tanstack/store':
+        specifier: 'catalog:'
+        version: 0.9.3
+      before-after-hook:
+        specifier: 'catalog:'
+        version: 4.0.0
+    devDependencies:
+      '@algorandfoundation/package-releaser':
+        specifier: workspace:*
+        version: link:../../build
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@types/node@25.5.0)(jsdom@20.0.3(canvas@2.11.2))(vite@6.4.1(@types/node@25.5.0)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
 
   keystore/react-native:
     dependencies:

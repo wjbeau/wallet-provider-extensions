@@ -4,7 +4,16 @@
   "alwaysCreateEntryPointModule": true,
   "skipErrorChecking": true,
   "exclude": ["**/*.test.ts", "**/*.bench.ts"],
-  "entryPoints": ["keystore/store", "keystore/react-native", "log"],
+  "entryPoints": [
+    "keystore/store",
+    "keystore/react-native",
+    "accounts/store",
+    "accounts/keystore-extension",
+    "identities/extension",
+    "identities/store",
+    "identities/keystore-extension",
+    "log"
+  ],
   "externalSymbolLinkMappings": {
     "@algorandfoundation/xhd-wallet-api": {
       "KeyContext": "https://algorandfoundation.github.io/xhd-wallet-api/enums/KeyContext.html"

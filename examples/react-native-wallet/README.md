@@ -1,6 +1,6 @@
-# React Native Wallet (Extension Playground)
+# Wallet Provider (Test Harness)
 
-This is a comprehensive React Native wallet example that serves as the **playground for the [Wallet Provider Extensions](../../)** repository.
+This is a comprehensive React Native wallet example that serves as the **test harness for [Provider Extensions](../../)**.
 
 It demonstrates how to compose multiple extensions into a single, unified `Provider` instance and how to handle reactive state and type narrowing in a real-world application.
 

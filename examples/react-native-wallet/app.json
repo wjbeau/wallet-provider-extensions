@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "react-native-wallet",
-    "slug": "react-native-wallet",
+    "name": "Wallet Provider",
+    "slug": "wallet-provider",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
