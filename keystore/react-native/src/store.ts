@@ -40,10 +40,14 @@ import { commit, fetchSecret, storage } from "./storage/state.ts";
 import type { AuthenticationOptions } from "./types.ts";
 
 /**
- * Type guard for SeedData
+ * Type guard for {@link SeedData}.
+ *
+ * Accepts both the canonical `seed` type and the legacy `hd-seed` shape so
+ * that callers transitioning to the new model continue to work without
+ * changes.
  */
 function isSeedData(key: any): key is SeedData {
-  return key?.type === "hd-seed";
+  return key?.type === "seed" || key?.type === "hd-seed";
 }
 
 /**
@@ -133,11 +137,17 @@ export async function generateKey(options: {
     // If it's a seed, it must be "hd-seed" and have format "raw"
     // (We already ensure this in importSeed/importKey)
 
-    // Map our internal types to keystore types if needed
-    const mappedType = type === "ed25519" ? "ecc" : type;
+    // Map our internal types to keystore types if needed.
+    //
+    // NOTE: `ed25519` deliberately stays as `ed25519` so that the core
+    // keystore's `EdDSA` branch dispatches to `generateEd25519FromSeed`
+    // when a `seed`/`hd-seed` parent is provided. Mapping it to `ecc`
+    // (the previous behavior) routed it into the XHD/P256 path and
+    // caused: "XHD derived keys require a rootKeyId" for plain seeds.
+    const mappedType = type;
 
-    // If we are generating a P256 key, we need the root key
-    if (mappedType === "hd-derived-p256" || mappedType === "ecc" || algorithm === "P256") {
+    // If we are generating an XHD-derived P256 key, we need a root key.
+    if (mappedType === "hd-derived-p256" || algorithm === "P256") {
       let rootKey: XHDRootKey | null = null;
       if (isSeedData(parentKey)) {
         // Generate a temporary root key from the seed
@@ -265,7 +275,7 @@ export async function importSeed({
       store,
       keyData: {
         id: keyId,
-        type: "hd-seed",
+        type: "seed",
         name: name || "Imported Seed",
         algorithm: "raw",
         format: "bytes",
@@ -602,6 +612,8 @@ export async function importKey({
     }
 
     switch (keyData.type) {
+      // Accept both the legacy `hd-seed` shape and the canonical `seed` type.
+      case "seed":
       case "hd-seed": {
         if (
           typeof keyData.privateKey === "undefined" ||
@@ -615,7 +627,7 @@ export async function importKey({
           store,
           keyData: {
             id: keyId,
-            type: "hd-seed",
+            type: "seed",
             algorithm: "raw",
             format: "raw", // Must be "raw" for core keystore to recognize it as a seed
             extractable: true,

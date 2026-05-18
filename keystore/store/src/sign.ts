@@ -1,3 +1,4 @@
+import { subtle } from "node:crypto";
 import { clearKeyData, getBIP44PathFromContext } from "./crypto.ts";
 import { InvalidKeyDataError } from "./errors.ts";
 import { dp256, xhd } from "./libs.ts";
@@ -7,6 +8,111 @@ import type {
   XHDDomainP256KeyData,
   XHDRootKey,
 } from "./types/index.ts";
+
+/**
+ * Maps a high-level keystore algorithm name to a WebCrypto
+ * `AlgorithmIdentifier`/`SignAlgorithm` shape suitable for
+ * `subtle.importKey` and `subtle.sign`.
+ */
+function toSubtleAlgorithm(algorithm: string): {
+  importAlg: any;
+  signAlg: any;
+} {
+  switch (algorithm) {
+    case "EdDSA":
+    case "Ed25519":
+      return { importAlg: { name: "Ed25519" }, signAlg: { name: "Ed25519" } };
+    case "RS256":
+      return {
+        importAlg: { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        signAlg: { name: "RSASSA-PKCS1-v1_5" },
+      };
+    case "ES256":
+    case "P256":
+    case "P-256":
+      return {
+        importAlg: { name: "ECDSA", namedCurve: "P-256" },
+        signAlg: { name: "ECDSA", hash: "SHA-256" },
+      };
+    case "HMAC":
+      return {
+        importAlg: { name: "HMAC", hash: "SHA-256" },
+        signAlg: { name: "HMAC" },
+      };
+    default:
+      return {
+        importAlg: { name: algorithm },
+        signAlg: { name: algorithm },
+      };
+  }
+}
+
+/**
+ * Falls back to WebCrypto's {@link SubtleCrypto} to sign data using a key
+ * whose algorithm is not natively handled by the keystore. Supports keys
+ * stored as raw Ed25519 seeds (32 bytes) or as PKCS8/raw byte buffers.
+ *
+ * @example
+ * ```typescript
+ * const sig = await signWithSubtle({ key, data });
+ * ```
+ */
+export async function signWithSubtle({
+  key,
+  data,
+}: {
+  key: KeyData;
+  data: Uint8Array<ArrayBufferLike>;
+}): Promise<Uint8Array<ArrayBufferLike>> {
+  if (!(key.privateKey instanceof Uint8Array)) {
+    throw new InvalidKeyDataError("Key does not have a private key");
+  }
+
+  const { importAlg, signAlg } = toSubtleAlgorithm(key.algorithm);
+
+  let importFormat: "raw" | "pkcs8" =
+    key.format === "der" || key.format === "pkcs8" ? "pkcs8" : "raw";
+  let bytes: Uint8Array = key.privateKey;
+
+  // Standalone Ed25519 keys carry a 32-byte seed (or a 64-byte
+  // libsodium-style seed||public concatenation). WebCrypto's "raw"
+  // import uses the public key, so we must wrap the seed in PKCS8 to
+  // import the *private* key.
+  if (importAlg.name === "Ed25519") {
+    const seed = key.privateKey.length === 64 ? key.privateKey.subarray(0, 32) : key.privateKey;
+    if (seed.length !== 32) {
+      throw new InvalidKeyDataError(`Ed25519 private key must be 32 bytes (got ${seed.length})`);
+    }
+    // PKCS8 prefix for an Ed25519 private key wrapping a 32-byte seed.
+    const prefix = new Uint8Array([
+      0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04,
+      0x20,
+    ]);
+    bytes = new Uint8Array(prefix.length + seed.length);
+    bytes.set(prefix, 0);
+    bytes.set(seed, prefix.length);
+    importFormat = "pkcs8";
+  }
+
+  let cryptoKey: CryptoKey;
+  try {
+    cryptoKey = (await subtle.importKey(
+      importFormat,
+      new Uint8Array(bytes) as any,
+      importAlg,
+      false,
+      ["sign"] as KeyUsage[],
+    )) as CryptoKey;
+  } catch (error) {
+    throw new InvalidKeyDataError(
+      `WebCrypto sign fallback failed to import key for ${key.algorithm}`,
+      error as Error,
+    );
+  }
+
+  const sig = await subtle.sign(signAlg, cryptoKey, new Uint8Array(data));
+  return new Uint8Array(sig);
+}
 
 export async function signXHDDomainP256KeyData({
   key,
@@ -142,9 +248,17 @@ export async function signWithKeyData({
           data,
         });
       }
+      case "secret-key": {
+        throw new InvalidKeyDataError(
+          "secret-key entries are arbitrary user data and cannot be used to sign",
+        );
+      }
       default: {
-        // TODO: fallback to subtle and adopt it's interfaces
-        throw new InvalidKeyDataError(`Unknown key type: ${key.type}`);
+        // Fallback: hand the key off to WebCrypto's SubtleCrypto. This
+        // handles standalone Ed25519 keys (generated from a seed phrase),
+        // as well as RSA / ECDSA / HMAC keys produced via the WebCrypto
+        // generation fallback.
+        return signWithSubtle({ key, data });
       }
     }
   } finally {

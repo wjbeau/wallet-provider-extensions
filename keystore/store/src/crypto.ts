@@ -9,7 +9,14 @@ import {
 import { InvalidKeyDataError } from "./errors.ts";
 import type { Key, KeyData } from "./types/index.ts";
 
-export const derivableTypes: string[] = ["hd-root-key", "hd-derived-ed25519", "hd-derived-p256"];
+export const derivableTypes: string[] = [
+  "hd-root-key",
+  "hd-derived-ed25519",
+  "hd-derived-p256",
+  // Standalone Ed25519 keys are derived from a `seed`/`hd-seed` parent
+  // (see `generateEd25519FromSeed`), so they also require a parent key.
+  "ed25519",
+];
 
 export function requiresParentKey(key: Partial<Key>): boolean {
   return typeof key.type !== "undefined" && derivableTypes.includes(key.type);

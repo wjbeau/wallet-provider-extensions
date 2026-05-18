@@ -1,3 +1,9 @@
+# [accounts-keystore-extension@1.0.0-canary.5](https://github.com/algorandfoundation/wallet-provider-extensions/compare/accounts-keystore-extension@1.0.0-canary.4...accounts-keystore-extension@1.0.0-canary.5) (2026-05-13)
+
+### Features
+
+- web crypto fallback for keys and generic secret import ([f7481b1](https://github.com/algorandfoundation/wallet-provider-extensions/commit/f7481b1dc95014c1903a4351d5fffc8c9995e31a))
+
 # [accounts-keystore-extension@1.0.0-canary.4](https://github.com/algorandfoundation/wallet-provider-extensions/compare/accounts-keystore-extension@1.0.0-canary.3...accounts-keystore-extension@1.0.0-canary.4) (2026-04-16)
 
 ### Bug Fixes

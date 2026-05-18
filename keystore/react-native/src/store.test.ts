@@ -47,7 +47,7 @@ describe("react-native-keystore store.ts logic", () => {
       // Verify it was committed to storage
       const committed = await fetchSecret<any>({ keyId: id });
       expect(committed).toMatchObject({
-        type: "hd-seed",
+        type: "seed",
         name: "Raw Seed",
       });
       // Compare hex strings
@@ -90,10 +90,32 @@ describe("react-native-keystore store.ts logic", () => {
       expect(id).toBe("imported-key-id");
 
       const committed = await fetchSecret<any>({ keyId: id });
+      // The legacy `hd-seed` input is normalised to the canonical `seed` type.
       expect(committed).toMatchObject({
-        type: "hd-seed",
+        type: "seed",
       });
       // Compare hex strings
+      expect(Buffer.from(committed.privateKey).toString("hex")).toBe(expectedHex);
+    });
+
+    it("should import a KeyData object with the canonical `seed` type", async () => {
+      const rawSeed = new Uint8Array(64);
+      for (let i = 0; i < 64; i++) rawSeed[i] = 64 - i;
+      const expectedHex = Buffer.from(rawSeed).toString("hex");
+      const keyData = {
+        id: "imported-seed-id",
+        type: "seed" as const,
+        algorithm: "raw" as const,
+        format: "bytes" as const,
+        extractable: true,
+        keyUsages: ["deriveKey", "deriveBits"] as any,
+        privateKey: rawSeed,
+      };
+      const id = await importKey({ store, keyData });
+      expect(id).toBe("imported-seed-id");
+
+      const committed = await fetchSecret<any>({ keyId: id });
+      expect(committed).toMatchObject({ type: "seed" });
       expect(Buffer.from(committed.privateKey).toString("hex")).toBe(expectedHex);
     });
   });

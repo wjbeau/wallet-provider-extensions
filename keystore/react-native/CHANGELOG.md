@@ -1,3 +1,9 @@
+# [react-native-keystore@1.0.0-canary.12](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.11...react-native-keystore@1.0.0-canary.12) (2026-05-13)
+
+### Features
+
+- web crypto fallback for keys and generic secret import ([f7481b1](https://github.com/algorandfoundation/wallet-provider-extensions/commit/f7481b1dc95014c1903a4351d5fffc8c9995e31a))
+
 # [react-native-keystore@1.0.0-canary.11](https://github.com/algorandfoundation/wallet-provider-extensions/compare/react-native-keystore@1.0.0-canary.10...react-native-keystore@1.0.0-canary.11) (2026-04-16)
 
 ### Bug Fixes

@@ -61,6 +61,35 @@ For detailed information on types and methods, see the [TypeDocs](https://algora
 - [**`KeyStoreState`**](./src/types/extension.ts): Reactive state structure.
 - [**`Key`**](./src/types/core.ts): Metadata for a single key.
 
+## Supported Algorithms & Key Types
+
+The store defines the canonical [`KeyType`](./src/types/core.ts) and [`Algorithm`](./src/types/core.ts) unions used by every backend. Backends are free to implement a subset of these.
+
+### Algorithms
+
+| Algorithm | Description                                |
+| --------- | ------------------------------------------ |
+| `EdDSA`   | EdDSA using Ed25519 (signing/verification) |
+| `P256`    | ECDSA using P-256 and SHA-256              |
+| `RS256`   | RSA PKCS#1 v1.5 with SHA-256               |
+| `raw`     | Raw bytes (e.g. seed material)             |
+
+### Key Types
+
+| Type                 | Algorithm | Description                                                               |
+| -------------------- | --------- | ------------------------------------------------------------------------- |
+| `seed`               | `raw`     | BIP39 / Algo25 seed material used as a root for HD derivation             |
+| `hd-seed`            | `raw`     | **Deprecated** alias of `seed`, kept for backward compatibility           |
+| `hd-root-key`        | `EdDSA`   | XHD root key derived from a `seed` (basis for `hd-derived-ed25519`)       |
+| `hd-derived-ed25519` | `EdDSA`   | XHD-derived Ed25519 child key (Algorand `m/44'/283'/account'/change/idx`) |
+| `hd-derived-p256`    | `P256`    | XHD-derived P-256 child key                                               |
+| `ed25519`            | `EdDSA`   | Standalone Ed25519 key derived directly from a `seed` parent              |
+| `rsa`                | `RS256`   | RSA key pair (handed off to WebCrypto)                                    |
+| `ecc`                | `P256`    | Generic elliptic-curve key pair (handed off to WebCrypto)                 |
+| `secret-key`         | `raw`     | Arbitrary user-supplied symmetric/secret material                         |
+
+> Generation of `ed25519` and `hd-derived-*` keys requires a `seed` (or legacy `hd-seed`) parent — callers convert any mnemonic to a seed before calling `generate`. Unrecognized algorithms fall through to a `SubtleCrypto` WebCrypto fallback.
+
 ## Security
 
 The store is designed to be **UI-safe**. It only holds metadata and public identifiers. Private key material should **never** be stored in the reactive `keyStore` and should remain isolated within the backend implementation.
