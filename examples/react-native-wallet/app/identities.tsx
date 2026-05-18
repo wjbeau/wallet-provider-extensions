@@ -6,23 +6,63 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  Alert,
 } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
-import { useProvider } from "@/hooks/useProvider";
+import { useProvider, useIdentities, useKeys, useKeystoreStatus } from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extension";
-import { isWatchedAccount } from "@/extensions/example";
+import type { DIDDocument } from "@algorandfoundation/identities-store";
 
-export default function Accounts() {
-  const { accounts, status, account } = useProvider();
+export default function Identities() {
+  const { identity, key } = useProvider();
+  const identities = useIdentities();
+  const keys = useKeys();
+  const status = useKeystoreStatus();
 
-  const handleRemoveAccount = async (address: string) => {
+  const handleRemoveIdentity = async (address: string) => {
     try {
-      await account.store.removeAccount(address);
+      await identity.store.removeIdentity(address);
     } catch (error: any) {
-      console.error("Failed to remove account", error);
+      console.error("Failed to remove identity", error);
     }
+  };
+
+  const handleGenerateIdentity = async () => {
+    try {
+      const rootKeys = keys.filter((k) => k.type === "hd-root-key");
+      if (rootKeys.length === 0) {
+        Alert.alert("No Root Key", "Please import or generate a seed first on the Keys page.");
+        return;
+      }
+
+      const activeSeed = rootKeys[0].id;
+      // Find next index for context 1
+      const context1Keys = keys.filter(
+        (k) => k.metadata?.context === 1 && k.metadata?.parentKeyId === activeSeed,
+      );
+      const nextIndex = context1Keys.length;
+
+      await key.store.generate({
+        type: "hd-derived-ed25519",
+        algorithm: "EdDSA",
+        extractable: true,
+        keyUsages: ["sign", "verify"],
+        params: {
+          parentKeyId: activeSeed,
+          context: 1, // Context 1 is for Identities
+          account: 0,
+          index: nextIndex,
+          derivation: 9,
+        },
+      });
+    } catch (error: any) {
+      Alert.alert("Failed to generate identity key", error.message);
+    }
+  };
+
+  const handleExportDidDocument = (doc: DIDDocument) => {
+    Alert.alert("DID Document", JSON.stringify(doc, null, 2), [{ text: "OK" }]);
   };
 
   return (
@@ -30,7 +70,7 @@ export default function Accounts() {
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
         <View>
-          <Text style={styles.welcomeText}>Wallet Accounts</Text>
+          <Text style={styles.welcomeText}>Wallet Identities</Text>
           <View style={styles.statusBadge}>
             <View
               style={[
@@ -44,22 +84,40 @@ export default function Accounts() {
             <Text style={styles.statusText}>{status}</Text>
           </View>
         </View>
-        <Link href="/" asChild>
-          <TouchableOpacity style={styles.navButton}>
-            <MaterialCommunityIcons name="key" size={24} color="#007AFF" />
-            <Text style={styles.navButtonText}>Keys</Text>
-          </TouchableOpacity>
-        </Link>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Link href="/accounts" asChild>
+            <TouchableOpacity style={[styles.navButton, { marginRight: 8 }]}>
+              <MaterialCommunityIcons name="account-group" size={24} color="#007AFF" />
+              <Text style={styles.navButtonText}>Accounts</Text>
+            </TouchableOpacity>
+          </Link>
+          <Link href="/" asChild>
+            <TouchableOpacity style={styles.navButton}>
+              <MaterialCommunityIcons name="key" size={24} color="#007AFF" />
+              <Text style={styles.navButtonText}>Keys</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Total Accounts</Text>
-          <Text style={styles.balanceAmount}>{accounts.length}</Text>
+          <Text style={styles.balanceLabel}>Total Identities</Text>
+          <Text style={styles.balanceAmount}>{identities.length}</Text>
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => account.store.clear()}
+              onPress={handleGenerateIdentity}
+              disabled={status !== "idle"}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: "#E8F5E9" }]}>
+                <MaterialCommunityIcons name="shield-plus-outline" size={24} color="#4CAF50" />
+              </View>
+              <Text style={styles.actionText}>Generate</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => identity.store.clear()}
               disabled={status !== "idle"}
             >
               <View style={[styles.iconCircle, { backgroundColor: "#FFF3E0" }]}>
@@ -70,66 +128,14 @@ export default function Accounts() {
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Accounts</Text>
-        {accounts.length === 0 ? (
+        <Text style={styles.sectionTitle}>Identities</Text>
+        {identities.length === 0 ? (
           <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No accounts found.</Text>
+            <Text style={styles.emptyStateText}>No identities found.</Text>
+            <Text style={styles.emptyStateSubtext}>Generate one to get started with DIDs.</Text>
           </Animated.View>
         ) : (
-          accounts.map((item, i) => {
-            let content;
-            switch (true) {
-              case isKeystoreAccount(item):
-                content = (
-                  <>
-                    <View style={[styles.accountIconContainer, { backgroundColor: "#E3F2FD" }]}>
-                      <MaterialCommunityIcons name="shield-key" size={24} color="#1976D2" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.accountAddress} numberOfLines={1} ellipsizeMode="middle">
-                        {item.address}
-                      </Text>
-                      <Text style={styles.accountTypeLabel}>Keystore Account</Text>
-                    </View>
-                  </>
-                );
-                break;
-              case isWatchedAccount(item):
-                content = (
-                  <>
-                    <View style={[styles.accountIconContainer, { backgroundColor: "#F3E5F5" }]}>
-                      <MaterialCommunityIcons name="eye-outline" size={24} color="#7B1FA2" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.accountAddress} numberOfLines={1} ellipsizeMode="middle">
-                        {item.address}
-                      </Text>
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Text style={styles.accountTypeLabel}>Watched Account</Text>
-                        {item.name && <Text style={styles.accountMetadata}> • {item.name}</Text>}
-                      </View>
-                    </View>
-                  </>
-                );
-                break;
-              default:
-                content = (
-                  <>
-                    <View style={styles.accountIconContainer}>
-                      <MaterialCommunityIcons name="account" size={24} color="#007AFF" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.accountAddress} numberOfLines={1} ellipsizeMode="middle">
-                        {item.address}
-                      </Text>
-                      {item.metadata?.name && (
-                        <Text style={styles.accountMetadata}>{item.metadata.name}</Text>
-                      )}
-                    </View>
-                  </>
-                );
-            }
-
+          identities.map((item, i) => {
             return (
               <Animated.View
                 key={item.address || i}
@@ -137,10 +143,34 @@ export default function Accounts() {
                 exiting={FadeOut.duration(300)}
                 layout={LinearTransition.springify()}
               >
-                <View style={styles.accountCard}>
-                  <View style={styles.accountInfo}>{content}</View>
-                  <View style={styles.accountActions}>
-                    <TouchableOpacity onPress={() => handleRemoveAccount(item.address)}>
+                <View style={styles.identityCard}>
+                  <View style={styles.identityInfo}>
+                    <View style={styles.identityIconContainer}>
+                      <MaterialCommunityIcons
+                        name="shield-account-outline"
+                        size={24}
+                        color="#007AFF"
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.identityAddress} numberOfLines={1} ellipsizeMode="middle">
+                        {item.address}
+                      </Text>
+                      <Text style={styles.identityTypeLabel}>{item.type}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.identityActions}>
+                    <TouchableOpacity
+                      onPress={() => item.didDocument && handleExportDidDocument(item.didDocument)}
+                      style={{ marginRight: 12 }}
+                    >
+                      <MaterialCommunityIcons
+                        name="file-document-outline"
+                        size={24}
+                        color="#007AFF"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleRemoveIdentity(item.address)}>
                       <MaterialCommunityIcons name="delete-outline" size={24} color="#FF3B30" />
                     </TouchableOpacity>
                   </View>
@@ -270,7 +300,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 8,
   },
-  accountCard: {
+  identityCard: {
     backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
@@ -284,12 +314,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  accountInfo: {
+  identityInfo: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
-  accountIconContainer: {
+  identityIconContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -298,24 +328,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  accountAddress: {
+  identityAddress: {
     fontSize: 16,
     color: "#1A1A1A",
     fontWeight: "600",
     fontFamily: "System",
   },
-  accountTypeLabel: {
+  identityTypeLabel: {
     fontSize: 10,
     color: "#999",
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  accountMetadata: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 2,
-  },
-  accountActions: {
+  identityActions: {
+    flexDirection: "row",
+    alignItems: "center",
     marginLeft: 12,
   },
   emptyState: {
@@ -331,5 +358,12 @@ const styles = StyleSheet.create({
   emptyStateText: {
     color: "#999",
     fontSize: 16,
+    fontWeight: "600",
+  },
+  emptyStateSubtext: {
+    color: "#AAA",
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "center",
   },
 });

@@ -205,6 +205,12 @@ importers:
       '@algorandfoundation/accounts-store':
         specifier: workspace:*
         version: link:../../accounts/store
+      '@algorandfoundation/identities-extension':
+        specifier: workspace:*
+        version: link:../../identities/extension
+      '@algorandfoundation/identities-store':
+        specifier: workspace:*
+        version: link:../../identities/store
       '@algorandfoundation/keystore':
         specifier: workspace:*
         version: link:../../keystore/store
@@ -326,6 +332,84 @@ importers:
       eslint-config-expo:
         specifier: ~10.0.0
         version: 10.0.0(eslint@9.39.4)(typescript@5.9.3)
+
+  identities/extension:
+    dependencies:
+      '@algorandfoundation/identities-keystore-extension':
+        specifier: workspace:*
+        version: link:../keystore-extension
+      '@algorandfoundation/identities-store':
+        specifier: workspace:*
+        version: link:../store
+      '@algorandfoundation/keystore':
+        specifier: workspace:*
+        version: link:../../keystore/store
+      '@algorandfoundation/wallet-provider':
+        specifier: 'catalog:'
+        version: 1.0.0-canary.5
+      '@tanstack/store':
+        specifier: 'catalog:'
+        version: 0.9.3
+      before-after-hook:
+        specifier: 'catalog:'
+        version: 4.0.0
+    devDependencies:
+      '@algorandfoundation/package-releaser':
+        specifier: workspace:*
+        version: link:../../build
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@types/node@25.5.0)(jsdom@20.0.3(canvas@2.11.2))(vite@6.4.1(@types/node@25.5.0)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
+
+  identities/keystore-extension:
+    dependencies:
+      '@algorandfoundation/identities-store':
+        specifier: workspace:*
+        version: link:../store
+      '@algorandfoundation/keystore':
+        specifier: workspace:*
+        version: link:../../keystore/store
+      '@algorandfoundation/wallet-provider':
+        specifier: 'catalog:'
+        version: 1.0.0-canary.5
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.0.0
+      '@tanstack/store':
+        specifier: 'catalog:'
+        version: 0.9.3
+      before-after-hook:
+        specifier: 'catalog:'
+        version: 4.0.0
+    devDependencies:
+      '@algorandfoundation/package-releaser':
+        specifier: workspace:*
+        version: link:../../build
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@types/node@25.5.0)(jsdom@20.0.3(canvas@2.11.2))(vite@6.4.1(@types/node@25.5.0)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
+
+  identities/store:
+    dependencies:
+      '@algorandfoundation/wallet-provider':
+        specifier: 'catalog:'
+        version: 1.0.0-canary.5
+      '@scure/base':
+        specifier: 'catalog:'
+        version: 2.0.0
+      '@tanstack/store':
+        specifier: 'catalog:'
+        version: 0.9.3
+      before-after-hook:
+        specifier: 'catalog:'
+        version: 4.0.0
+    devDependencies:
+      '@algorandfoundation/package-releaser':
+        specifier: workspace:*
+        version: link:../../build
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.2(@types/node@25.5.0)(jsdom@20.0.3(canvas@2.11.2))(vite@6.4.1(@types/node@25.5.0)(lightningcss@1.32.0)(terser@5.46.1)(yaml@2.8.3))
 
   keystore/react-native:
     dependencies:
@@ -10926,9 +11010,9 @@ snapshots:
       '@typescript-eslint/eslint-plugin': 8.58.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4)(typescript@5.9.3)
       '@typescript-eslint/parser': 8.58.0(eslint@9.39.4)(typescript@5.9.3)
       eslint: 9.39.4
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4)
       eslint-plugin-expo: 1.0.0(eslint@9.39.4)(typescript@5.9.3)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4))(eslint@9.39.4)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4)
       eslint-plugin-react: 7.37.5(eslint@9.39.4)
       eslint-plugin-react-hooks: 5.2.0(eslint@9.39.4)
       globals: 16.5.0
@@ -10946,7 +11030,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -10957,18 +11041,18 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4))(eslint@9.39.4)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4))(eslint@9.39.4):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.58.0(eslint@9.39.4)(typescript@5.9.3)
       eslint: 9.39.4
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -10981,7 +11065,7 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4))(eslint@9.39.4):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -10992,7 +11076,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4))(eslint@9.39.4))(eslint@9.39.4)
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

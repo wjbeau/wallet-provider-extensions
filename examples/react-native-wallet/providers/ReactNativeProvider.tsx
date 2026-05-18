@@ -10,6 +10,7 @@ import {
   KeystoreAccount,
   WithAccountsKeystore,
 } from "@algorandfoundation/accounts-keystore-extension";
+import { WithIdentities, type IdentitiesExtension } from "@algorandfoundation/identities-extension";
 import { WithWatchedAccount, WatchedAccount } from "@/extensions/example";
 
 export type AppAccount = WatchedAccount | KeystoreAccount | Account;
@@ -29,6 +30,7 @@ export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXT
     WithKeyStore,
     WithAccountStore<AppAccount>,
     WithAccountsKeystore,
+    WithIdentities,
     WithWatchedAccount,
   ] as const;
 
@@ -38,6 +40,8 @@ export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXT
   accounts!: AppAccount[];
   /** Reactive array of log messages */
   logs!: LogMessage[];
+  /** Reactive array of identities */
+  identities!: IdentitiesExtension["identities"];
   /** Current status of the keystore (e.g., 'idle', 'generating') */
   status!: string;
 
@@ -54,6 +58,8 @@ export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXT
   };
   /** API for logging operations */
   log!: LogStoreApi;
+  /** API for identity operations */
+  identity!: IdentitiesExtension["identity"];
 }
 
 export const AlgorandContext = createContext<null | ReactNativeProvider>(null);

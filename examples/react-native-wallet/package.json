@@ -14,6 +14,8 @@
   "dependencies": {
     "@algorandfoundation/accounts-keystore-extension": "workspace:*",
     "@algorandfoundation/accounts-store": "workspace:*",
+    "@algorandfoundation/identities-extension": "workspace:*",
+    "@algorandfoundation/identities-store": "workspace:*",
     "@algorandfoundation/keystore": "workspace:*",
     "@algorandfoundation/log-store": "workspace:*",
     "@algorandfoundation/react-native-keystore": "workspace:*",
