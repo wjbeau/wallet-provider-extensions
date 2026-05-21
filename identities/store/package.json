@@ -1,6 +1,6 @@
 {
   "name": "@algorandfoundation/identities-store",
-  "version": "1.0.0-canary.0",
+  "version": "1.0.0-canary.1",
   "description": "Identities Store for Wallet Provider Extensions.",
   "license": "Apache-2.0",
   "author": "Algorand Foundation",
