@@ -118,13 +118,18 @@ export interface KeyStoreAPI {
   ): Promise<Uint8Array>;
 
   /**
-   * Imports a raw seed (64 bytes / 512 bits) or a BIP39 mnemonic for HD wallets.
+   * Imports a raw seed (64 bytes / 512 bits) for HD wallets.
    *
-   * @param seed - The raw seed bytes or BIP39 mnemonic string.
+   * Accepts seed **bytes only**. A BIP39 mnemonic must be converted to seed
+   * bytes at the call site (e.g. `bip39.mnemonicToSeed`) so the mnemonic
+   * string never crosses into the keystore — an immutable JS string can't be
+   * wiped and would linger in the heap until GC.
+   *
+   * @param seed - The raw seed bytes.
    * @param options - Optional configuration for the seed.
    * @returns The {@link KeyId} assigned to the seed.
    */
-  importSeed?(seed: Uint8Array | string, options?: KeyOptions): Promise<KeyId>;
+  importSeed?(seed: Uint8Array, options?: KeyOptions): Promise<KeyId>;
 
   /**
    * Derives a new key from a seed using HD derivation path.
