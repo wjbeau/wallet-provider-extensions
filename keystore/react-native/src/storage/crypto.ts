@@ -5,20 +5,26 @@ import type { AuthenticationOptions } from "../types.ts";
 const ALGORITHM = "aes-256-gcm";
 const MASTER_KEY_CACHE_MS = 60_000;
 
-let cachedMasterKey: Buffer | null = null;
+let cachedMasterKey: Buffer | undefined;
 let cachedMasterKeyExpiresAt = 0;
 
-function getCachedMasterKey(): Buffer | null {
+function clearCachedMasterKey() {
+  cachedMasterKey?.fill(0);
+  cachedMasterKey = undefined;
+  cachedMasterKeyExpiresAt = 0;
+}
+
+function getCachedMasterKey(): Buffer | undefined {
   if (!cachedMasterKey || Date.now() > cachedMasterKeyExpiresAt) {
-    cachedMasterKey = null;
-    cachedMasterKeyExpiresAt = 0;
-    return null;
+    clearCachedMasterKey();
+    return undefined;
   }
 
   return Buffer.from(cachedMasterKey);
 }
 
 function cacheMasterKey(key: Buffer) {
+  clearCachedMasterKey();
   cachedMasterKey = Buffer.from(key);
   cachedMasterKeyExpiresAt = Date.now() + MASTER_KEY_CACHE_MS;
 }

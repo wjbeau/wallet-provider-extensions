@@ -118,7 +118,7 @@ export interface KeyStoreAPI {
   ): Promise<Uint8Array>;
 
   /**
-   * Imports a raw seed (64 bytes / 512 bits) for HD wallets.
+   * Imports raw seed bytes for HD wallets.
    *
    * Accepts seed **bytes only**. A BIP39 mnemonic must be converted to seed
    * bytes at the call site (e.g. `bip39.mnemonicToSeed`) so the mnemonic
