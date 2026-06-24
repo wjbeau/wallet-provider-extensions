@@ -217,7 +217,7 @@ export const WithKeyStore: Extension<KeyStoreExtension> = (
               clearKeyData(key);
             }
           }),
-        /** Imports a raw seed or BIP39 mnemonic for HD wallet derivation */
+        /** Imports a raw seed for HD wallet derivation (convert any mnemonic to seed bytes first) */
         importSeed: (seed, options): Promise<KeyId> =>
           store.importSeed({
             store: keyStore,

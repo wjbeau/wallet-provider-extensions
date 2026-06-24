@@ -28,14 +28,6 @@ describe("react-native-keystore store.ts logic", () => {
   describe("importSeed", () => {
     const store = new Store<KeyStoreState>({ keys: [], status: "idle" });
 
-    it("should throw an error for mnemonic import as it is not implemented", async () => {
-      const mnemonic =
-        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-      await expect(importSeed({ store, seed: mnemonic })).rejects.toThrow(
-        "Mnemonic import is not implemented yet",
-      );
-    });
-
     it("should import a raw Uint8Array seed", async () => {
       const rawSeed = new Uint8Array(64);
       for (let i = 0; i < 64; i++) rawSeed[i] = i;

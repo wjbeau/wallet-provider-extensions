@@ -254,7 +254,7 @@ export async function importSeed({
   authenticationOptions,
 }: {
   store: Store<KeyStoreState>;
-  seed: Uint8Array | string;
+  seed: Uint8Array;
   name?: string;
   id?: KeyId;
   authenticationOptions?: AuthenticationOptions;
@@ -266,9 +266,6 @@ export async function importSeed({
   const metadata: any = {};
 
   try {
-    if (typeof seed === "string") {
-      throw new InvalidKeyDataError("Mnemonic import is not implemented yet");
-    }
     privateKey = seed;
 
     await commit({
