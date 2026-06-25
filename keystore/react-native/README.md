@@ -6,7 +6,7 @@ A secure key management system for the Algorand Wallet Provider. Manage cryptogr
 
 Building a non-custodial wallet requires a **secure, isolated key vault**. The Keystore Extension separates key management from wallet logic:
 
-- **Users** enter a BIP39 mnemonic in the app, which converts it to seed bytes before import
+- **Users** enter a BIP39 mnemonic
 - **Wallet UI** requests signatures without ever seeing the seed or private keys
 - **Keystore backend** handles all cryptographic operations securely
 - **Keys are cleared from memory** immediately after use, never staying in memory
