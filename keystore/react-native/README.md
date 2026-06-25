@@ -6,7 +6,7 @@ A secure key management system for the Algorand Wallet Provider. Manage cryptogr
 
 Building a non-custodial wallet requires a **secure, isolated key vault**. The Keystore Extension separates key management from wallet logic:
 
-- **Users** import their BIP39 mnemonic once
+- **Users** enter a BIP39 mnemonic
 - **Wallet UI** requests signatures without ever seeing the seed or private keys
 - **Keystore backend** handles all cryptographic operations securely
 - **Keys are cleared from memory** immediately after use, never staying in memory
@@ -33,7 +33,7 @@ The React Native backend implements a subset of the [`KeyType`](../store/src/typ
 | `hd-derived-p256`    | `P256`    | XHD-derived P-256 child key (passkey / WebAuthn flows)                              |
 | `ed25519`            | `EdDSA`   | Standalone Ed25519 key derived directly from a `seed` parent (no XHD root required) |
 
-> `ed25519` and `hd-derived-*` keys both require a seed parent supplied via `params.parentKeyId`. Convert any mnemonic to a seed (`importSeed`) before calling `generate`. `RS256` / generic `ecc` / `secret-key` types from the core union are not currently implemented in this backend.
+> `ed25519` and `hd-derived-*` keys both require a seed parent supplied via `params.parentKeyId`. Convert any BIP39 mnemonic to seed bytes before calling `importSeed`, then use the resulting seed ID when calling `generate`. `RS256` / generic `ecc` / `secret-key` types from the core union are not currently implemented in this backend.
 
 ## Quick Start
 
@@ -95,14 +95,19 @@ const signature = await provider.keystore.sign(keyId, data);
 // Private key never exposed — signature is returned directly
 ```
 
-### 4. Import a BIP39 Mnemonic
+### 4. Convert a BIP39 Mnemonic to Seed Bytes and Import It
 
 ```typescript
-// User provides their 25-word seed phrase
+import { mnemonicToSeed } from "@scure/bip39";
+
+// User provides their BIP39 mnemonic
 const mnemonic = "abandon abandon abandon ... about";
 
-const seedId = await provider.keystore.importSeed(mnemonic);
-// Seed is securely stored; never exposed to the wallet UI
+// Convert the BIP39 mnemonic outside the keystore so the mnemonic string never enters it
+const seed = await mnemonicToSeed(mnemonic);
+
+const seedId = await provider.keystore.importSeed(seed);
+// Seed bytes are securely stored; the BIP39 mnemonic itself is not passed to the keystore
 ```
 
 ### 5. Derive Multiple Accounts
@@ -130,9 +135,10 @@ const sig1 = await provider.keystore.sign(account1, data);
 // Generate a new key
 const keyId = await provider.keystore.generate(options);
 
-// Import a key or seed
+// Import a key or raw seed bytes
 const keyId = await provider.keystore.import(keyData, format);
-const seedId = await provider.keystore.importSeed(seed);
+const seedBytes = await mnemonicToSeed(mnemonic);
+const seedId = await provider.keystore.importSeed(seedBytes);
 
 // Export public key (private key never exported)
 const keyData = await provider.keystore.export(keyId);
@@ -163,6 +169,8 @@ await provider.keystore.clear();
 
 ### Seeds (BIP39)
 
+- ✅ **BIP39 mnemonic strings stay outside** the keystore API
+- ✅ **Only seed bytes are imported** into the keystore
 - ✅ **Never exported** after import
 - ✅ **Never shared** with wallet UI
 - ✅ **Derivation happens inside** the secure backend

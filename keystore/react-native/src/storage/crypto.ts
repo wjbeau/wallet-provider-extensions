@@ -3,12 +3,42 @@ import { createCipheriv, createDecipheriv, randomBytes } from "react-native-quic
 import type { AuthenticationOptions } from "../types.ts";
 
 const ALGORITHM = "aes-256-gcm";
+const MASTER_KEY_CACHE_MS = 60_000;
+
+let cachedMasterKey: Buffer | undefined;
+let cachedMasterKeyExpiresAt = 0;
+
+function clearCachedMasterKey() {
+  cachedMasterKey?.fill(0);
+  cachedMasterKey = undefined;
+  cachedMasterKeyExpiresAt = 0;
+}
+
+function getCachedMasterKey(): Buffer | undefined {
+  if (!cachedMasterKey || Date.now() > cachedMasterKeyExpiresAt) {
+    clearCachedMasterKey();
+    return undefined;
+  }
+
+  return Buffer.from(cachedMasterKey);
+}
+
+function cacheMasterKey(key: Buffer) {
+  clearCachedMasterKey();
+  cachedMasterKey = Buffer.from(key);
+  cachedMasterKeyExpiresAt = Date.now() + MASTER_KEY_CACHE_MS;
+}
 
 /**
  * Retrieves the master key from the Keychain, or generates a new one if it doesn't exist.
  * @returns The master key as a Buffer
  */
 export async function getMasterKey(options?: AuthenticationOptions): Promise<Buffer> {
+  if (options?.biometrics) {
+    const cached = getCachedMasterKey();
+    if (cached) return cached;
+  }
+
   const prompt = options?.prompt ?? "Authenticate to secure your wallet";
   const authenticationPrompt =
     typeof prompt === "string"
@@ -27,16 +57,19 @@ export async function getMasterKey(options?: AuthenticationOptions): Promise<Buf
     authenticationPrompt,
   });
   if (credentials) {
-    return Buffer.from(credentials.password, "hex");
+    const key = Buffer.from(credentials.password, "hex");
+    if (options?.biometrics) cacheMasterKey(key);
+    return key;
   }
 
   // Create new random key
-  const newKey = randomBytes(32); // TODO: harden entropy
+  const newKey = Buffer.from(randomBytes(32)); // TODO: harden entropy
   await Keychain.setGenericPassword("master", newKey.toString("hex"), {
     service: "app-secret",
     ...biometricOptions,
   });
 
+  if (options?.biometrics) cacheMasterKey(newKey);
   return Buffer.from(newKey);
 }
 
