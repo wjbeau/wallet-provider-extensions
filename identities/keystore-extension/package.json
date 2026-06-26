@@ -1,5 +1,5 @@
 {
-  "name": "@algorandfoundation/identities-keystore-extension",
+  "name": "@wjbeau/identities-keystore-extension",
   "version": "1.0.0-canary.1",
   "description": "Bridge extension between Identities and Keystore for Wallet Provider.",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -33,8 +33,8 @@
     "release:dry-run": "package-releaser --dry-run"
   },
   "dependencies": {
-    "@algorandfoundation/identities-store": "workspace:*",
-    "@algorandfoundation/keystore": "workspace:*",
+    "@wjbeau/identities-store": "workspace:*",
+    "@wjbeau/keystore": "workspace:*",
     "@algorandfoundation/wallet-provider": "catalog:",
     "@scure/base": "catalog:",
     "before-after-hook": "catalog:"

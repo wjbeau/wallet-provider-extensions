@@ -2,7 +2,7 @@
 
 The **Identities** domain manages decentralized identifiers (DIDs) and the DID documents that describe them. It is the bridge between a wallet's cryptographic material and the standardized identity layer (verification methods, services, controller relationships) consumed by external systems.
 
-> 💡 **Recommended entry point:** use [`@algorandfoundation/identities-extension`](./extension) — the unified meta-package — unless you specifically need to compose the building blocks yourself.
+> 💡 **Recommended entry point:** use [`@wjbeau/identities-extension`](./extension) — the unified meta-package — unless you specifically need to compose the building blocks yourself.
 
 ## Responsibilities
 
@@ -17,13 +17,13 @@ This domain is split into a generic store, an optional keystore source bridge, a
 
 ### Unified Extension _(recommended)_
 
-- [`@algorandfoundation/identities-extension`](./extension) — meta-package that bundles the identity store with the keystore bridge and **dynamically loads the bridge only when the provider exposes a keystore**. Compatible with React Native (Metro) and standard ESM bundlers.
+- [`@wjbeau/identities-extension`](./extension) — meta-package that bundles the identity store with the keystore bridge and **dynamically loads the bridge only when the provider exposes a keystore**. Compatible with React Native (Metro) and standard ESM bundlers.
 
 ### Building Blocks
 
-- **Generic Store** — [`@algorandfoundation/identities-store`](./store): types, the reactive identity store, and the `WithIdentityStore` extension. Source-agnostic.
+- **Generic Store** — [`@wjbeau/identities-store`](./store): types, the reactive identity store, and the `WithIdentityStore` extension. Source-agnostic.
 - **Source Bridges**
-  - [`@algorandfoundation/identities-keystore-extension`](./keystore-extension): optional bridge that builds DID documents from keystore-managed seeds and their derived keys, and restores identities from existing DID documents back into the keystore lineage.
+  - [`@wjbeau/identities-keystore-extension`](./keystore-extension): optional bridge that builds DID documents from keystore-managed seeds and their derived keys, and restores identities from existing DID documents back into the keystore lineage.
 
 ## Architecture
 
@@ -54,7 +54,7 @@ The keystore bridge is loaded **dynamically** by the unified extension — if th
 
 1. **Create a new package** under `identities/<your-source>` following the [file naming conventions](../AGENTS.md): `src/extension.ts`, `src/store.ts`, `src/types.ts`, `src/errors.ts`.
 2. **Depend on the identity store as the source of truth** — accept it via options or read `provider.identity.store`. Never duplicate identity state.
-3. **Translate your source's events into store mutations** — use `addIdentity`, `updateIdentity`, `removeIdentity` from `@algorandfoundation/identities-store` rather than maintaining a parallel list.
+3. **Translate your source's events into store mutations** — use `addIdentity`, `updateIdentity`, `removeIdentity` from `@wjbeau/identities-store` rather than maintaining a parallel list.
 4. **Populate `metadata` consistently** — e.g. `metadata.source`, `metadata.keyId` (when correlated with a keystore key). The unified extension and downstream consumers use these fields to surface lineage and capability.
 5. **Return the API shape** from your extension function (e.g. `{ identityResolver: { … } }`). The provider's merging logic will compose it with the existing identity API. Do **not** mutate the provider directly.
 6. **Add tests** that exercise both pure store interactions and the bridge's lifecycle.

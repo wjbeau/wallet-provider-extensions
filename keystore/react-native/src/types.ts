@@ -1,4 +1,4 @@
-import type { KeyStoreOptions } from "@algorandfoundation/keystore";
+import type { KeyStoreOptions } from "@wjbeau/keystore";
 export interface ReactKeystoreOptions extends KeyStoreOptions {
   keystore: KeyStoreOptions["keystore"] & {
     authentication?: AuthenticationOptions;

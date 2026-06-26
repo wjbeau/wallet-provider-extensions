@@ -18,7 +18,7 @@ import {
   useRootColors,
 } from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import type { DIDDocument } from "@algorandfoundation/identities-store";
+import type { DIDDocument } from "@wjbeau/identities-store";
 import { HeaderCard } from "@/components";
 
 export default function Identities() {

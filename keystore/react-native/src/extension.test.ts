@@ -1,4 +1,4 @@
-import type { KeyData, KeyStoreOptions, KeyStoreState } from "@algorandfoundation/keystore";
+import type { KeyData, KeyStoreOptions, KeyStoreState } from "@wjbeau/keystore";
 import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 import { describe, expect, it, vi } from "vitest";

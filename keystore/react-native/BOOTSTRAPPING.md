@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `@algorandfoundation/react-native-keystore` package provides a secure, persistent, and concrete keystore implementation for React Native applications. It integrates directly with the Algorand Wallet Provider and handles secure storage using MMKV (for encrypted key material) and Keychain (for the master encryption key).
+The `@wjbeau/react-native-keystore` package provides a secure, persistent, and concrete keystore implementation for React Native applications. It integrates directly with the Algorand Wallet Provider and handles secure storage using MMKV (for encrypted key material) and Keychain (for the master encryption key).
 
 ## Core Principle: Separation of Concerns
 
@@ -41,7 +41,7 @@ Create a TanStack store for the keystore to manage its reactive state.
 ```typescript
 // stores/keystore.ts
 import { Store } from "@tanstack/store";
-import { KeyStoreState } from "@algorandfoundation/keystore";
+import { KeyStoreState } from "@wjbeau/keystore";
 
 export const keyStore = new Store<KeyStoreState>({
   keys: [],
@@ -57,8 +57,8 @@ In your main application file (e.g., `_layout.tsx` or `App.tsx`), initialize the
 // providers/ReactNativeProvider.tsx
 import React, { createContext, type ReactNode } from 'react';
 import { Provider } from '@algorandfoundation/wallet-provider';
-import { WithKeyStore } from "@algorandfoundation/react-native-keystore";
-import { KeyStoreAPI, Key } from "@algorandfoundation/keystore";
+import { WithKeyStore } from "@wjbeau/react-native-keystore";
+import { KeyStoreAPI, Key } from "@wjbeau/keystore";
 import { keyStore } from "@/stores/keystore";
 
 export class ReactNativeProvider extends Provider<typeof ReactNativeProvider.EXTENSIONS> {
@@ -119,14 +119,14 @@ import {
   fetchSecret,
   getMasterKey,
   storage
-} from "@algorandfoundation/react-native-keystore";
+} from "@wjbeau/react-native-keystore";
 import {
   initializeKeyStore,
   Key,
   KeyData,
   KeyStoreState,
   setStatus
-} from "@algorandfoundation/keystore";
+} from "@wjbeau/keystore";
 import { AlgorandProvider, ReactNativeProvider } from "@/providers/ReactNativeProvider";
 
 async function bootstrap() {

@@ -1,4 +1,4 @@
-import type { KeyData, KeyStoreState } from "@algorandfoundation/keystore";
+import type { KeyData, KeyStoreState } from "@wjbeau/keystore";
 import { Store } from "@tanstack/store";
 import { describe, expect, it } from "vitest";
 import { commit, fetchSecret, storage } from "./state.js";

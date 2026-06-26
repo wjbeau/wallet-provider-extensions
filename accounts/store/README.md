@@ -1,4 +1,4 @@
-# 🏦 @algorandfoundation/accounts-store
+# 🏦 @wjbeau/accounts-store
 
 Basic reactive state management for accounts.
 
@@ -20,7 +20,7 @@ This package provides a standardized way to manage and interact with account dat
 ## 📥 Installation
 
 ```bash
-pnpm add @algorandfoundation/accounts-store
+pnpm add @wjbeau/accounts-store
 ```
 
 ## 🚀 Quick Start
@@ -29,7 +29,7 @@ pnpm add @algorandfoundation/accounts-store
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithAccountStore } from "@algorandfoundation/accounts-store";
+import { WithAccountStore } from "@wjbeau/accounts-store";
 import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 
@@ -86,7 +86,7 @@ The Account Store is designed to be generic. You can define your own account typ
 ### 1. Define a Custom Account Type
 
 ```typescript
-import { Account } from "@algorandfoundation/accounts-store";
+import { Account } from "@wjbeau/accounts-store";
 
 export interface MyCustomAccount extends Account {
   type: "custom";
@@ -104,7 +104,7 @@ You can pass your custom type as a generic to `WithAccountStore`.
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithAccountStore, type AccountStoreApi } from "@algorandfoundation/accounts-store";
+import { WithAccountStore, type AccountStoreApi } from "@wjbeau/accounts-store";
 
 // Use the generic extension with your custom type
 const MyProvider = Provider.withExtensions([
@@ -146,7 +146,7 @@ In many cases, a single provider may need to handle multiple different types of 
 ### 1. Define Your Account Union
 
 ```typescript
-import { Account } from "@algorandfoundation/accounts-store";
+import { Account } from "@wjbeau/accounts-store";
 
 export interface IntermezzoAccount extends Account {
   type: "intermezzo";

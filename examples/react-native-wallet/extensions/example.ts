@@ -5,7 +5,7 @@ import {
   addAccount,
   AccountStoreOptions,
   removeAccount,
-} from "@algorandfoundation/accounts-store";
+} from "@wjbeau/accounts-store";
 
 /**
  * Represents a watched account that only has a public address.

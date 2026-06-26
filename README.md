@@ -28,7 +28,7 @@ On top of each store, the project ships optional **bridge extensions** that wire
 
 Cryptographic key material management — generation, derivation, and secure storage.
 
-**Unified Extension** _(recommended)_: _TODO — a `@algorandfoundation/keystore-extension` meta-package that composes the store with the best available platform bridge (RN, web, node) via conditional loading._
+**Unified Extension** _(recommended)_: _TODO — a `@wjbeau/keystore-extension` meta-package that composes the store with the best available platform bridge (RN, web, node) via conditional loading._
 
 Building blocks:
 
@@ -133,8 +133,8 @@ Extensions are typically used by extending the base `Provider` class. This "conc
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithKeyStore } from "@algorandfoundation/react-native-keystore";
-import { WithLogStore } from "@algorandfoundation/log-store";
+import { WithKeyStore } from "@wjbeau/react-native-keystore";
+import { WithLogStore } from "@wjbeau/log-store";
 import { keyStore } from "./stores/keystore";
 import { logStore } from "./stores/logstore";
 

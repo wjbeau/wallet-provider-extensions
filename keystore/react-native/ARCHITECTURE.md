@@ -19,7 +19,7 @@ Think of an HD Wallet like a master key system for a large building:
 
 ## React Native Implementation
 
-The `@algorandfoundation/react-native-keystore` package provides a specialized implementation of the Keystore Extension optimized for React Native. It uses `react-native-mmkv` for fast, persistent storage of encrypted key material and `react-native-keychain` for secure storage of the master encryption key, ensuring that all data at rest is protected by the platform's secure enclave or keychain.
+The `@wjbeau/react-native-keystore` package provides a specialized implementation of the Keystore Extension optimized for React Native. It uses `react-native-mmkv` for fast, persistent storage of encrypted key material and `react-native-keychain` for secure storage of the master encryption key, ensuring that all data at rest is protected by the platform's secure enclave or keychain.
 
 ### Architecture Overview
 

@@ -1,5 +1,5 @@
 import { Store } from "@tanstack/store";
-import type { IdentityStoreState } from "@algorandfoundation/identities-store";
+import type { IdentityStoreState } from "@wjbeau/identities-store";
 
 /**
  * The single source of truth for identities in the application.

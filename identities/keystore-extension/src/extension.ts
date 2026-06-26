@@ -1,11 +1,11 @@
 import { base58 } from "@scure/base";
-import type { Key, KeyStoreState } from "@algorandfoundation/keystore";
-import { generateDidKey, generateDidDocument } from "@algorandfoundation/identities-store";
+import type { Key, KeyStoreState } from "@wjbeau/keystore";
+import { generateDidKey, generateDidDocument } from "@wjbeau/identities-store";
 import type {
   Identity,
   IdentityStoreState,
   DIDDocument,
-} from "@algorandfoundation/identities-store";
+} from "@wjbeau/identities-store";
 import type { Extension } from "@algorandfoundation/wallet-provider";
 import type { Store } from "@tanstack/store";
 import { decodeAddress, toBase64URL } from "./utils.ts";

@@ -1,4 +1,4 @@
-# 🆔🌉 @algorandfoundation/identities-keystore-extension
+# 🆔🌉 @wjbeau/identities-keystore-extension
 
 Bridge between Identity Store and Keystore.
 
@@ -19,7 +19,7 @@ This extension provides a reference implementation for bridging the [Identity St
 ## 📥 Installation
 
 ```bash
-pnpm add @algorandfoundation/identities-keystore-extension
+pnpm add @wjbeau/identities-keystore-extension
 ```
 
 ## 🚀 Quick Start
@@ -30,9 +30,9 @@ The `WithIdentitiesKeystore` extension requires both `WithIdentityStore` and `Wi
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithIdentityStore } from "@algorandfoundation/identities-store";
-import { WithKeyStore } from "@algorandfoundation/react-native-keystore"; // or any keystore implementation
-import { WithIdentitiesKeystore } from "@algorandfoundation/identities-keystore-extension";
+import { WithIdentityStore } from "@wjbeau/identities-store";
+import { WithKeyStore } from "@wjbeau/react-native-keystore"; // or any keystore implementation
+import { WithIdentitiesKeystore } from "@wjbeau/identities-keystore-extension";
 
 const MyProvider = Provider.withExtensions([
   WithIdentityStore,

@@ -23,7 +23,7 @@ A core pattern in this repository is using a single store to manage various type
 In `app/accounts.tsx`, we use a `switch(true)` statement with type guards for type-safe rendering of different account types. This is the recommended way to handle multiple types in the same store:
 
 ```tsx
-import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extension";
+import { isKeystoreAccount } from "@wjbeau/accounts-keystore-extension";
 import { isWatchedAccount } from "@/extensions/example";
 
 // ... inside the accounts map function

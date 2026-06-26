@@ -1,4 +1,4 @@
-# 🆔 @algorandfoundation/identities-extension
+# 🆔 @wjbeau/identities-extension
 
 Unified Identities extension for Wallet Provider.
 
@@ -6,7 +6,7 @@ This package provides a unified extension that combines the identity store and t
 
 ## ✨ Features
 
-- **Unified API**: Combines `@algorandfoundation/identities-store` and `@algorandfoundation/identities-keystore-extension`.
+- **Unified API**: Combines `@wjbeau/identities-store` and `@wjbeau/identities-keystore-extension`.
 - **Conditional Loading**: Automatically enables keystore integration if the `WithKeyStore` extension is present.
 - **Simplified Setup**: Reduces boilerplate when setting up identity management in a provider.
 - **Reactive State**: Inherits all reactive capabilities from the underlying identity store.
@@ -19,7 +19,7 @@ This package provides a unified extension that combines the identity store and t
 ## 📥 Installation
 
 ```bash
-pnpm add @algorandfoundation/identities-extension
+pnpm add @wjbeau/identities-extension
 ```
 
 ## 🚀 Quick Start
@@ -28,7 +28,7 @@ pnpm add @algorandfoundation/identities-extension
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithIdentities } from "@algorandfoundation/identities-extension";
+import { WithIdentities } from "@wjbeau/identities-extension";
 
 const MyProvider = Provider.withExtensions([WithIdentities]);
 const provider = new MyProvider({ id: "my-provider", name: "My Provider" });
@@ -43,8 +43,8 @@ When combined with `WithKeyStore`, the `WithIdentities` extension automatically 
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithKeyStore } from "@algorandfoundation/keystore";
-import { WithIdentities } from "@algorandfoundation/identities-extension";
+import { WithKeyStore } from "@wjbeau/keystore";
+import { WithIdentities } from "@wjbeau/identities-extension";
 
 const MyProvider = Provider.withExtensions([WithKeyStore, WithIdentities]);
 const provider = new MyProvider({ id: "my-provider", name: "My Provider" });

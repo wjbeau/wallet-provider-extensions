@@ -4,16 +4,16 @@
  *
  * While this entry point still works for backward compatibility, it is recommended to
  * migrate to named exports or use specific sub-paths:
- * - `@algorandfoundation/keystore/types`
- * - `@algorandfoundation/keystore/errors`
+ * - `@wjbeau/keystore/types`
+ * - `@wjbeau/keystore/errors`
  *
  * Migration example:
  * ```typescript
  * // From
- * import { KeyStoreAPI } from "@algorandfoundation/keystore";
+ * import { KeyStoreAPI } from "@wjbeau/keystore";
  *
  * // To
- * import { KeyStoreAPI } from "@algorandfoundation/keystore/types";
+ * import { KeyStoreAPI } from "@wjbeau/keystore/types";
  * ```
  */
 

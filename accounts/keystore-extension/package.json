@@ -1,5 +1,5 @@
 {
-  "name": "@algorandfoundation/accounts-keystore-extension",
+  "name": "@wjbeau/accounts-keystore-extension",
   "version": "1.0.0-canary.5",
   "description": "Accounts Keystore bridge for wallet extensions.",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -35,23 +35,23 @@
     "release:dry-run": "package-releaser --dry-run"
   },
   "dependencies": {
-    "@algorandfoundation/accounts-store": "workspace:*",
-    "@algorandfoundation/keystore": "workspace:*",
+    "@wjbeau/accounts-store": "workspace:*",
+    "@wjbeau/keystore": "workspace:*",
     "@algorandfoundation/wallet-provider": "catalog:",
     "@scure/base": "catalog:"
   },
   "devDependencies": {
-    "@algorandfoundation/log-store": "workspace:*",
+    "@wjbeau/log-store": "workspace:*",
     "@algorandfoundation/package-releaser": "workspace:*",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@algorandfoundation/log-store": "workspace:*",
+    "@wjbeau/log-store": "workspace:*",
     "@tanstack/store": "catalog:",
     "before-after-hook": "catalog:"
   },
   "peerDependenciesMeta": {
-    "@algorandfoundation/log-store": {
+    "@wjbeau/log-store": {
       "optional": true
     }
   }

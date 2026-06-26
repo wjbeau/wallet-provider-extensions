@@ -10,7 +10,7 @@ import {
   useIdentities,
   useRootColors,
 } from "@/hooks/useProvider";
-import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extension";
+import { isKeystoreAccount } from "@wjbeau/accounts-keystore-extension";
 import { isWatchedAccount } from "@/extensions/example";
 import { HeaderCard, DetailSection, InfoRow, AssociationRow } from "@/components";
 

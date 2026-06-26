@@ -1,6 +1,6 @@
-import { WithIdentityStore } from "@algorandfoundation/identities-store";
-import type { IdentityStoreState } from "@algorandfoundation/identities-store";
-import type { WithIdentitiesKeystore as WithIdentitiesKeystoreType } from "@algorandfoundation/identities-keystore-extension";
+import { WithIdentityStore } from "@wjbeau/identities-store";
+import type { IdentityStoreState } from "@wjbeau/identities-store";
+import type { WithIdentitiesKeystore as WithIdentitiesKeystoreType } from "@wjbeau/identities-keystore-extension";
 import type { Extension } from "@algorandfoundation/wallet-provider";
 import { Store } from "@tanstack/store";
 import type { IdentitiesExtension, IdentitiesExtensionOptions } from "./types.ts";
@@ -78,7 +78,7 @@ export const WithIdentities: Extension<IdentitiesExtension> = (
     // Dynamic import to support React Native and reduce bundle size
     const loadBridge = async () => {
       const { WithIdentitiesKeystore } =
-        (await import("@algorandfoundation/identities-keystore-extension")) as {
+        (await import("@wjbeau/identities-keystore-extension")) as {
           WithIdentitiesKeystore: typeof WithIdentitiesKeystoreType;
         };
       return WithIdentitiesKeystore(bridgeProvider, bridgeOptions);

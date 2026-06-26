@@ -38,7 +38,7 @@ export default function Index() {
           icon: "key",
           color: "#007AFF",
           href: "/keys",
-          packages: ["@algorandfoundation/keystore", "@algorandfoundation/react-native-keystore"],
+          packages: ["@wjbeau/keystore", "@wjbeau/react-native-keystore"],
           substats: [
             {
               label: "Base",
@@ -66,8 +66,8 @@ export default function Index() {
           color: "#34C759",
           href: "/accounts",
           packages: [
-            "@algorandfoundation/accounts-store",
-            "@algorandfoundation/accounts-keystore-extension",
+            "@wjbeau/accounts-store",
+            "@wjbeau/accounts-keystore-extension",
           ],
           substats: [
             {
@@ -93,9 +93,9 @@ export default function Index() {
           color: "#5856D6",
           href: "/identities",
           packages: [
-            "@algorandfoundation/identities-store",
-            "@algorandfoundation/identities-keystore-extension",
-            "@algorandfoundation/identities-extension",
+            "@wjbeau/identities-store",
+            "@wjbeau/identities-keystore-extension",
+            "@wjbeau/identities-extension",
           ],
           substats: [
             { label: "Active", count: identities.length },
@@ -143,7 +143,7 @@ export default function Index() {
               {domain.extensions[0]?.packages.map((pkg) => (
                 <View key={pkg} style={styles.packageChip}>
                   <Text style={styles.packageText} numberOfLines={1}>
-                    {pkg.replace("@algorandfoundation/", "")}
+                    {pkg.replace("@wjbeau/", "")}
                   </Text>
                 </View>
               ))}

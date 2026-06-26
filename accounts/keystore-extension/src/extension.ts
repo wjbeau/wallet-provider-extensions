@@ -4,16 +4,16 @@ import {
   type AccountStoreState,
   addAccount,
   removeAccount,
-} from "@algorandfoundation/accounts-store";
+} from "@wjbeau/accounts-store";
 import type {
   Key,
   KeyStoreExtension,
   KeyStoreState,
   XHDDerivedKeyData,
-} from "@algorandfoundation/keystore";
+} from "@wjbeau/keystore";
 import { base64 } from "@scure/base";
 import type { Extension } from "@algorandfoundation/wallet-provider";
-import type { LogStoreApi, LogStoreExtension } from "@algorandfoundation/log-store";
+import type { LogStoreApi, LogStoreExtension } from "@wjbeau/log-store";
 import type { Store } from "@tanstack/store";
 import type { AccountsKeystoreExtensionOptions, KeystoreAccount } from "./types.ts";
 

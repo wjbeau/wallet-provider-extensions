@@ -1,5 +1,5 @@
 {
-  "name": "@algorandfoundation/keystore",
+  "name": "@wjbeau/keystore",
   "version": "1.0.0-canary.16",
   "description": "Basic Keystore.",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -42,18 +42,18 @@
     "@scure/bip39": "catalog:"
   },
   "devDependencies": {
-    "@algorandfoundation/log-store": "workspace:*",
+    "@wjbeau/log-store": "workspace:*",
     "@algorandfoundation/package-releaser": "workspace:^",
     "typedoc": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@algorandfoundation/log-store": "workspace:*",
+    "@wjbeau/log-store": "workspace:*",
     "@tanstack/store": "catalog:",
     "before-after-hook": "catalog:"
   },
   "peerDependenciesMeta": {
-    "@algorandfoundation/log-store": {
+    "@wjbeau/log-store": {
       "optional": true
     }
   }

@@ -1,4 +1,4 @@
-# @algorandfoundation/keystore
+# @wjbeau/keystore
 
 Core types and reactive state management for the Wallet Provider Keystore.
 
@@ -22,7 +22,7 @@ By separating the store and types from the implementation, we enable:
 
 If you are looking for a concrete implementation, please refer to:
 
-- [`@algorandfoundation/keystore-react-native`](../react-native/README.md) - React Native implementation using secure hardware.
+- [`@wjbeau/keystore-react-native`](../react-native/README.md) - React Native implementation using secure hardware.
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ If you are looking for a concrete implementation, please refer to:
 To use the store, you typically use a concrete implementation that implements the `KeyStoreAPI`:
 
 ```typescript
-import { KeyStoreAPI } from "@algorandfoundation/keystore/types";
+import { KeyStoreAPI } from "@wjbeau/keystore/types";
 
 class MyBackend implements KeyStoreAPI {
   // Implement required methods: generate, import, sign, etc.
@@ -43,7 +43,7 @@ class MyBackend implements KeyStoreAPI {
 The store provides a reactive way to track available keys and the current operation status:
 
 ```typescript
-import { keyStore } from "@algorandfoundation/keystore";
+import { keyStore } from "@wjbeau/keystore";
 
 keyStore.subscribe((state) => {
   console.log("Current keys:", state.keys);

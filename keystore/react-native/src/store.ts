@@ -18,7 +18,7 @@ import {
   type XHDDerivedKeyData,
   type XHDDomainP256KeyData,
   type XHDRootKey,
-} from "@algorandfoundation/keystore";
+} from "@wjbeau/keystore";
 
 import { clearBuffer, generateId } from "@algorandfoundation/wallet-provider";
 import { BIP32DerivationType, KeyContext } from "@algorandfoundation/xhd-wallet-api";

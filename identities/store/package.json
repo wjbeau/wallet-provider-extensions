@@ -1,5 +1,5 @@
 {
-  "name": "@algorandfoundation/identities-store",
+  "name": "@wjbeau/identities-store",
   "version": "1.0.0-canary.1",
   "description": "Identities Store for Wallet Provider Extensions.",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

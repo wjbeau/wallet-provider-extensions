@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { isKeystoreAccount, WithAccountsKeystore } from "./extension.ts";
 import { base64 } from "@scure/base";
-import type { Account, AccountStoreState } from "@algorandfoundation/accounts-store";
+import type { Account, AccountStoreState } from "@wjbeau/accounts-store";
 import { Store } from "@tanstack/store";
 import {
   type Key,
@@ -9,7 +9,7 @@ import {
   generateXHDRootKeyFromSeed,
   generateXHDFromParent,
   generateEd25519FromSeed,
-} from "@algorandfoundation/keystore";
+} from "@wjbeau/keystore";
 import type { KeystoreAccount } from "./types.ts";
 
 describe("WithAccountsKeystore", () => {

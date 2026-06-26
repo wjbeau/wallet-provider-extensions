@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Store } from "@tanstack/store";
 import { WithIdentities } from "./extension.ts";
-import type { KeyStoreState } from "@algorandfoundation/keystore";
-import type { IdentityStoreState } from "@algorandfoundation/identities-store";
+import type { KeyStoreState } from "@wjbeau/keystore";
+import type { IdentityStoreState } from "@wjbeau/identities-store";
 
 describe("WithIdentities Extension", () => {
   let keyStore: Store<KeyStoreState>;

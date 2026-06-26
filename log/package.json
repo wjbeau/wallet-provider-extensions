@@ -1,5 +1,5 @@
 {
-  "name": "@algorandfoundation/log-store",
+  "name": "@wjbeau/log-store",
   "version": "1.0.0-canary.3",
   "description": "Generalized log for extensions",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

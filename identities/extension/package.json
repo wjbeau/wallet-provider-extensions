@@ -1,5 +1,5 @@
 {
-  "name": "@algorandfoundation/identities-extension",
+  "name": "@wjbeau/identities-extension",
   "version": "1.0.0-canary.1",
   "description": "Unified Identities extension for Wallet Provider.",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -33,9 +33,9 @@
     "release:dry-run": "package-releaser --dry-run"
   },
   "dependencies": {
-    "@algorandfoundation/identities-keystore-extension": "workspace:*",
-    "@algorandfoundation/identities-store": "workspace:*",
-    "@algorandfoundation/keystore": "workspace:*",
+    "@wjbeau/identities-keystore-extension": "workspace:*",
+    "@wjbeau/identities-store": "workspace:*",
+    "@wjbeau/keystore": "workspace:*",
     "@algorandfoundation/wallet-provider": "catalog:"
   },
   "devDependencies": {

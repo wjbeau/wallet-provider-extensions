@@ -4,18 +4,18 @@ import { AlgorandProvider, ReactNativeProvider } from "@/providers/ReactNativePr
 import { install } from "react-native-quick-crypto";
 import { keyStore } from "@/stores/keystore";
 import { keyStoreHooks, accountHooks } from "@/stores/before-after";
-import { fetchSecret, storage } from "@algorandfoundation/react-native-keystore";
+import { fetchSecret, storage } from "@wjbeau/react-native-keystore";
 import {
   initializeKeyStore,
   Key,
   KeyData,
   KeyStoreState,
   setStatus,
-} from "@algorandfoundation/keystore";
+} from "@wjbeau/keystore";
 import { Store } from "@tanstack/store";
 import { accountsStore } from "@/stores/accounts";
 import { identitiesStore } from "@/stores/identities";
-import type { ReactKeystoreOptions } from "@algorandfoundation/react-native-keystore";
+import type { ReactKeystoreOptions } from "@wjbeau/react-native-keystore";
 
 install();
 

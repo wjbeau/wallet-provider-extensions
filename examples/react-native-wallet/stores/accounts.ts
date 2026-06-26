@@ -1,4 +1,4 @@
-import type { AccountStoreState } from "@algorandfoundation/accounts-store";
+import type { AccountStoreState } from "@wjbeau/accounts-store";
 import { Store } from "@tanstack/react-store";
 import { HARDCODED_WATCHED_ADDRESS } from "@/extensions/example";
 import { AppAccount } from "@/providers/ReactNativeProvider";

@@ -1,11 +1,11 @@
 import type { Store } from "@tanstack/store";
-import type { KeyStoreState } from "@algorandfoundation/keystore";
+import type { KeyStoreState } from "@wjbeau/keystore";
 import type {
   IdentityStoreApi,
   IdentityStoreExtension,
   IdentityStoreState,
   DIDDocument,
-} from "@algorandfoundation/identities-store";
+} from "@wjbeau/identities-store";
 
 /**
  * Options for the Identities extension.

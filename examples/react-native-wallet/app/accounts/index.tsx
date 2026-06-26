@@ -18,7 +18,7 @@ import {
   useRootColors,
 } from "@/hooks/useProvider";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { isKeystoreAccount } from "@algorandfoundation/accounts-keystore-extension";
+import { isKeystoreAccount } from "@wjbeau/accounts-keystore-extension";
 import { isWatchedAccount } from "@/extensions/example";
 import { Alert } from "react-native";
 import { HeaderCard } from "@/components";

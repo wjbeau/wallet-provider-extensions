@@ -1,4 +1,4 @@
-# @algorandfoundation/react-native-keystore
+# @wjbeau/react-native-keystore
 
 A secure key management system for the Algorand Wallet Provider. Manage cryptographic keys, derive HD wallets from BIP39 seeds, and sign arbitrary data—all while keeping private keys locked away in a secure vault.
 
@@ -22,7 +22,7 @@ This architecture enables:
 
 ## Supported Algorithms & Key Types
 
-The React Native backend implements a subset of the [`KeyType`](../store/src/types/core.ts) / [`Algorithm`](../store/src/types/core.ts) unions defined by `@algorandfoundation/keystore`:
+The React Native backend implements a subset of the [`KeyType`](../store/src/types/core.ts) / [`Algorithm`](../store/src/types/core.ts) unions defined by `@wjbeau/keystore`:
 
 | Type                 | Algorithm | Description                                                                         |
 | -------------------- | --------- | ----------------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ The React Native backend implements a subset of the [`KeyType`](../store/src/typ
 The keystore is typically used as an extension for the Algorand Wallet Provider.
 
 ```typescript
-import { WithKeyStore } from "@algorandfoundation/react-native-keystore";
+import { WithKeyStore } from "@wjbeau/react-native-keystore";
 import { Provider } from "@algorandfoundation/wallet-provider";
 import { keyStore } from "./stores/keystore";
 import { keyStoreHooks } from "./stores/hooks";

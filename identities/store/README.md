@@ -1,4 +1,4 @@
-# 🆔 @algorandfoundation/identities-store
+# 🆔 @wjbeau/identities-store
 
 Basic reactive state management for identities.
 
@@ -20,7 +20,7 @@ This package provides a standardized way to manage and interact with identity da
 ## 📥 Installation
 
 ```bash
-pnpm add @algorandfoundation/identities-store
+pnpm add @wjbeau/identities-store
 ```
 
 ## 🚀 Quick Start
@@ -29,7 +29,7 @@ pnpm add @algorandfoundation/identities-store
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithIdentityStore } from "@algorandfoundation/identities-store";
+import { WithIdentityStore } from "@wjbeau/identities-store";
 import { Store } from "@tanstack/store";
 import Hook from "before-after-hook";
 

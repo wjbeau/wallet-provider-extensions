@@ -1,4 +1,4 @@
-# 🌉 @algorandfoundation/accounts-keystore-extension
+# 🌉 @wjbeau/accounts-keystore-extension
 
 Bridge between Account Store and Keystore.
 
@@ -21,7 +21,7 @@ This extension provides a reference implementation for bridging the [Account Sto
 ## 📥 Installation
 
 ```bash
-pnpm add @algorandfoundation/accounts-keystore-extension
+pnpm add @wjbeau/accounts-keystore-extension
 ```
 
 ## 🚀 Quick Start
@@ -32,9 +32,9 @@ The `WithAccountsKeystore` extension requires both `WithAccountStore` and `WithK
 
 ```typescript
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithAccountStore } from "@algorandfoundation/accounts-store";
-import { WithKeyStore } from "@algorandfoundation/keystore-react-native"; // or any keystore implementation
-import { WithAccountsKeystore } from "@algorandfoundation/accounts-keystore-extension";
+import { WithAccountStore } from "@wjbeau/accounts-store";
+import { WithKeyStore } from "@wjbeau/keystore-react-native"; // or any keystore implementation
+import { WithAccountsKeystore } from "@wjbeau/accounts-keystore-extension";
 
 const MyProvider = Provider.withExtensions([WithAccountStore, WithKeyStore, WithAccountsKeystore]);
 ```

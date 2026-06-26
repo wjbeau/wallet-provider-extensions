@@ -2,8 +2,8 @@ import type {
   IdentityStoreApi,
   IdentityStoreOptions,
   DIDDocument,
-} from "@algorandfoundation/identities-store";
-import type { KeyStoreOptions } from "@algorandfoundation/keystore";
+} from "@wjbeau/identities-store";
+import type { KeyStoreOptions } from "@wjbeau/keystore";
 
 /**
  * Options for the IdentitiesKeystore extension.

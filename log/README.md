@@ -1,4 +1,4 @@
-# @algorandfoundation/log-store
+# @wjbeau/log-store
 
 A lightweight, generic log store extension for the Algorand Wallet Provider. It captures messages with levels, timestamps, and optional metadata, and exposes them on the provider state for easy inspection and debugging.
 
@@ -12,7 +12,7 @@ A lightweight, generic log store extension for the Algorand Wallet Provider. It 
 ## Installation
 
 ```bash
-npm install @algorandfoundation/log-store
+npm install @wjbeau/log-store
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ npm install @algorandfoundation/log-store
 
 ```ts
 import { Provider } from "@algorandfoundation/wallet-provider";
-import { WithLogStore } from "@algorandfoundation/log-store";
+import { WithLogStore } from "@wjbeau/log-store";
 
 // 1) Create a provider with the Log Store extension
 const MyProvider = Provider.withExtensions([WithLogStore]);
@@ -53,7 +53,7 @@ provider.log.clear();
 You can work with the underlying store if you need subscriptions or integration with reactive UIs.
 
 ```ts
-import { logsStore } from "@algorandfoundation/log-store";
+import { logsStore } from "@wjbeau/log-store";
 
 // Subscribe to state changes
 const unsubscribe = logsStore.subscribe((state) => {
@@ -68,7 +68,7 @@ unsubscribe();
 
 ```tsx
 import { useStore } from "@tanstack/react-store";
-import { logsStore } from "@algorandfoundation/log-store";
+import { logsStore } from "@wjbeau/log-store";
 
 export function LogList() {
   const logs = useStore(logsStore, (state) => state.logs);

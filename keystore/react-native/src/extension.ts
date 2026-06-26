@@ -14,8 +14,8 @@ import {
   verify,
   type XHDDerivedKeyData,
   type XHDDomainP256KeyData,
-} from "@algorandfoundation/keystore";
-import type { LogStoreExtension } from "@algorandfoundation/log-store";
+} from "@wjbeau/keystore";
+import type { LogStoreExtension } from "@wjbeau/log-store";
 import type { Extension, Provider } from "@algorandfoundation/wallet-provider";
 
 import { context } from "./constants.ts";

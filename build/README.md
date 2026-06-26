@@ -49,7 +49,7 @@ npm run release
 Or from the root of the monorepo using workspaces:
 
 ```bash
-npm run release -w @algorandfoundation/keystore
+npm run release -w @wjbeau/keystore
 ```
 
 ## Global Configuration

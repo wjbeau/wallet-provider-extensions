@@ -1,4 +1,4 @@
-import type { KeyStoreState } from "@algorandfoundation/keystore";
+import type { KeyStoreState } from "@wjbeau/keystore";
 import { Store } from "@tanstack/store";
 import { describe, expect, it } from "vitest";
 import { fetchSecret } from "./storage/state.ts";
